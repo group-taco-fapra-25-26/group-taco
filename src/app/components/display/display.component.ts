@@ -6,6 +6,7 @@ import {ExampleFileComponent} from "../example-file/example-file.component";
 import {FileReaderService} from "../../services/file-reader.service";
 import {HttpClient} from "@angular/common/http";
 import {SvgNodeComponent} from "./svg-node/svg-node.component";
+import {DrawingStateService} from "../../services/drawing.state.service";
 
 @Component({
     selector: 'app-display',
@@ -21,10 +22,13 @@ export class DisplayComponent implements OnDestroy {
 
     readonly diagram = signal<Diagram | undefined>(undefined);
 
+    readonly isDrawingEnabled = this.drawingStateService.isDrawingEnabled;
+
     private _sub: Subscription;
 
     constructor(private _displayService: DisplayService,
                 private _fileReaderService: FileReaderService,
+                private drawingStateService: DrawingStateService,
                 private _http: HttpClient) {
 
         this._sub = this._displayService.diagram$.subscribe(diagram => {

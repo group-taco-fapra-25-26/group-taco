@@ -1,4 +1,5 @@
 <svg #drawingArea class="canvas"
+     [class.disabled]="!isDrawingEnabled()"
      (drop)="processDropEvent($event)"
      (dragover)="prevent($event)">
 

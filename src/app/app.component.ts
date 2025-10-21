@@ -9,6 +9,7 @@ import {MatFormField, MatLabel} from '@angular/material/form-field';
 import {MatInput} from '@angular/material/input';
 import {CdkTextareaAutosize} from '@angular/cdk/text-field';
 import {FooterComponent} from './components/footer/footer.component';
+import {MainTabComponent} from "./components/main-tab/main-tab.component";
 
 @Component({
     selector: 'app-root',
@@ -24,6 +25,7 @@ import {FooterComponent} from './components/footer/footer.component';
         CdkTextareaAutosize,
         ReactiveFormsModule,
         FooterComponent,
+        MainTabComponent,
     ]
 })
 export class AppComponent {

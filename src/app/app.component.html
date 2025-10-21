@@ -9,6 +9,9 @@
     </h2>
 
     <!--    Main content    -->
+    <div>
+        <app-main-tab></app-main-tab>
+    </div>
     <app-display class="padding full-size" (fileContent)="processSourceChange($event)"></app-display>
 
 
@@ -17,7 +20,7 @@
             <app-example-button title="Button" (buttonPressed)="processButtonClick()"></app-example-button>
 
             @if (buttonClickCount() > 0) {
-                Number of clicks: {{buttonClickCount()}}!
+                Number of tacos: {{buttonClickCount()}}!
             }
         </div>
 

@@ -1,0 +1,34 @@
+<mat-tab-group (selectedTabChange)="onTabChange($event)" >
+    <mat-tab>
+        <ng-template mat-tab-label>
+            <mat-icon class="tab-icon">edit</mat-icon>
+            Draw
+        </ng-template>
+        <app-draw></app-draw>
+    </mat-tab>
+
+    <mat-tab>
+        <ng-template mat-tab-label>
+            <mat-icon class="tab-icon">play_arrow</mat-icon>
+            Play
+        </ng-template>
+        <app-play></app-play>
+    </mat-tab>
+
+    <mat-tab>
+        <ng-template mat-tab-label>
+            <mat-icon class="tab-icon">graph_3</mat-icon>
+            Reachability Graph
+        </ng-template>
+        <app-reachability-graph></app-reachability-graph>
+    </mat-tab>
+
+    <mat-tab>
+        <ng-template mat-tab-label>
+            <mat-icon class="tab-icon">flowchart</mat-icon>
+            Process Net
+        </ng-template>
+        <app-process-net></app-process-net>
+    </mat-tab>
+
+</mat-tab-group>
