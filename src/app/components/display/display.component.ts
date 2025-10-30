@@ -1,4 +1,4 @@
-import { Component, OnDestroy, output, signal, inject, OnInit } from '@angular/core';
+import { Component, computed, OnDestroy, output, signal, inject, OnInit } from '@angular/core';
 import { DisplayService } from '../../services/display.service';
 import { catchError, of, Subscription, take } from 'rxjs';
 import { Diagram } from '../../classes/diagram/diagram';
@@ -6,7 +6,8 @@ import { ExampleFileComponent } from '../example-file/example-file.component';
 import { FileReaderService } from '../../services/file-reader.service';
 import { HttpClient } from '@angular/common/http';
 import { SvgNodeComponent } from './svg-node/svg-node.component';
-import { DrawingStateService } from '../../services/drawing.state.service';
+import { TabStateService } from '../../services/tab-state.service';
+import { Tab } from '../../models/tab';
 
 @Component({
     selector: 'app-display',
@@ -23,10 +24,10 @@ export class DisplayComponent implements OnInit, OnDestroy {
 
     private _displayService = inject(DisplayService);
     private _fileReaderService = inject(FileReaderService);
-    private drawingStateService = inject(DrawingStateService);
+    private _tabStateService = inject(TabStateService);
     private _http = inject(HttpClient);
 
-    readonly isDrawingEnabled = this.drawingStateService.isDrawingEnabled;
+    readonly isDrawingEnabled = computed(() => this._tabStateService.currentTab() === Tab.DRAW);
 
     ngOnInit(): void {
         this._sub = this._displayService.diagram$.subscribe((diagram) => {
