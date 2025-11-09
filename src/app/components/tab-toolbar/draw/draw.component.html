@@ -1,7 +1,9 @@
-<div>
+<div class="draw-tab-toolbar-container">
+    <app-upload></app-upload>
+
     <app-clear-net-button
         title="Clear Draw"
         (buttonCleared)="onNetCleared()"
         (clearAll)="onClearAll()"></app-clear-net-button>
-    <app-display (fileContent)="processSourceChange($event)"></app-display>
 </div>
+<app-display></app-display>

@@ -1,6 +1,5 @@
 import { Injectable, OnDestroy } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { Diagram } from '../classes/diagram/diagram';
 import { DisplayableGraph } from '../classes/displayable-graph.interface';
 
 @Injectable({
@@ -25,8 +24,8 @@ export class DisplayService implements OnDestroy {
         return this._diagram$.getValue();
     }
 
-    public display(net: Diagram) {
-        this._diagram$.next(net);
+    public display(graph: DisplayableGraph) {
+        this._diagram$.next(graph);
     }
 
     public clear() {

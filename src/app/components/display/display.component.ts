@@ -1,14 +1,13 @@
-import { Component, computed, inject, OnDestroy, OnInit, output, signal } from '@angular/core';
+import { Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { DisplayService } from '../../services/display.service';
-import { catchError, of, Subscription, take } from 'rxjs';
+import { Subscription } from 'rxjs';
 import { ExampleFileComponent } from '../example-file/example-file.component';
-import { FileReaderService } from '../../services/file-reader.service';
-import { HttpClient } from '@angular/common/http';
 import { SvgNodeComponent } from './svg-node/svg-node.component';
 import { SvgArcComponent } from './svg-arc/svg-arc.component';
 import { TabStateService } from '../../services/tab-state.service';
 import { Tab } from '../../classes/tabs';
 import { DisplayableGraph } from '../../classes/displayable-graph.interface';
+import { PetriNetLoaderService } from '../../services/petri-net-loader.service';
 
 @Component({
     selector: 'app-display',
@@ -18,16 +17,13 @@ import { DisplayableGraph } from '../../classes/displayable-graph.interface';
     styleUrls: ['./display.component.css'],
 })
 export class DisplayComponent implements OnInit, OnDestroy {
-    readonly fileContent = output<string>();
-
     readonly diagram = signal<DisplayableGraph | undefined>(undefined);
 
     private _sub?: Subscription;
 
     private _displayService = inject(DisplayService);
-    private _fileReaderService = inject(FileReaderService);
     private _tabStateService = inject(TabStateService);
-    private _http = inject(HttpClient);
+    private _loaderService = inject(PetriNetLoaderService);
 
     readonly isDrawingEnabled = computed(() => this._tabStateService.currentTab() === Tab.DRAW);
     readonly isPlayingEnabled = computed(() => this._tabStateService.currentTab() === Tab.PLAY);
@@ -47,54 +43,19 @@ export class DisplayComponent implements OnInit, OnDestroy {
 
     public processDropEvent(e: DragEvent) {
         e.preventDefault();
-
         const fileLocation = e.dataTransfer?.getData(ExampleFileComponent.META_DATA_CODE);
 
         if (fileLocation) {
-            this.fetchFile(fileLocation);
-        } else {
-            this.readFile(e.dataTransfer?.files);
+            this._loaderService.loadFileFromUrl(fileLocation);
+        } else if (e.dataTransfer?.files) {
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                this._loaderService.loadFile(files[0]);
+            }
         }
     }
 
     public prevent(e: DragEvent) {
-        // dragover must be prevented for drop to work
         e.preventDefault();
-    }
-
-    private fetchFile(link: string) {
-        this._http
-            .get(link, {
-                responseType: 'text',
-            })
-            .pipe(
-                catchError((err) => {
-                    console.error('Error while fetching file from link', link, err);
-                    return of(undefined);
-                }),
-                take(1),
-            )
-            .subscribe((content) => {
-                this.emitFileContent(content);
-            });
-    }
-
-    private readFile(files: FileList | undefined | null) {
-        if (files === undefined || files === null || files.length === 0) {
-            return;
-        }
-        this._fileReaderService
-            .readFile(files[0])
-            .pipe(take(1))
-            .subscribe((content) => {
-                this.emitFileContent(content);
-            });
-    }
-
-    private emitFileContent(content: string | undefined) {
-        if (content === undefined) {
-            return;
-        }
-        this.fileContent.emit(content);
     }
 }

@@ -24,7 +24,6 @@ import { TabStateService } from '../../services/tab-state.service';
 })
 export class MainTabComponent {
     readonly clearAll = output<void>();
-    readonly fileContent = output<string>();
 
     private _tabStateService: TabStateService = inject(TabStateService);
     private readonly _tabs: Tab[] = [Tab.DRAW, Tab.PLAY, Tab.REACHABILITY_GRAPH, Tab.PROCESS_NET];
@@ -38,10 +37,5 @@ export class MainTabComponent {
     onClearAll() {
         this.clearAll.emit();
         console.log('MainTabComponent: Clear all event emitted');
-    }
-
-    onFileContent(content: string) {
-        this.fileContent.emit(content);
-        console.log('MainTabComponent: File content event emitted');
     }
 }
