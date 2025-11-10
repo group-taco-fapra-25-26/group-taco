@@ -11,7 +11,14 @@ describe('ToasterComponent', () => {
         await TestBed.configureTestingModule({
             imports: [ToasterComponent],
             providers: [
-                { provide: MatSnackBarRef, useValue: { dismiss: () => {} } },
+                {
+                    provide: MatSnackBarRef,
+                    useValue: {
+                        dismiss: () => {
+                            /* empty testing only */
+                        },
+                    },
+                },
                 {
                     provide: MAT_SNACK_BAR_DATA,
                     useValue: { type: 'success', heading: '', message: '' },

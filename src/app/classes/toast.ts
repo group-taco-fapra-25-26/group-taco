@@ -1,5 +1,5 @@
 export interface ToastData {
-    type: 'success' | 'info' | 'warning' | 'error';
+    type: ToastType;
     heading: string;
     message: string;
 }
