@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { MAT_SNACK_BAR_DATA, MatSnackBarRef } from '@angular/material/snack-bar';
 
 import { ToasterComponent } from './toaster.component';
 
@@ -9,6 +10,13 @@ describe('ToasterComponent', () => {
     beforeEach(async () => {
         await TestBed.configureTestingModule({
             imports: [ToasterComponent],
+            providers: [
+                { provide: MatSnackBarRef, useValue: { dismiss: () => {} } },
+                {
+                    provide: MAT_SNACK_BAR_DATA,
+                    useValue: { type: 'success', heading: '', message: '' },
+                },
+            ],
         }).compileComponents();
 
         fixture = TestBed.createComponent(ToasterComponent);
