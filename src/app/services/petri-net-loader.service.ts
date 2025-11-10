@@ -1,8 +1,8 @@
-import { Injectable, inject } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { FileReaderService } from './file-reader.service';
 import { ParserService } from './parser.service';
 import { DisplayService } from './display.service';
-import { take, catchError, of } from 'rxjs';
+import { catchError, of, take } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { SourcePetriNetService } from './source-petri-net.service';
 
@@ -72,6 +72,7 @@ export class PetriNetLoaderService {
 
             if (parsedNet) {
                 this._sourcePetriNetService.setSourceNet(parsedNet);
+                this._sourcePetriNetService.setSourceText(content);
                 this._displayService.display(parsedNet);
                 console.log('PetriNetLoaderService: Petri net loaded successfully.');
             } else {

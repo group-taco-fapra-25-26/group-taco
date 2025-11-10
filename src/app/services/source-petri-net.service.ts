@@ -21,6 +21,13 @@ export class SourcePetriNetService {
      */
     public readonly sourceNet$: Observable<Diagram | null> = this._sourceNet$.asObservable();
 
+    private readonly _sourceText$ = new BehaviorSubject<string>('');
+    public readonly sourceText$: Observable<string> = this._sourceText$.asObservable();
+
+    public setSourceText(newSource: string) {
+        this._sourceText$.next(newSource);
+    }
+
     /**
      * Sets the current source petri net.
      * @param net The new source petri net.
