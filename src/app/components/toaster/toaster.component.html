@@ -1,0 +1,14 @@
+<div class="toast-content">
+
+    <mat-icon class="toast-icon">{{ iconName }}</mat-icon>
+
+    <div class="text-content">
+        <div class="heading">{{ data.heading }}</div>
+        <div class="message">{{ data.message }}</div>
+    </div>
+
+    <button class="close-button" (click)="closeToast()">
+        <mat-icon>close</mat-icon>
+    </button>
+
+</div>

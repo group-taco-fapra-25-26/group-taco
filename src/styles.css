@@ -9,3 +9,62 @@ body {
     padding: 50px;
     font-family: 'Courier New', sans-serif;
 }
+
+/* --- Global Toast-Style --- */
+.mat-mdc-snack-bar-container.custom-toast-container .mat-mdc-snackbar-surface {
+    padding: 0 !important;
+    border-radius: 8px !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+    border-left-width: 6px;
+    border-left-style: solid;
+    background: none;
+    color: inherit;
+}
+
+.mat-mdc-snack-bar-container.custom-toast-container {
+    margin-top: 15px !important;
+}
+
+/* --- Success (Grün) --- */
+.mat-mdc-snack-bar-container.success-toast .mat-mdc-snackbar-surface {
+    background-color: #e6f7e6 !important;
+    border-left-color: #65c368;
+
+    .toast-icon { color: #388e3c; }
+    .heading { color: #388e3c; }
+    .message { color: #388e3c; }
+    .close-button { color: #388e3c; }
+}
+
+/* --- Info (Blau) --- */
+.mat-mdc-snack-bar-container.info-toast .mat-mdc-snackbar-surface {
+    background-color: #e8eaf6 !important;
+    border-left-color: #5b8de3;
+
+    .toast-icon { color: #1976d2; }
+    .heading { color: #1976d2; }
+    .message { color: #1976d2; }
+    .close-button { color: #1976d2; }
+}
+
+/* --- Warning (Orange) --- */
+.mat-mdc-snack-bar-container.warning-toast .mat-mdc-snackbar-surface {
+    background-color: #fff8e1 !important;
+    border-left-color: #f4a94f;
+
+    .toast-icon { color: #f57c00; }
+    .heading { color: #f57c00; }
+    .message { color: #f57c00; }
+    .close-button { color: #f57c00; }
+}
+
+/* --- Error (Rot) --- */
+.mat-mdc-snack-bar-container.error-toast .mat-mdc-snackbar-surface {
+    background-color: #ffebee !important;
+    border-left-color: #e95e5e;
+
+    .toast-icon { color: #d32f2f; }
+    .heading { color: #d32f2f; }
+    .message { color: #d32f2f; }
+    .close-button { color: #d32f2f; }
+}
