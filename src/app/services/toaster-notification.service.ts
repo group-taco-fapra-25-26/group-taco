@@ -19,10 +19,7 @@ export class ToasterNotificationService {
 
         const data: ToastData = { type, heading, message };
 
-        this._snackBar.openFromComponent(ToasterComponent, {
-            ...config,
-            data: data,
-        });
+        this._snackBar.openFromComponent(ToasterComponent, { ...config, data });
     }
 
     showSuccess(heading: string, message: string) {

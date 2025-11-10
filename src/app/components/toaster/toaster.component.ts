@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { MAT_SNACK_BAR_DATA, MatSnackBarRef } from '@angular/material/snack-bar';
-import { ToastData } from '../../classes/toast';
+import { TOAST_ICONS, ToastData } from '../../classes/toast';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 
@@ -16,16 +16,7 @@ export class ToasterComponent {
     private snackBarRef = inject(MatSnackBarRef<ToasterComponent>);
 
     get iconName(): string {
-        switch (this.data.type) {
-            case 'success':
-                return 'check';
-            case 'info':
-                return 'info';
-            case 'warning':
-                return 'warning';
-            case 'error':
-                return 'error';
-        }
+        return TOAST_ICONS[this.data.type] ?? 'info';
     }
 
     closeToast() {

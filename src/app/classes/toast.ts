@@ -5,3 +5,10 @@ export interface ToastData {
 }
 
 export type ToastType = 'success' | 'info' | 'warning' | 'error';
+
+export const TOAST_ICONS: Record<ToastType, string> = {
+    success: 'check',
+    info: 'info',
+    warning: 'warning',
+    error: 'error',
+};
