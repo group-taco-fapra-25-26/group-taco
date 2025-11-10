@@ -14,7 +14,6 @@ import { UploadComponent } from '../../upload/upload.component';
 })
 export class ProcessNetComponent {
     readonly clearAll = output<void>();
-    readonly fileContent = output<string>();
     private _tabStateService = inject(TabStateService);
 
     constructor() {

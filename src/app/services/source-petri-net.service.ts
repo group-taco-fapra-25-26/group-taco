@@ -1,4 +1,4 @@
-import { Injectable, OnDestroy } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { Diagram } from '../classes/diagram/diagram';
 
@@ -12,7 +12,7 @@ import { Diagram } from '../classes/diagram/diagram';
  * Other services can subscribe to the sourceNet$ observable to get updates when the source net changes.
  * The other services can then use the source net to generate other artifacts, like the reachability graph.
  */
-export class SourcePetriNetService implements OnDestroy {
+export class SourcePetriNetService {
     private readonly _sourceNet$ = new BehaviorSubject<Diagram | null>(null);
 
     /**
@@ -20,10 +20,6 @@ export class SourcePetriNetService implements OnDestroy {
      * Can be subscribed to fetch updates when the source net changes.
      */
     public readonly sourceNet$: Observable<Diagram | null> = this._sourceNet$.asObservable();
-
-    ngOnDestroy(): void {
-        this._sourceNet$.complete();
-    }
 
     /**
      * Sets the current source petri net.

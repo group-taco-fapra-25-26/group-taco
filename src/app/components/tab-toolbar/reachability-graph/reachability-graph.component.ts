@@ -34,7 +34,7 @@ export class ReachabilityGraphComponent {
             const currentTab = this._tabStateService.currentTab();
             if (currentTab === Tab.REACHABILITY_GRAPH) {
                 //TODO: call some method that calculates the reachability graph automatically when switching to the tab
-                // by using the _reachabilityGraphService
+                // by using a reachabilityGraphService or something similar
                 console.log('ReachabilityGraphComponent: Switched to Reachability Graph tab');
             }
         });

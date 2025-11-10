@@ -18,7 +18,6 @@ import { UploadComponent } from '../../upload/upload.component';
 })
 export class PlayComponent {
     readonly clearAll = output<void>();
-    readonly fileContent = output<string>();
     private _tabStateService = inject(TabStateService);
     private _sourceNetService = inject(SourcePetriNetService);
     private _displayService = inject(DisplayService);

@@ -50,8 +50,8 @@ The ability to show different graphs is achieved by making each tab component re
 - **Scenario 2: "Reachability Graph" Tab Becomes Active**
     - The `effect()` inside `ReachabilityGraphComponent` triggers.
     - It checks if its tab is active (`this._tabStateService.currentTab() === Tab.REACHABILITY_GRAPH`).
-    - If `true`, it calls its specific calculation service: `ReachabilityGraphService.generateAndDisplay()`.
-    - This service internally gets the source net, computes the new graph, and then calls `DisplayService.display(computedGraph)` with the _result_.
+    - If `true`, it should call the specific calculation service
+    - **Note:** The functionality to compute and display the reachability graph (`ReachabilityGraphService.generateAndDisplay()`) is planned for future implementation.
 
 ### Summary
 
