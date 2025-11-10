@@ -14,13 +14,13 @@ export class PetriNetLoaderService {
     private _parser = inject(ParserService);
     private _displayService = inject(DisplayService);
     private _http = inject(HttpClient);
-    private _sourcePetrinetService = inject(SourcePetriNetService);
+    private _sourcePetriNetService = inject(SourcePetriNetService);
 
     /**
-     * Verarbeitet eine hochgeladene Datei (File-Objekt).
-     * Liest, parst und lädt das Netz in den DisplayService.
+     * Processes an uploaded file (File object).
+     * Reads, parses and loads the net into the DisplayService.
      *
-     * @param file Die vom Input-Feld kommende Datei
+     * @param file The file coming from the input field
      */
     public loadFile(file: File): void {
         this._fileReader
@@ -30,25 +30,25 @@ export class PetriNetLoaderService {
                 if (content) {
                     this.parseAndDisplay(content);
                 } else {
-                    //TODO: call the toaster service after it is implemented
-                    console.error('Datei konnte nicht gelesen werden oder ist leer.');
+                    // TODO: call the toaster service after it is implemented
+                    console.error('File could not be read or is empty.');
                 }
             });
     }
 
     /**
-     * Verarbeitet eine Datei von einer URL (z.B. von deinen Beispielen).
-     * Lädt, parst und lädt das Netz in den DisplayService.
+     * Processes a file from a URL
+     * Fetches, parses and loads the net into the DisplayService.
      *
-     * @param url Die URL zur Beispieldatei
+     * @param url The URL to the file
      */
     public loadFileFromUrl(url: string): void {
         this._http
             .get(url, { responseType: 'text' })
             .pipe(
                 catchError((err) => {
-                    //TODo: call the toaster service after it is implemented
-                    console.error('Error while fetching file from link', url, err);
+                    // TODO: call the toaster service after it is implemented
+                    console.error('Error while fetching file from URL', url, err);
                     return of(undefined);
                 }),
                 take(1),
@@ -57,30 +57,30 @@ export class PetriNetLoaderService {
                 if (content) {
                     this.parseAndDisplay(content);
                 } else {
-                    //TODO: call the toaster service after it is implemented
-                    console.error('Kein Inhalt von URL erhalten.', url);
+                    // TODO: call the toaster service after it is implemented
+                    console.error('No content received from URL.', url);
                 }
             });
     }
 
     /**
-     * Die zentrale Parsing- und Update-Logik.
+     * Central parsing and update logic.
      */
     private parseAndDisplay(content: string): void {
         try {
             const parsedNet = this._parser.parse(content);
 
             if (parsedNet) {
-                this._sourcePetrinetService.setSourceNet(parsedNet);
+                this._sourcePetriNetService.setSourceNet(parsedNet);
                 this._displayService.display(parsedNet);
-                console.log('PetriNetLoaderService: Netz erfolgreich geladen.');
+                console.log('PetriNetLoaderService: Petri net loaded successfully.');
             } else {
-                //TODO: call the toaster service after it is implemented
-                console.warn('Parser-Fehler: Datei konnte nicht geparsed werden.');
+                // TODO: call the toaster service after it is implemented
+                console.warn('Parser error: file could not be parsed.');
             }
         } catch (error) {
-            //TODO: call the toaster service after it is implemented
-            console.error('Schwerer Fehler beim Parsen:', error);
+            // TODO: call the toaster service after it is implemented
+            console.error('Critical error while parsing:', error);
         }
     }
 }

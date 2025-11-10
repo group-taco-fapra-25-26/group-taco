@@ -1,6 +1,8 @@
-import { Component, output } from '@angular/core';
+import { Component, effect, inject, output } from '@angular/core';
 import { ProcessNetDisplayComponent } from './process-net-display/process-net-display.component';
 import { ClearNetButtonComponent } from '../../clear-net-button/clear-net-button.component';
+import { Tab } from '../../../classes/tabs';
+import { TabStateService } from '../../../services/tab-state.service';
 
 @Component({
     selector: 'app-process-net',
@@ -12,6 +14,11 @@ import { ClearNetButtonComponent } from '../../clear-net-button/clear-net-button
 export class ProcessNetComponent {
     readonly clearAll = output<void>();
     readonly fileContent = output<string>();
+    private _tabStateService = inject(TabStateService);
+
+    constructor() {
+        this.initializeTabEffect();
+    }
 
     public onNetCleared() {
         console.log('ProcessNetComponent: Net cleared from button');
@@ -20,5 +27,14 @@ export class ProcessNetComponent {
     public onClearAll() {
         this.clearAll.emit();
         console.log('ProcessNetComponent: Clear all event emitted');
+    }
+
+    private initializeTabEffect() {
+        effect(() => {
+            const currentTab = this._tabStateService.currentTab();
+            if (currentTab === Tab.PROCESS_NET) {
+                console.log('ProcessNetComponent: Switched to Process Net tab');
+            }
+        });
     }
 }

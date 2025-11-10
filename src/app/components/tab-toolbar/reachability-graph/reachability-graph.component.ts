@@ -1,6 +1,9 @@
-import { Component, output } from '@angular/core';
+import { Component, effect, inject, output } from '@angular/core';
 import { DisplayComponent } from '../../display/display.component';
 import { ClearNetButtonComponent } from '../../clear-net-button/clear-net-button.component';
+import { TabStateService } from '../../../services/tab-state.service';
+import { Tab } from '../../../classes/tabs';
+import { DisplayService } from '../../../services/display.service';
 
 @Component({
     selector: 'app-reachability-graph',
@@ -11,7 +14,12 @@ import { ClearNetButtonComponent } from '../../clear-net-button/clear-net-button
 })
 export class ReachabilityGraphComponent {
     readonly clearAll = output<void>();
-    readonly fileContent = output<string>();
+    private _tabStateService = inject(TabStateService);
+    private _displayService = inject(DisplayService);
+
+    constructor() {
+        this.initializeTabEffect();
+    }
 
     public onNetCleared() {
         console.log('ReachabilityGraphComponent: Net cleared from button');
@@ -20,5 +28,17 @@ export class ReachabilityGraphComponent {
     public onClearAll() {
         this.clearAll.emit();
         console.log('ReachabilityGraphComponent: Clear all event emitted');
+    }
+
+    private initializeTabEffect() {
+        effect(() => {
+            const currentTab = this._tabStateService.currentTab();
+            if (currentTab === Tab.REACHABILITY_GRAPH) {
+                //TODO: call some method that calculates the reachability graph automatically when switching to the tab
+                // by using the _reachabilityGraphService
+                console.log('ReachabilityGraphComponent: Switched to Reachability Graph tab');
+                this._displayService.clear();
+            }
+        });
     }
 }
