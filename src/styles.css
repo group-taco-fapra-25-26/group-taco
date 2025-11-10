@@ -30,10 +30,18 @@ body {
     background-color: #e6f7e6 !important;
     border-left-color: #65c368;
 
-    .toast-icon { color: #388e3c; }
-    .heading { color: #388e3c; }
-    .message { color: #388e3c; }
-    .close-button { color: #388e3c; }
+    .toast-icon {
+        color: #388e3c;
+    }
+    .heading {
+        color: #388e3c;
+    }
+    .message {
+        color: #388e3c;
+    }
+    .close-button {
+        color: #388e3c;
+    }
 }
 
 /* --- Info (Blau) --- */
@@ -41,10 +49,18 @@ body {
     background-color: #e8eaf6 !important;
     border-left-color: #5b8de3;
 
-    .toast-icon { color: #1976d2; }
-    .heading { color: #1976d2; }
-    .message { color: #1976d2; }
-    .close-button { color: #1976d2; }
+    .toast-icon {
+        color: #1976d2;
+    }
+    .heading {
+        color: #1976d2;
+    }
+    .message {
+        color: #1976d2;
+    }
+    .close-button {
+        color: #1976d2;
+    }
 }
 
 /* --- Warning (Orange) --- */
@@ -52,10 +68,18 @@ body {
     background-color: #fff8e1 !important;
     border-left-color: #f4a94f;
 
-    .toast-icon { color: #f57c00; }
-    .heading { color: #f57c00; }
-    .message { color: #f57c00; }
-    .close-button { color: #f57c00; }
+    .toast-icon {
+        color: #f57c00;
+    }
+    .heading {
+        color: #f57c00;
+    }
+    .message {
+        color: #f57c00;
+    }
+    .close-button {
+        color: #f57c00;
+    }
 }
 
 /* --- Error (Rot) --- */
@@ -63,8 +87,16 @@ body {
     background-color: #ffebee !important;
     border-left-color: #e95e5e;
 
-    .toast-icon { color: #d32f2f; }
-    .heading { color: #d32f2f; }
-    .message { color: #d32f2f; }
-    .close-button { color: #d32f2f; }
+    .toast-icon {
+        color: #d32f2f;
+    }
+    .heading {
+        color: #d32f2f;
+    }
+    .message {
+        color: #d32f2f;
+    }
+    .close-button {
+        color: #d32f2f;
+    }
 }
