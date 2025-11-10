@@ -3,19 +3,18 @@ import { DisplayComponent } from '../../display/display.component';
 import { ClearNetButtonComponent } from '../../clear-net-button/clear-net-button.component';
 import { TabStateService } from '../../../services/tab-state.service';
 import { Tab } from '../../../classes/tabs';
-import { DisplayService } from '../../../services/display.service';
+import { UploadComponent } from '../../upload/upload.component';
 
 @Component({
     selector: 'app-reachability-graph',
     standalone: true,
-    imports: [DisplayComponent, ClearNetButtonComponent],
+    imports: [DisplayComponent, ClearNetButtonComponent, UploadComponent],
     templateUrl: './reachability-graph.component.html',
     styleUrl: './reachability-graph.component.css',
 })
 export class ReachabilityGraphComponent {
     readonly clearAll = output<void>();
     private _tabStateService = inject(TabStateService);
-    private _displayService = inject(DisplayService);
 
     constructor() {
         this.initializeTabEffect();
@@ -37,7 +36,6 @@ export class ReachabilityGraphComponent {
                 //TODO: call some method that calculates the reachability graph automatically when switching to the tab
                 // by using the _reachabilityGraphService
                 console.log('ReachabilityGraphComponent: Switched to Reachability Graph tab');
-                this._displayService.clear();
             }
         });
     }

@@ -1,11 +1,11 @@
-<div>
+<div class="draw-tab-toolbar-container">
+    <app-upload></app-upload>
     <app-clear-net-button
         title="Clear Play"
         (buttonCleared)="onNetCleared()"
         (clearAll)="onClearAll()"></app-clear-net-button>
 </div>
-    <app-display></app-display>
-    <br />
-    <app-firing-table [firingEntries]="firingEntries()"></app-firing-table>
-    <br />
-
+<app-display></app-display>
+<br />
+<app-firing-table [firingEntries]="firingEntries()"></app-firing-table>
+<br />

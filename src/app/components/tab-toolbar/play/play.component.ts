@@ -7,11 +7,12 @@ import { FiringTableComponent } from './firing-table/firing-table.component';
 import { Tab } from '../../../classes/tabs';
 import { TabStateService } from '../../../services/tab-state.service';
 import { SourcePetriNetService } from '../../../services/source-petri-net.service';
+import { UploadComponent } from '../../upload/upload.component';
 
 @Component({
     selector: 'app-play',
     standalone: true,
-    imports: [DisplayComponent, ClearNetButtonComponent, FiringTableComponent],
+    imports: [DisplayComponent, ClearNetButtonComponent, FiringTableComponent, UploadComponent],
     templateUrl: './play.component.html',
     styleUrl: './play.component.css',
 })

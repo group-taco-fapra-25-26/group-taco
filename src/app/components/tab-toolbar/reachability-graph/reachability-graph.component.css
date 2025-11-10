@@ -1,0 +1,4 @@
+.draw-tab-toolbar-container {
+    display: flex;
+    justify-content: space-between;
+}
