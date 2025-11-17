@@ -8,11 +8,12 @@ import { Tab } from '../../../classes/tabs';
 import { TabStateService } from '../../../services/tab-state.service';
 import { SourcePetriNetService } from '../../../services/source-petri-net.service';
 import { UploadComponent } from '../upload/upload.component';
+import { SaveComponent } from '../save/save.component';
 
 @Component({
     selector: 'app-play',
     standalone: true,
-    imports: [DisplayComponent, ClearNetButtonComponent, FiringTableComponent, UploadComponent],
+    imports: [DisplayComponent, ClearNetButtonComponent, FiringTableComponent, UploadComponent, SaveComponent],
     templateUrl: './play.component.html',
     styleUrl: './play.component.css',
 })
