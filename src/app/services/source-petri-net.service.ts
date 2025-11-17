@@ -29,12 +29,50 @@ export class SourcePetriNetService {
      */
     public readonly sourceText$: Observable<string> = this._sourceText$.asObservable();
 
+    private readonly _isDirty$ = new BehaviorSubject<boolean>(false);
+
     /**
-     * Updates the source text of the Petri net and emits the new value to subscribers.
-     * @param newSource - The updated source text. Can be an empty string.
+     * Observable that emits whether the current source Petri net has unsaved changes.
      */
-    public setSourceText(newSource: string) {
-        this._sourceText$.next(newSource);
+    public readonly isDirty$: Observable<boolean> = this._isDirty$.asObservable();
+
+    /**
+     * Loads a new petri net as the current source net.
+     * Resets the dirty flag to false (no unsaved changes).
+     * @param net
+     *         the new petri net diagram
+     * @param rawText
+     *        the raw text representation of the petri net
+     */
+    public loadNewNet(net: Diagram, rawText: string): void {
+        this._sourceNet$.next(net);
+        this._sourceText$.next(rawText);
+        this._isDirty$.next(false);
+    }
+
+    /**
+     * Updates the currently stored source petri net with the modified net.
+     * Marks the net as dirty (having unsaved changes).
+     * Should be called whenever the user makes changes to the petri net.
+     * @param modifiedNet
+     *          the modified petri net diagram
+     */
+    public updateEditedNet(modifiedNet: Diagram): void {
+        this._sourceNet$.next(modifiedNet);
+        this._isDirty$.next(true);
+    }
+
+    /**
+     * Sets the current source text and petri net as clean (no unsaved changes).
+     * @param newText
+     *         the new source text
+     * @param savedDiagram
+     *         the saved petri net diagram
+     */
+    public setClean(newText: string, savedDiagram: Diagram): void {
+        this._sourceText$.next(newText);
+        this._sourceNet$.next(savedDiagram);
+        this._isDirty$.next(false);
     }
 
     /**
@@ -47,18 +85,17 @@ export class SourcePetriNetService {
     }
 
     /**
-     * Sets the current source petri net.
-     * @param net The new source petri net.
-     */
-    public setSourceNet(net: Diagram | null): void {
-        this._sourceNet$.next(net);
-    }
-
-    /**
      * Gets the current source petri net.
      * @returns The current source petri net.
      */
     public getCurrentSourceNet(): Diagram | null {
         return this._sourceNet$.getValue();
+    }
+
+    /**
+     * @returns true when the current source petri net has unsaved changes, false otherwise.
+     */
+    public isCurrentNetDirty(): boolean {
+        return this._isDirty$.getValue();
     }
 }

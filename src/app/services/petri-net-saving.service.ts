@@ -1,6 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { SourcePetriNetService } from './source-petri-net.service';
 import { ToasterNotificationService } from './toaster-notification.service';
+import { Diagram } from '../classes/diagram/diagram';
 
 @Injectable({ providedIn: 'root' })
 export class PetriNetSavingService {
@@ -14,7 +15,20 @@ export class PetriNetSavingService {
      * If no Petri net is present, a warning notification is shown.
      */
     public savePetriNet(): void {
-        const textContent = this._sourcePetriNetService.getSourceText();
+        const isDirty = this._sourcePetriNetService.isCurrentNetDirty();
+        let textContent: string;
+        let diagramToSave: Diagram | null;
+
+        if (isDirty) {
+            diagramToSave = this._sourcePetriNetService.getCurrentSourceNet();
+            if (!diagramToSave) return;
+
+            //TODO: convert diagram to text by implementing a serializer
+            textContent = '';
+            this._sourcePetriNetService.setClean(textContent, diagramToSave);
+        } else {
+            textContent = this._sourcePetriNetService.getSourceText();
+        }
 
         if (!textContent) {
             this._notificationService.showWarning(

@@ -80,8 +80,7 @@ export class PetriNetLoaderService {
             const parsedNet = this._parser.parse(content);
 
             if (parsedNet) {
-                this._sourcePetriNetService.setSourceNet(parsedNet);
-                this._sourcePetriNetService.setSourceText(content);
+                this._sourcePetriNetService.loadNewNet(parsedNet, content);
                 this._displayService.display(parsedNet);
                 this._toasterService.showSuccess('Erfolg', 'Petri-Netz wurde erfolgreich geladen.');
             } else {
