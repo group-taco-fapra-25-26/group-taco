@@ -1,10 +1,11 @@
 import { Component, inject } from '@angular/core';
-import { PetriNetLoaderService } from '../../services/petri-net-loader.service';
+import { PetriNetLoaderService } from '../../../services/petri-net-loader.service';
 import { MatIcon } from '@angular/material/icon';
+import { MatButton } from '@angular/material/button';
 
 @Component({
     selector: 'app-upload',
-    imports: [MatIcon],
+    imports: [MatIcon, MatButton],
     templateUrl: './upload.component.html',
     styleUrl: './upload.component.css',
 })

@@ -22,10 +22,28 @@ export class SourcePetriNetService {
     public readonly sourceNet$: Observable<Diagram | null> = this._sourceNet$.asObservable();
 
     private readonly _sourceText$ = new BehaviorSubject<string>('');
+
+    /**
+     * Observable that emits the current source text.
+     * Can be subscribed to fetch updates when the source text changes.
+     */
     public readonly sourceText$: Observable<string> = this._sourceText$.asObservable();
 
+    /**
+     * Updates the source text of the Petri net and emits the new value to subscribers.
+     * @param newSource - The updated source text. Can be an empty string.
+     */
     public setSourceText(newSource: string) {
         this._sourceText$.next(newSource);
+    }
+
+    /**
+     * Returns the currently stored source text of the Petri net.
+     * Reads the value synchronously from the internal BehaviorSubject.
+     * @returns The current source text as a string.
+     */
+    public getSourceText() {
+        return this._sourceText$.getValue();
     }
 
     /**

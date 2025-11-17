@@ -10,6 +10,13 @@ body {
     font-family: 'Courier New', sans-serif;
 }
 
+.tab-toolbar-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 0;
+}
+
 /* --- Global Toast-Style --- */
 .mat-mdc-snack-bar-container.custom-toast-container .mat-mdc-snackbar-surface {
     padding: 0 !important;

@@ -7,7 +7,7 @@ import { FiringTableComponent } from './firing-table/firing-table.component';
 import { Tab } from '../../../classes/tabs';
 import { TabStateService } from '../../../services/tab-state.service';
 import { SourcePetriNetService } from '../../../services/source-petri-net.service';
-import { UploadComponent } from '../../upload/upload.component';
+import { UploadComponent } from '../upload/upload.component';
 
 @Component({
     selector: 'app-play',

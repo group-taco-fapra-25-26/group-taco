@@ -3,7 +3,7 @@ import { ProcessNetDisplayComponent } from './process-net-display/process-net-di
 import { ClearNetButtonComponent } from '../../clear-net-button/clear-net-button.component';
 import { Tab } from '../../../classes/tabs';
 import { TabStateService } from '../../../services/tab-state.service';
-import { UploadComponent } from '../../upload/upload.component';
+import { UploadComponent } from '../upload/upload.component';
 
 @Component({
     selector: 'app-process-net',

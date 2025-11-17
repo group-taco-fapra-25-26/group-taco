@@ -2,15 +2,16 @@ import { Component, effect, inject, output } from '@angular/core';
 import { DisplayComponent } from '../../display/display.component';
 import { DisplayService } from '../../../services/display.service';
 import { ClearNetButtonComponent } from '../../clear-net-button/clear-net-button.component';
-import { UploadComponent } from '../../upload/upload.component';
+import { UploadComponent } from '../upload/upload.component';
 import { Tab } from '../../../classes/tabs';
 import { TabStateService } from '../../../services/tab-state.service';
 import { SourcePetriNetService } from '../../../services/source-petri-net.service';
+import { SaveComponent } from '../save/save.component';
 
 @Component({
     selector: 'app-draw',
     standalone: true,
-    imports: [DisplayComponent, ClearNetButtonComponent, UploadComponent],
+    imports: [DisplayComponent, ClearNetButtonComponent, UploadComponent, SaveComponent],
     templateUrl: './draw.component.html',
     styleUrl: './draw.component.css',
 })
