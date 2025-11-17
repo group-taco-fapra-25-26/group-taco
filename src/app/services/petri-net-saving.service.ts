@@ -2,11 +2,13 @@ import { inject, Injectable } from '@angular/core';
 import { SourcePetriNetService } from './source-petri-net.service';
 import { ToasterNotificationService } from './toaster-notification.service';
 import { Diagram } from '../classes/diagram/diagram';
+import { SerializationService } from './serialization.service';
 
 @Injectable({ providedIn: 'root' })
 export class PetriNetSavingService {
     private _sourcePetriNetService = inject(SourcePetriNetService);
     private _notificationService = inject(ToasterNotificationService);
+    private _serializationService = inject(SerializationService);
 
     private readonly FILE_NAME = 'petri-net.json';
 
@@ -23,8 +25,7 @@ export class PetriNetSavingService {
             diagramToSave = this._sourcePetriNetService.getCurrentSourceNet();
             if (!diagramToSave) return;
 
-            //TODO: convert diagram to text by implementing a serializer
-            textContent = '';
+            textContent = this._serializationService.serialize(diagramToSave);
             this._sourcePetriNetService.setClean(textContent, diagramToSave);
         } else {
             textContent = this._sourcePetriNetService.getSourceText();
