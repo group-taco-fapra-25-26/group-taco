@@ -5,5 +5,6 @@ export interface FiringEntry {
     id: number;
     firingSequence: string;
     transitionCount: number;
-    endMarking: string;
+    startMarking: Record<string, number>;
+    endMarking: Record<string, number>;
 }

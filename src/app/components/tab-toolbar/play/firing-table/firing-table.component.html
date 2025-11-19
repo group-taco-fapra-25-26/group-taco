@@ -3,6 +3,7 @@
         <tr>
             <th>Firing Sequence</th>
             <th>Transition Count</th>
+            <th>Start Marking</th>
             <th>End Marking</th>
         </tr>
     </thead>
@@ -11,7 +12,8 @@
             <tr>
                 <td>{{ entry.firingSequence }}</td>
                 <td>{{ entry.transitionCount }}</td>
-                <td>{{ entry.endMarking }}</td>
+                <td>{{ formatMarking(entry.startMarking) }}</td>
+                <td>{{ formatMarking(entry.endMarking) }}</td>
             </tr>
         }
     </tbody>

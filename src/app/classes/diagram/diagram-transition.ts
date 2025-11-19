@@ -37,11 +37,11 @@ export class DiagramTransition extends DiagramNode {
         return this._label;
     }
 
-    private isActivated(): boolean {
+    public isActivated(): boolean {
         return this._inputPlaces.every((place, index) => place.tokenCount >= this._inputArcs[index].weight);
     }
 
-    private fire(): void {
+    public fire(): void {
         this._inputArcs.forEach((arc, i) => {
             const place = this._inputPlaces[i];
             place.tokens = place.tokenCount - arc.weight;
@@ -50,11 +50,5 @@ export class DiagramTransition extends DiagramNode {
             const place = this._outputPlaces[i];
             place.tokens = place.tokenCount + arc.weight;
         });
-    }
-
-    public processClick(): boolean {
-        const isActivated = this.isActivated();
-        if (isActivated) this.fire();
-        return isActivated;
     }
 }

@@ -10,4 +10,10 @@ import { FiringEntry } from '../../../../classes/firing-entry';
 })
 export class FiringTableComponent {
     firingEntries = input<FiringEntry[]>();
+
+    formatMarking(marking: Record<string, number>): string {
+        return Object.entries(marking)
+            .map(([key, value]) => `${key}:${value}`)
+            .join(', ');
+    }
 }
