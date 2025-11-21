@@ -1,5 +1,16 @@
 <!-- Render places as circles -->
 @if (isPlace()) {
+    <!-- Selection highlight -->
+    <svg:circle
+        xmlns:svg="http://www.w3.org/2000/svg"
+        [attr.cx]="circleX()"
+        [attr.cy]="circleY()"
+        [attr.r]="RADIUS + 6"
+        fill="none"
+        [attr.stroke]="selectionStrokeColor()"
+        stroke-width="4"
+        pointer-events="none" />
+
     <svg:circle
         xmlns:svg="http://www.w3.org/2000/svg"
         [attr.cx]="circleX()"
@@ -10,10 +21,45 @@
         stroke-width="2"
         (mousedown)="mouseDown($event)"
         (mouseup)="mouseUp($event)" />
+
+    <!-- Tokens visualization inside place -->
+    @if (!showTokenNumber()) {
+        @for (token of tokenPositions(); track token.x + '-' + token.y) {
+            <svg:circle
+                xmlns:svg="http://www.w3.org/2000/svg"
+                [attr.cx]="token.x"
+                [attr.cy]="token.y"
+                r="5"
+                fill="black" />
+        }
+    } @else {
+        <svg:text
+            xmlns:svg="http://www.w3.org/2000/svg"
+            [attr.x]="circleX()"
+            [attr.y]="circleY()"
+            text-anchor="middle"
+            dominant-baseline="central"
+            class="token-count">
+            {{ tokenCount() }}
+        </svg:text>
+    }
 }
 
 <!-- Render transitions as rectangles -->
 @if (isTransition()) {
+    <!-- Selection highlight -->
+    <svg:rect
+        xmlns:svg="http://www.w3.org/2000/svg"
+        [attr.x]="rectX() - 6"
+        [attr.y]="rectY() - 6"
+        [attr.width]="RECT_WIDTH + 12"
+        [attr.height]="RECT_HEIGHT + 12"
+        fill="none"
+        [attr.stroke]="selectionStrokeColor()"
+        stroke-width="4"
+        rx="4"
+        pointer-events="none" />
+
     <svg:rect
         xmlns:svg="http://www.w3.org/2000/svg"
         [attr.x]="rectX()"

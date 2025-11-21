@@ -12,10 +12,10 @@ export class DiagramTransition extends DiagramNode {
     constructor(
         id: string,
         label: string,
-        inputPlaces: DiagramPlace[],
-        outputPlaces: DiagramPlace[],
-        inputArcs: DiagramArc[],
-        outputArcs: DiagramArc[],
+        inputPlaces: DiagramPlace[] = [],
+        outputPlaces: DiagramPlace[] = [],
+        inputArcs: DiagramArc[] = [],
+        outputArcs: DiagramArc[] = [],
     ) {
         super(id);
         this._label = label || id;
