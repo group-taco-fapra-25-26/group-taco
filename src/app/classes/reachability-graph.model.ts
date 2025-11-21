@@ -10,6 +10,8 @@ class StateNode implements DisplayableNode {
     id: string;
     x = 0;
     y = 0;
+    //stateNodeMarking als Record, wie Marking im Petrinetz, aber definitiv aufsteigend sortiert nach Places
+    stateNodeMarking?:Record<string,number>;
 
     get shape(): SHAPE {
         return SHAPE.CIRCLE;
@@ -27,6 +29,14 @@ class StateNode implements DisplayableNode {
         this.x = x;
         this.y = y;
     }
+
+    //function for determining stateNodeMarking; extract and sort tokens for each place in ascending order sorted by Place number
+    determineStateNodeMarking(): void {
+        
+
+    }
+
+
 }
 
 /**
