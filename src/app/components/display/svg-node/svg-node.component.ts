@@ -1,7 +1,9 @@
-import { Component, computed, input, output, signal, TemplateRef, untracked, viewChild } from '@angular/core';
+import { Component, computed, inject, input, output, signal, TemplateRef, untracked, viewChild } from '@angular/core';
 import { Coords } from '../../../classes/json-petri-net';
 import { SHAPE } from '../../../classes/diagram/diagram-node';
 import { DisplayableNode } from '../../../classes/displayable-graph.interface';
+import { PlayService } from '../../../services/play.service';
+import { DiagramTransition } from '../../../classes/diagram/diagram-transition';
 
 @Component({
     selector: 'g[appSvgNode]',
@@ -15,16 +17,49 @@ export class SvgNodeComponent {
     readonly RECT_HEIGHT = 30;
 
     readonly diagramNode = input<DisplayableNode>();
+    private _playService = inject(PlayService);
+
+    readonly isTransitionAndActive = computed(() => {
+        const node = this.diagramNode();
+        if (node instanceof DiagramTransition) {
+            return this._playService.isTransitionAndActivated(node);
+        }
+        return false;
+    });
+
     // Mark if this node is currently selected (for connection creation)
     readonly selected = input<boolean>(false);
 
-    private _playService = inject(PlayService);
     clickNode = output<DisplayableNode>();
 
     readonly fillColor = signal('white');
 
     readonly transitionFillColor = computed(() => {
+        if (this.isTransitionAndActive()) {
+            return 'dimgray';
+        }
         return this.fillColor() === 'lightgray' ? 'gray' : 'black';
+    });
+
+    readonly transitionStrokeColor = computed(() => {
+        if (this.isTransitionAndActive()) {
+            return 'darkgreen';
+        }
+        return 'black';
+    });
+
+    readonly transitionStrokeWidth = computed(() => {
+        if (this.isTransitionAndActive()) {
+            return 4;
+        }
+        return 2;
+    });
+
+    readonly transitionCornerRadius = computed(() => {
+        if (this.isTransitionAndActive()) {
+            return 5;
+        }
+        return 0;
     });
 
     readonly placeFillColor = computed(() => {
@@ -46,7 +81,7 @@ export class SvgNodeComponent {
     });
 
     readonly tokenCount = computed(() => {
-        return this.diagramNode()?.tokenCount || 0;
+        return this.diagramNode()?.tokenCount() || 0;
     });
 
     readonly circleX = computed(() => {
