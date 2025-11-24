@@ -5,7 +5,7 @@ export abstract class DiagramNode implements DisplayableNode {
     private readonly _id: string;
     private _x: number;
     private _y: number;
-    private _svgElement: SVGElement | undefined;
+    private static readonly _zeroTokens = signal(0);
 
     protected constructor(id: string) {
         this._id = id;
@@ -35,37 +35,12 @@ export abstract class DiagramNode implements DisplayableNode {
 
     abstract get shape(): SHAPE.CIRCLE | SHAPE.RECT;
 
-    // eslint-disable-next-line @typescript-eslint/class-literal-property-style
     get tokenCount(): Signal<number> {
-        return signal(0);
+        return DiagramNode._zeroTokens;
     }
 
     get displayLabel(): string {
         return this._id;
-    }
-
-    public registerSvg(svg: SVGElement) {
-        this._svgElement = svg;
-        this._svgElement.onmousedown = (event) => {
-            this.processMouseDown(event);
-        };
-        this._svgElement.onmouseup = (event) => {
-            this.processMouseUp(event);
-        };
-    }
-
-    private processMouseDown(event: MouseEvent) {
-        if (this._svgElement === undefined) {
-            return;
-        }
-        this._svgElement.setAttribute('fill', 'red');
-    }
-
-    private processMouseUp(event: MouseEvent) {
-        if (this._svgElement === undefined) {
-            return;
-        }
-        this._svgElement.setAttribute('fill', 'black');
     }
 }
 
