@@ -55,7 +55,7 @@ export class ProcessNetDisplayComponent extends DisplayComponent {
         const elementType: BasicDragData['elementType'] = node.shape === SHAPE.CIRCLE ? 'place' : 'transition';
         const elementId = node.id;
         const elementLabel = node.displayLabel;
-        const elementTokens = elementType === 'place' ? node.tokenCount : undefined;
+        const elementTokens = elementType === 'place' ? node.tokenCount() : undefined;
 
         // Store the data for later use in drag
         const dragData: BasicDragData = {

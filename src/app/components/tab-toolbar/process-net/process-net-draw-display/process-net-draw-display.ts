@@ -1,14 +1,14 @@
-import { Component, signal, OnInit, OnDestroy, ElementRef, inject, ChangeDetectorRef, computed } from '@angular/core';
+import { ChangeDetectorRef, Component, computed, ElementRef, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { SvgNodeComponent } from '../../../display/svg-node/svg-node.component';
 import { DiagramNode } from '../../../../classes/diagram/diagram-node';
 import { DiagramPlace } from '../../../../classes/diagram/diagram-place';
 import { DiagramTransition } from '../../../../classes/diagram/diagram-transition';
 import { DisplayService } from '../../../../services/display.service';
 import {
-    validateProcessNet,
     type PetriNet,
-    type ProcessElement,
     type ProcessConnection,
+    type ProcessElement,
+    validateProcessNet,
 } from '../../../../services/validation.service';
 import { ToasterNotificationService } from '../../../../services/toaster-notification.service';
 
@@ -403,7 +403,7 @@ export class ProcessNetDrawDisplayComponent implements OnInit, OnDestroy {
                     // Recreate node instance to trigger SvgNodeComponent re-render
                     let newNode: DiagramNode;
                     if (el.node instanceof DiagramPlace) {
-                        const tokens = (el.node as DiagramPlace).tokenCount ?? 0;
+                        const tokens = (el.node as DiagramPlace).tokenCount() ?? 0;
                         const originalLabel = el.node.label ?? el.node.displayLabel;
                         newNode = new DiagramPlace(el.node.id, tokens, originalLabel);
                     } else if (el.node instanceof DiagramTransition) {

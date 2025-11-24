@@ -4,11 +4,14 @@ import { ToasterNotificationService } from './toaster-notification.service';
 import { DiagramTransition } from '../classes/diagram/diagram-transition';
 import { Diagram } from '../classes/diagram/diagram';
 import { SourcePetriNetService } from './source-petri-net.service';
+import { TabStateService } from './tab-state.service';
+import { Tab } from '../classes/tabs';
 
 @Injectable({ providedIn: 'root' })
 export class PlayService {
     private _notificationService = inject(ToasterNotificationService);
     private _sourceNetService = inject(SourcePetriNetService);
+    private _tabStateService = inject(TabStateService);
 
     private _startMarking: Record<string, number> = {};
     private _currentMarking = signal<Record<string, number>>(this._startMarking);
@@ -46,6 +49,10 @@ export class PlayService {
                 'Transition not activated',
                 `The transition ${node.label} is not activated and cannot be fired.`,
             );
+    }
+
+    isTransitionAndActivated(node: DiagramTransition): boolean {
+        return this._tabStateService.currentTab() === Tab.PLAY && node.isActivated();
     }
 
     /**

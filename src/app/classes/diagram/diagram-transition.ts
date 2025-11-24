@@ -38,17 +38,17 @@ export class DiagramTransition extends DiagramNode {
     }
 
     public isActivated(): boolean {
-        return this._inputPlaces.every((place, index) => place.tokenCount >= this._inputArcs[index].weight);
+        return this._inputPlaces.every((place, index) => place.tokenCount() >= this._inputArcs[index].weight);
     }
 
     public fire(): void {
         this._inputArcs.forEach((arc, i) => {
             const place = this._inputPlaces[i];
-            place.tokens = place.tokenCount - arc.weight;
+            place.tokens = place.tokenCount() - arc.weight;
         });
         this._outputArcs.forEach((arc, i) => {
             const place = this._outputPlaces[i];
-            place.tokens = place.tokenCount + arc.weight;
+            place.tokens = place.tokenCount() + arc.weight;
         });
     }
 }

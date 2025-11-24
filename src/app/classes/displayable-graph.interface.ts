@@ -1,5 +1,6 @@
 import { SHAPE } from './diagram/diagram-node';
 import { Coords } from './json-petri-net';
+import { Signal } from '@angular/core';
 
 /**
  * Contract for every node that can be displayed.
@@ -11,7 +12,7 @@ export interface DisplayableNode {
 
     readonly shape: SHAPE;
     readonly displayLabel: string;
-    readonly tokenCount: number;
+    readonly tokenCount: Signal<number>;
 }
 
 /**

@@ -1,4 +1,5 @@
 import { DisplayableNode } from '../displayable-graph.interface';
+import { signal, Signal } from '@angular/core';
 
 export abstract class DiagramNode implements DisplayableNode {
     private readonly _id: string;
@@ -35,8 +36,8 @@ export abstract class DiagramNode implements DisplayableNode {
     abstract get shape(): SHAPE.CIRCLE | SHAPE.RECT;
 
     // eslint-disable-next-line @typescript-eslint/class-literal-property-style
-    get tokenCount(): number {
-        return 0;
+    get tokenCount(): Signal<number> {
+        return signal(0);
     }
 
     get displayLabel(): string {

@@ -39,9 +39,9 @@ export class SerializationService {
             rawNet.layout = rawNet.layout ?? {};
             rawNet.layout[place.id] = { x: place.x, y: place.y };
 
-            if (place.tokenCount > 0) {
+            if (place.tokenCount() > 0) {
                 rawNet.marking = rawNet.marking ?? {};
-                rawNet.marking[place.id] = place.tokenCount;
+                rawNet.marking[place.id] = place.tokenCount();
             }
         }
     }

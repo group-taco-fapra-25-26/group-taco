@@ -67,8 +67,9 @@
         [attr.width]="RECT_WIDTH"
         [attr.height]="RECT_HEIGHT"
         [attr.fill]="transitionFillColor()"
-        stroke="black"
-        stroke-width="2"
+        [attr.stroke]="transitionStrokeColor()"
+        [attr.stroke-width]="transitionStrokeWidth()"
+        [attr.rx]="transitionCornerRadius()"
         (mousedown)="mouseDown($event)"
         (mouseup)="mouseUp($event)"
         (click)="click()" />

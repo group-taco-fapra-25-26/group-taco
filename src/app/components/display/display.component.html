@@ -5,6 +5,11 @@
     preserveAspectRatio="xMidYMid meet"
     (drop)="processDropEvent($event)"
     (dragover)="prevent($event)">
+    <defs>
+        <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill="black" />
+        </marker>
+    </defs>
     @for (edge of diagram()?.getEdges(); track edge.id) {
         <g appSvgArc [diagramArc]="edge" [nodes]="diagram()?.getNodes() || []" />
     }
