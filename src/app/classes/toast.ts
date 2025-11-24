@@ -22,28 +22,28 @@ export const TOAST_POSITIONS = {
     TOP_LEFT: {
         horizontal: 'left',
         vertical: 'top',
-    } as ToastPosition,
+    },
     TOP_CENTER: {
         horizontal: 'center',
         vertical: 'top',
-    } as ToastPosition,
+    },
     TOP_RIGHT: {
         horizontal: 'right',
         vertical: 'top',
-    } as ToastPosition,
+    },
     BOTTOM_LEFT: {
         horizontal: 'left',
         vertical: 'bottom',
-    } as ToastPosition,
+    },
     BOTTOM_CENTER: {
         horizontal: 'center',
         vertical: 'bottom',
-    } as ToastPosition,
+    },
     BOTTOM_RIGHT: {
         horizontal: 'right',
         vertical: 'bottom',
-    } as ToastPosition,
-} as const;
+    },
+} satisfies Record<string, ToastPosition>;
 
 export const DEFAULT_TOAST_POSITION: ToastPosition = TOAST_POSITIONS.TOP_RIGHT;
 

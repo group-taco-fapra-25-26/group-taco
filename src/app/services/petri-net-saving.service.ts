@@ -31,8 +31,6 @@ export class PetriNetSavingService {
             textContent = this._sourcePetriNetService.getSourceText();
         }
 
-        console.log(textContent);
-
         if (!textContent) {
             this._notificationService.showWarning(
                 'Speichern nicht möglich',
