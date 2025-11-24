@@ -30,11 +30,10 @@ class StateNode implements DisplayableNode {
         this.y = y;
     }
 
-    //function for determining stateNodeMarking; extract and sort tokens for each place in ascending order sorted by Place number
-    determineStateNodeMarking(): void {
-        
+    // //function for determining stateNodeMarking; extract and sort tokens for each place in ascending order sorted by Place number
+    // determineStateNodeMarking(): void {
 
-    }
+    // }
 
 
 }
