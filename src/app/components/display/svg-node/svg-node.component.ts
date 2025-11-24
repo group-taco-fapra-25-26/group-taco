@@ -18,7 +18,6 @@ export class SvgNodeComponent {
     // Mark if this node is currently selected (for connection creation)
     readonly selected = input<boolean>(false);
 
-    private _playService = inject(PlayService);
     clickNode = output<DisplayableNode>();
 
     readonly fillColor = signal('white');

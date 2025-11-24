@@ -1,4 +1,4 @@
-import { Component, inject, output } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { MatTabChangeEvent, MatTabsModule } from '@angular/material/tabs';
 import { MatIconModule } from '@angular/material/icon';
 import { DrawComponent } from '../tab-toolbar/draw/draw.component';
@@ -23,8 +23,6 @@ import { TabStateService } from '../../services/tab-state.service';
     styleUrl: './main-tab.component.css',
 })
 export class MainTabComponent {
-    readonly clearAll = output<void>();
-
     private _tabStateService: TabStateService = inject(TabStateService);
     private readonly _tabs: Tab[] = [Tab.DRAW, Tab.PLAY, Tab.REACHABILITY_GRAPH, Tab.PROCESS_NET];
 
@@ -32,10 +30,5 @@ export class MainTabComponent {
 
     onTabChange(event: MatTabChangeEvent) {
         this._tabStateService.switchTo(this._tabs[event.index]);
-    }
-
-    onClearAll() {
-        this.clearAll.emit();
-        console.log('MainTabComponent: Clear all event emitted');
     }
 }

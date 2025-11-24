@@ -46,9 +46,4 @@ export class AppComponent {
     public processButtonClick() {
         this.buttonClickCount.set(this.buttonClickCount() + 1);
     }
-
-    public onClearAll() {
-        this.textareaFc.setValue('');
-        console.log('AppComponent: File content field cleared');
-    }
 }
