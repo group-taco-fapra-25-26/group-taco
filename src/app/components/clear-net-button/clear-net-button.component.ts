@@ -1,7 +1,9 @@
-import { Component, input, output, inject } from '@angular/core';
-import { DisplayService } from '../../services/display.service';
+import { Component, inject, input } from '@angular/core';
 import { MatButton } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
+import { SourcePetriNetService } from '../../services/source-petri-net.service';
+import { DisplayService } from '../../services/display.service';
+import { PlayService } from '../../services/play.service';
 
 @Component({
     selector: 'app-clear-net-button',
@@ -12,15 +14,14 @@ import { MatIcon } from '@angular/material/icon';
 })
 export class ClearNetButtonComponent {
     readonly title = input<string>('Clear Net');
-    readonly buttonCleared = output<void>();
-    readonly clearAll = output<void>();
 
+    private _sourcePetriNetService = inject(SourcePetriNetService);
+    private _playService = inject(PlayService);
     private _displayService = inject(DisplayService);
 
-    public clearNet() {
+    public clearNet(): void {
+        this._sourcePetriNetService.clear();
+        this._playService.resetFiringEntries();
         this._displayService.clear();
-        this.buttonCleared.emit();
-        this.clearAll.emit();
-        console.log('Network cleared');
     }
 }

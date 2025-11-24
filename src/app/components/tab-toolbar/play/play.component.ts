@@ -1,4 +1,4 @@
-import { Component, inject, OnDestroy, OnInit, output } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { DisplayComponent } from '../../display/display.component';
 import { DisplayService } from '../../../services/display.service';
 import { PlayService } from '../../../services/play.service';
@@ -17,8 +17,6 @@ import { SaveComponent } from '../save/save.component';
     styleUrl: './play.component.css',
 })
 export class PlayComponent implements OnInit, OnDestroy {
-    readonly clearAll = output<void>();
-
     private _sub?: Subscription;
 
     private _displayService = inject(DisplayService);
@@ -26,9 +24,6 @@ export class PlayComponent implements OnInit, OnDestroy {
 
     firingEntries = this._playService.firingEntries;
 
-    /**
-     * Subscribes to loading of new diagrams to marking updates of the current diagram.
-     */
     ngOnInit(): void {
         this._sub = this._displayService.diagram$
             .pipe(
@@ -46,15 +41,5 @@ export class PlayComponent implements OnInit, OnDestroy {
 
     ngOnDestroy(): void {
         this._sub?.unsubscribe();
-    }
-
-    public onNetCleared() {
-        console.log('PlayComponent: Net cleared from button');
-    }
-
-    public onClearAll() {
-        this.clearAll.emit();
-        this._playService.resetFiringEntries();
-        console.log('PlayComponent: Clear all event emitted');
     }
 }

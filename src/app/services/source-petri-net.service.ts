@@ -98,4 +98,14 @@ export class SourcePetriNetService {
     public isCurrentNetDirty(): boolean {
         return this._isDirty$.getValue();
     }
+
+    /**
+     * Clears the currently stored source petri net and its text representation.
+     * Resets the dirty flag to false.
+     */
+    public clear(): void {
+        this._sourceNet$.next(null);
+        this._sourceText$.next('');
+        this._isDirty$.next(false);
+    }
 }

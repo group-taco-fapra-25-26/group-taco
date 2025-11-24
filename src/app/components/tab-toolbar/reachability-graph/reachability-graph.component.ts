@@ -1,9 +1,8 @@
-import { Component, effect, inject, output } from '@angular/core';
+import { Component, effect, inject } from '@angular/core';
 import { DisplayComponent } from '../../display/display.component';
 import { ClearNetButtonComponent } from '../../clear-net-button/clear-net-button.component';
 import { TabStateService } from '../../../services/tab-state.service';
 import { Tab } from '../../../classes/tabs';
-import { PlayService } from '../../../services/play.service';
 import { UploadComponent } from '../upload/upload.component';
 
 @Component({
@@ -14,22 +13,10 @@ import { UploadComponent } from '../upload/upload.component';
     styleUrl: './reachability-graph.component.css',
 })
 export class ReachabilityGraphComponent {
-    readonly clearAll = output<void>();
     private _tabStateService = inject(TabStateService);
-    private _playService = inject(PlayService);
 
     constructor() {
         this.initializeTabEffect();
-    }
-
-    public onNetCleared() {
-        console.log('ReachabilityGraphComponent: Net cleared from button');
-    }
-
-    public onClearAll() {
-        this.clearAll.emit();
-        this._playService.resetFiringEntries();
-        console.log('ReachabilityGraphComponent: Clear all event emitted');
     }
 
     private initializeTabEffect() {

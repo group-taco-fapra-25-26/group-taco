@@ -12,3 +12,43 @@ export const TOAST_ICONS: Record<ToastType, string> = {
     warning: 'warning',
     error: 'error',
 };
+
+export interface ToastPosition {
+    horizontal: 'start' | 'center' | 'end' | 'left' | 'right';
+    vertical: 'top' | 'bottom';
+}
+
+export const TOAST_POSITIONS = {
+    TOP_LEFT: {
+        horizontal: 'left',
+        vertical: 'top',
+    },
+    TOP_CENTER: {
+        horizontal: 'center',
+        vertical: 'top',
+    },
+    TOP_RIGHT: {
+        horizontal: 'right',
+        vertical: 'top',
+    },
+    BOTTOM_LEFT: {
+        horizontal: 'left',
+        vertical: 'bottom',
+    },
+    BOTTOM_CENTER: {
+        horizontal: 'center',
+        vertical: 'bottom',
+    },
+    BOTTOM_RIGHT: {
+        horizontal: 'right',
+        vertical: 'bottom',
+    },
+} satisfies Record<string, ToastPosition>;
+
+export const DEFAULT_TOAST_POSITION: ToastPosition = TOAST_POSITIONS.TOP_RIGHT;
+
+export enum ToastDuration {
+    SHORT = 3000,
+    MEDIUM = 5000,
+    LONG = 10000,
+}

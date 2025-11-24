@@ -4,7 +4,7 @@
             <mat-icon class="tab-icon">edit</mat-icon>
             Draw
         </ng-template>
-        <app-draw class="tab-component" (clearAll)="onClearAll()"></app-draw>
+        <app-draw class="tab-component"></app-draw>
     </mat-tab>
 
     <mat-tab>
@@ -12,7 +12,7 @@
             <mat-icon class="tab-icon">play_arrow</mat-icon>
             Play
         </ng-template>
-        <app-play (clearAll)="onClearAll()"></app-play>
+        <app-play></app-play>
     </mat-tab>
 
     <mat-tab>
@@ -20,7 +20,7 @@
             <mat-icon class="tab-icon">graph_3</mat-icon>
             Reachability Graph
         </ng-template>
-        <app-reachability-graph (clearAll)="onClearAll()"></app-reachability-graph>
+        <app-reachability-graph></app-reachability-graph>
     </mat-tab>
 
     <mat-tab>
@@ -28,6 +28,6 @@
             <mat-icon class="tab-icon">flowchart</mat-icon>
             Process Net
         </ng-template>
-        <app-process-net (clearAll)="onClearAll()"></app-process-net>
+        <app-process-net></app-process-net>
     </mat-tab>
 </mat-tab-group>
