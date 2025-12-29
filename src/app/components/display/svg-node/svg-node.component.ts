@@ -5,6 +5,7 @@ import { DisplayableNode } from '../../../classes/displayable-graph.interface';
 import { PlayService } from '../../../services/play.service';
 import { DiagramTransition } from '../../../classes/diagram/diagram-transition';
 import { DiagramPlace } from '../../../classes/diagram/diagram-place';
+import { StateNode } from '../../../classes/reachability-graph.model';
 
 @Component({
     selector: 'g[appSvgNode]',
@@ -92,7 +93,7 @@ export class SvgNodeComponent {
      */
     readonly displayLabel = computed(() => {
         const label = this.diagramNode()?.displayLabel || '';
-        if (label.length > this.MAX_CHARS) {
+        if (label.length > this.MAX_CHARS && !(this.diagramNode() instanceof StateNode)) {
             return label.substring(0, this.MAX_CHARS) + '...';
         }
         return label;
