@@ -1,4 +1,15 @@
-import { ChangeDetectorRef, Component, computed, ElementRef, inject, OnDestroy, OnInit, signal } from '@angular/core';
+import {
+    ChangeDetectorRef,
+    Component,
+    computed,
+    ElementRef,
+    inject,
+    OnDestroy,
+    OnInit,
+    signal,
+    ViewChild,
+    AfterViewInit,
+} from '@angular/core';
 import { SvgNodeComponent } from '../../../display/svg-node/svg-node.component';
 import { DiagramNode, SHAPE } from '../../../../classes/diagram/diagram-node';
 import { DiagramPlace, DiagramPlaceLabelPlacement } from '../../../../classes/diagram/diagram-place';
@@ -12,7 +23,8 @@ import {
 } from '../../../../services/validation.service';
 import { ToasterNotificationService } from '../../../../services/toaster-notification.service';
 import { PanningService } from '../../../../services/panning.service';
-import { TOAST_POSITIONS } from '../../../../classes/toast';
+import { TOAST_POSITIONS, ToastList } from '../../../../classes/toast';
+import { TranslateModule } from '@ngx-translate/core';
 
 interface DrawnElement {
     node: DiagramNode;
@@ -44,12 +56,13 @@ declare global {
 @Component({
     selector: 'app-process-net-draw-display',
     standalone: true,
-    imports: [SvgNodeComponent],
+    imports: [SvgNodeComponent, TranslateModule],
     templateUrl: './process-net-draw-display.html',
     providers: [PanningService],
     styleUrls: ['./process-net-draw-display.css'],
 })
-export class ProcessNetDrawDisplayComponent implements OnInit, OnDestroy {
+export class ProcessNetDrawDisplayComponent implements OnInit, OnDestroy, AfterViewInit {
+    @ViewChild('drawingArea') drawingArea!: ElementRef<SVGGraphicsElement>;
     readonly drawnElements = signal<DrawnElement[]>([]);
     readonly isDragOver = signal<boolean>(false);
     // Connections between nodes (directed: from aId -> bId)
@@ -86,6 +99,8 @@ export class ProcessNetDrawDisplayComponent implements OnInit, OnDestroy {
     private customDropListener: ((event: Event) => void) | null = null;
     private displayService = inject(DisplayService);
     private toaster = inject(ToasterNotificationService);
+    private panningService = inject(PanningService);
+    readonly viewBox = this.panningService.viewBoxAsString;
 
     // Dimensions consistent with SvgNodeComponent
     private readonly PLACE_RADIUS = 25;
@@ -104,6 +119,10 @@ export class ProcessNetDrawDisplayComponent implements OnInit, OnDestroy {
             // Add mousedown listener with capture phase to intercept before child elements
             canvas.addEventListener('mousedown', this.handleCanvasMouseDown, true);
         }
+    }
+
+    ngAfterViewInit() {
+        this.svgElement = (this.drawingArea?.nativeElement as SVGSVGElement) ?? null;
     }
 
     ngOnDestroy() {
@@ -363,6 +382,29 @@ export class ProcessNetDrawDisplayComponent implements OnInit, OnDestroy {
         }
     }
 
+    onCanvasPanStart(event: MouseEvent) {
+        if (this.isDraggingElement) return;
+        const target = event.target as Element | null;
+        const isOnElement = target?.closest('.element-wrapper') || target?.classList.contains('drag-overlay');
+        if (isOnElement) {
+            return;
+        }
+        this.panningService.startPan(event, this.displayService.diagram, this.drawingArea);
+    }
+
+    onCanvasPan(event: MouseEvent) {
+        if (this.isDraggingElement) return;
+        this.panningService.pan(event, this.drawingArea);
+    }
+
+    onCanvasPanEnd() {
+        this.panningService.endPan(this.drawingArea);
+    }
+
+    onCanvasWheel(event: WheelEvent) {
+        this.panningService.zoom(event, this.drawingArea, this.displayService.diagram);
+    }
+
     private onDocumentMouseMove = (event: MouseEvent) => {
         if (!this.draggedElement || !this.isDraggingElement) {
             return;
@@ -437,7 +479,9 @@ export class ProcessNetDrawDisplayComponent implements OnInit, OnDestroy {
 
     private getSvgCoordinatesFromClient(clientX: number, clientY: number): { x: number; y: number } | null {
         if (!this.svgElement) {
-            this.svgElement = document.querySelector('.drawing-canvas');
+            this.svgElement =
+                (this.drawingArea?.nativeElement as SVGSVGElement) ??
+                ((document.querySelector('.drawing-canvas') as SVGSVGElement) || null);
         }
 
         if (!this.svgElement) {
@@ -519,7 +563,7 @@ export class ProcessNetDrawDisplayComponent implements OnInit, OnDestroy {
     onValidate() {
         const base = this.displayService.diagram;
         if (!base) {
-            this.toaster.showError('Validierung', 'Bitte zuerst ein Petrinetz laden.', {
+            this.toaster.showError('TOASTER.HEADER.VALIDATION', 'TOASTER.BODY.VALIDATION_ERROR', {
                 duration: 0,
                 toastPosition: TOAST_POSITIONS.TOP_CENTER,
             });
@@ -542,8 +586,7 @@ export class ProcessNetDrawDisplayComponent implements OnInit, OnDestroy {
                 nodes
                     .filter((n) => n.shape === 'circle')
                     .map((place) => {
-                        const tokenValue = typeof place.tokenCount === 'function' ? place.tokenCount() : 0;
-                        const tokens = typeof tokenValue === 'number' ? tokenValue : Number(tokenValue) || 0;
+                        const tokens = place.tokenCount();
                         return [place.id, tokens] as [string, number];
                     })
                     .filter(([, tokens]) => tokens > 0),
@@ -573,25 +616,25 @@ export class ProcessNetDrawDisplayComponent implements OnInit, OnDestroy {
         const result = validateProcessNet({ ...petri, startPlaces }, elements, connections);
         // result contains success flag and could contain error and info messages. If success and no messages, show a generic success message.
         if (result.valid && result.infos.length == 0) {
-            this.toaster.showSuccess('Validierung', 'Das Prozessnetz ist gültig und maximal.', {
+            this.toaster.showSuccess('TOASTER.HEADER.VALIDATION', 'TOASTER.BODY.VALIDATION_VALID_MAXIMAL', {
                 duration: 0,
                 toastPosition: TOAST_POSITIONS.TOP_CENTER,
             });
         } else if (result.valid && result.infos.length > 0) {
-            let message = 'Das Prozessnetz ist gültig.\n\n';
-            message += result.infos.map((info) => `- ${info}`).join('\n');
-            this.toaster.showInfo('Validierung', message, {
+            const infos = result.infos.map((info): ToastList => ({ message: info.key, messageParams: info.params }));
+            this.toaster.showInfo('TOASTER.HEADER.VALIDATION', 'TOASTER.BODY.VALIDATION_VALID_WITH_INFOS', {
                 duration: 0,
                 toastPosition: TOAST_POSITIONS.TOP_CENTER,
+                list: infos,
             });
         } else {
-            let message = 'Das Prozessnetz ist ungültig.\n\n';
-            message += 'Fehler:\n';
-            message += result.errors.map((error) => `- ${error}`).join('\n');
-            message += '\n';
-            this.toaster.showError('Validierung', message, {
+            const errors = result.errors.map(
+                (error): ToastList => ({ message: error.key, messageParams: error.params }),
+            );
+            this.toaster.showError('TOASTER.HEADER.VALIDATION', 'TOASTER.BODY.VALIDATION_INVALID', {
                 duration: 0,
                 toastPosition: TOAST_POSITIONS.TOP_CENTER,
+                list: errors,
             });
         }
     }
@@ -604,7 +647,7 @@ export class ProcessNetDrawDisplayComponent implements OnInit, OnDestroy {
     onCreateStartPosition() {
         const diagram = this.displayService.diagram;
         if (!diagram) {
-            this.toaster.showError('Startposition', 'Bitte zuerst ein Petrinetz laden.', {
+            this.toaster.showError('TOASTER.HEADER.START_POSITION', 'TOASTER.BODY.LOAD_NET_FIRST', {
                 duration: 0,
                 toastPosition: TOAST_POSITIONS.TOP_CENTER,
             });
@@ -614,7 +657,7 @@ export class ProcessNetDrawDisplayComponent implements OnInit, OnDestroy {
         const nodes = diagram.getNodes();
         const markedPlaces = nodes.filter((node) => node.shape === SHAPE.CIRCLE && node.tokenCount() > 0);
         if (markedPlaces.length === 0) {
-            this.toaster.showInfo('Startposition', 'Keine markierten Stellen gefunden.', {
+            this.toaster.showInfo('TOASTER.HEADER.START_POSITION', 'TOASTER.BODY.NO_MARKED_PLACES_FOUND', {
                 duration: 0,
                 toastPosition: TOAST_POSITIONS.TOP_CENTER,
             });
@@ -625,7 +668,7 @@ export class ProcessNetDrawDisplayComponent implements OnInit, OnDestroy {
             Array.from({ length: Math.max(0, Math.floor(place.tokenCount())) }, () => place),
         );
         if (tokenInstances.length === 0) {
-            this.toaster.showInfo('Startposition', 'Keine markierten Stellen gefunden.', {
+            this.toaster.showInfo('TOASTER.HEADER.START_POSITION', 'TOASTER.BODY.NO_MARKED_PLACES_FOUND', {
                 duration: 0,
                 toastPosition: TOAST_POSITIONS.TOP_CENTER,
             });
@@ -633,12 +676,16 @@ export class ProcessNetDrawDisplayComponent implements OnInit, OnDestroy {
         }
 
         this.clearDrawing();
+        this.panningService.resetViewBox(this.drawingArea);
 
-        const canvasHeight = 600;
+        const viewBox = this.panningService.INITIAL_VIEWBOX;
         const padding = 40;
-        const spacing = tokenInstances.length > 0 ? (canvasHeight - padding * 2) / tokenInstances.length : 0;
+        const availableHeight = viewBox.height - padding * 2;
+        const minSpacing = this.PLACE_RADIUS * 2 + 20;
+        const spacing = tokenInstances.length > 0 ? Math.max(availableHeight / tokenInstances.length, minSpacing) : 0;
 
         const newElements: DrawnElement[] = [];
+        const startX = viewBox.minX + viewBox.width * 0.25;
         tokenInstances.forEach((place, index) => {
             const innerLabel = this.getNextInnerLabel();
             const uniqueId = `start-${innerLabel}-${place.id}-${index}`;
@@ -648,15 +695,16 @@ export class ProcessNetDrawDisplayComponent implements OnInit, OnDestroy {
                 labelPlacement: 'below',
                 isStartPlace: true,
             });
-            newPlace.x = this.PLACE_RADIUS + 20;
-            newPlace.y = padding + spacing * index + spacing / 2;
+            newPlace.x = startX;
+            newPlace.y = viewBox.minY + padding + spacing * index + spacing / 2;
             newElements.push({ id: uniqueId, node: newPlace });
         });
 
         this.drawnElements.set(newElements);
-        this.toaster.showSuccess('Startposition', `${newElements.length} Startplätze angelegt.`, {
+        this.toaster.showSuccess('TOASTER.HEADER.START_POSITION', 'TOASTER.BODY.START_PLACES_CREATED', {
             duration: 0,
             toastPosition: TOAST_POSITIONS.TOP_CENTER,
+            messageParams: { count: newElements.length },
         });
     }
 
@@ -705,8 +753,7 @@ export class ProcessNetDrawDisplayComponent implements OnInit, OnDestroy {
         if (!node) {
             return 0;
         }
-        const tokenValue = typeof node.tokenCount === 'function' ? node.tokenCount() : 0;
-        const tokens = typeof tokenValue === 'number' ? tokenValue : Number(tokenValue) || 0;
+        const tokens = node.tokenCount();
         return Math.max(0, Math.floor(tokens));
     }
 

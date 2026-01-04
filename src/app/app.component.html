@@ -6,8 +6,7 @@
         >
     </div>
     <h2>
-        <i>Fachpraktikum Programmiersysteme WiSe25/26</i> by<br />
-        Marie G., Florian M., Ben L., Oliver S. and Alexander K.
+        <i>{{ 'HEADER_SUBTITLE' | translate }}</i>
     </h2>
 
     <!--    Main content    -->
@@ -17,18 +16,23 @@
 
     <div class="flexRowAlignSpaceBetweenStart">
         <div class="buttonWrapperWidth flexColumnAlignStartCenter">
-            <app-example-button title="Button" (buttonPressed)="processButtonClick()"></app-example-button>
+            <app-example-button
+                [title]="'EXAMPLE_BUTTON_TITLE' | translate"
+                (buttonPressed)="processButtonClick()"></app-example-button>
 
             @if (buttonClickCount() > 0) {
-                Number of tacos: {{ buttonClickCount() }}!
+                {{ 'TACO_COUNT' | translate: { count: buttonClickCount() } }}
             }
         </div>
 
-        <app-example-file title="File" link="assets/example.json" description="An example .json Petri net">
+        <app-example-file
+            [title]="'EXAMPLE_FILE_TITLE' | translate"
+            link="assets/example.json"
+            [description]="'EXAMPLE_FILE_DESC' | translate">
         </app-example-file>
 
         <mat-form-field appearance="outline">
-            <mat-label>File content</mat-label>
+            <mat-label>{{ 'FILE_CONTENT' | translate }}</mat-label>
             <textarea
                 matInput
                 cdkTextareaAutosize

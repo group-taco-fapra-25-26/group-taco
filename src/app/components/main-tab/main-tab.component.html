@@ -3,7 +3,7 @@
         <mat-tab>
             <ng-template mat-tab-label>
                 <mat-icon class="tab-icon">edit</mat-icon>
-                Draw
+                {{ 'TAB_DRAW' | translate }}
             </ng-template>
             <app-draw class="tab-component"></app-draw>
         </mat-tab>
@@ -11,7 +11,7 @@
         <mat-tab>
             <ng-template mat-tab-label>
                 <mat-icon class="tab-icon">play_arrow</mat-icon>
-                Play
+                {{ 'TAB_PLAY' | translate }}
             </ng-template>
             <app-play></app-play>
         </mat-tab>
@@ -19,7 +19,7 @@
         <mat-tab>
             <ng-template mat-tab-label>
                 <mat-icon class="tab-icon">account_tree</mat-icon>
-                Reachability Graph
+                {{ 'TAB_REACHABILITY' | translate }}
             </ng-template>
             <app-reachability-graph></app-reachability-graph>
         </mat-tab>
@@ -27,7 +27,7 @@
         <mat-tab>
             <ng-template mat-tab-label>
                 <mat-icon class="tab-icon">timeline</mat-icon>
-                Process Net
+                {{ 'TAB_PROCESS' | translate }}
             </ng-template>
             <app-process-net></app-process-net>
         </mat-tab>
@@ -36,7 +36,9 @@
         <app-upload></app-upload>
         <app-save></app-save>
         <app-clear-net-button></app-clear-net-button>
+        <app-layout-button></app-layout-button>
         <div class="divider-horizontal"></div>
-        <app-mode-toggle aria-label="Modus umschalten"></app-mode-toggle>
+        <app-mode-toggle></app-mode-toggle>
+        <app-language-button></app-language-button>
     </div>
 </div>

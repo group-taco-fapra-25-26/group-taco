@@ -7,12 +7,13 @@ import { Coords, JsonPetriNet } from '../classes/json-petri-net';
 import { DiagramPlace } from '../classes/diagram/diagram-place';
 import { DiagramTransition } from '../classes/diagram/diagram-transition';
 import { XMLParser } from 'fast-xml-parser';
-import { Pnml, PnmlArc, PnmlPlace, PnmlTransition } from '../classes/pnml-petri-net';
+import { Pnml, PnmlArc, PnmlNetContent, PnmlPlace, PnmlPtnet, PnmlTransition } from '../classes/pnml-petri-net';
 
 @Injectable({
     providedIn: 'root',
 })
 export class ParserService {
+    private readonly PNML_PTNET_TYPE = 'http://www.pnml.org/version-2009/grammar/ptnet';
     /**
      * Parses the given text into a Diagram object.
      * Supports PNML (XML format) and JSON format.
@@ -43,11 +44,22 @@ export class ParserService {
                 isArray: (tagName) => alwaysArray.includes(tagName),
             });
             const pnmlObject = parser.parse(text) as Pnml;
-            const net = pnmlObject.pnml?.net;
 
-            const arcs: DiagramArc[] = this.parsePnmlArcs(net?.arc ?? []);
-            const places: DiagramPlace[] = this.parsePnmlPlaces(net?.place ?? []);
-            const transitions: DiagramTransition[] = this.parsePnmlTransitions(net?.transition ?? [], arcs, places);
+            const net = pnmlObject.pnml?.net;
+            let netContent: PnmlNetContent | undefined;
+            if (net?.['@_type'] === this.PNML_PTNET_TYPE) {
+                netContent = (net as PnmlPtnet).page;
+            } else {
+                netContent = net as PnmlNetContent;
+            }
+
+            const arcs: DiagramArc[] = this.parsePnmlArcs(netContent?.arc ?? []);
+            const places: DiagramPlace[] = this.parsePnmlPlaces(netContent?.place ?? []);
+            const transitions: DiagramTransition[] = this.parsePnmlTransitions(
+                netContent?.transition ?? [],
+                arcs,
+                places,
+            );
 
             return new Diagram(places, transitions, arcs);
         } catch (e) {
@@ -67,7 +79,7 @@ export class ParserService {
 
             const marking = rawData.marking || {};
             const labels = rawData.labels || {};
-            const places = this.parsePlaces(rawData.places, marking);
+            const places = this.parsePlaces(rawData.places, marking, labels);
             const arcs = this.parseArcs(rawData.arcs, rawData.layout);
             const transitions = this.parseTransitions(rawData.transitions, labels, places, arcs);
 
@@ -81,13 +93,18 @@ export class ParserService {
         }
     }
 
-    private parsePlaces(placeIds: string[] | undefined, marking: Record<string, number>): DiagramPlace[] {
+    private parsePlaces(
+        placeIds: string[] | undefined,
+        marking: Record<string, number>,
+        labels: Record<string, string>,
+    ): DiagramPlace[] {
         if (!placeIds || !Array.isArray(placeIds)) {
             return [];
         }
         return placeIds.map((id) => {
             const initialTokens = marking[id] || 0;
-            return new DiagramPlace(id, initialTokens);
+            const label = labels[id] || id;
+            return new DiagramPlace(id, initialTokens, label);
         });
     }
 
@@ -212,7 +229,8 @@ export class ParserService {
         return places.map((place) => {
             const id = place['@_id'];
             const initialMarking = place.initialMarking ? Number(place.initialMarking.text) : 0;
-            const diagramPlace = new DiagramPlace(id, initialMarking);
+            const label = place.name?.text || id;
+            const diagramPlace = new DiagramPlace(id, initialMarking, label);
             diagramPlace.x = Number(place.graphics.position['@_x']);
             diagramPlace.y = Number(place.graphics.position['@_y']);
             return diagramPlace;

@@ -9,6 +9,7 @@ import { FooterComponent } from './components/footer/footer.component';
 import { MainTabComponent } from './components/main-tab/main-tab.component';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { SourcePetriNetService } from './services/source-petri-net.service';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
     selector: 'app-root',
@@ -24,6 +25,7 @@ import { SourcePetriNetService } from './services/source-petri-net.service';
         ReactiveFormsModule,
         FooterComponent,
         MainTabComponent,
+        TranslateModule,
     ],
 })
 export class AppComponent {

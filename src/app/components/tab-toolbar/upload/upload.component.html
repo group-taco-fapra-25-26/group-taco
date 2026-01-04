@@ -1,9 +1,4 @@
-<button
-    mat-icon-button
-    aria-label="Modus umschalten"
-    color="primary"
-    matTooltip="Netz hochladen"
-    (click)="fileInput.click()">
+<button mat-icon-button color="primary" [matTooltip]="'UPLOAD_NET' | translate" (click)="fileInput.click()">
     <mat-icon>upload_file</mat-icon>
 </button>
 

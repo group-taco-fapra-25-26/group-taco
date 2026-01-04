@@ -52,6 +52,18 @@ export class Diagram implements DisplayableGraph {
         return marking;
     }
 
+    /**
+     * Sets the marking of the diagram based on the provided mapping from place IDs to token counts.
+     * @param marking
+     *          The new marking to be set.
+     */
+    set marking(marking: Record<string, number>) {
+        this._places.forEach((place) => {
+            place.tokens = marking[place.id] || 0;
+        });
+        this.updateMarking();
+    }
+
     get startMarking(): Record<string, number> {
         return this._startMarking;
     }
@@ -81,5 +93,13 @@ export class Diagram implements DisplayableGraph {
 
     getEdges(): DisplayableEdge[] {
         return this._arcs;
+    }
+
+    getTransitionByLabel(label: string): DiagramTransition | undefined {
+        return this._transitions.find((t) => t.label === label || t.id === label);
+    }
+
+    getTransitionLabels(): string[] {
+        return this._transitions.map((t) => t.label || t.id) || [];
     }
 }

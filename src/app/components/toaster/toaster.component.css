@@ -29,6 +29,13 @@
     line-height: 1.4;
 }
 
+.toast-list {
+    margin: 4px 0 0 0;
+    padding-left: 20px;
+    font-size: 0.95em;
+    line-height: 1.4;
+}
+
 .close-button {
     background: none;
     border: none;

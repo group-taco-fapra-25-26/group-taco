@@ -1,17 +1,26 @@
 <button
     mat-icon-button
-    aria-label="Speichern unter..."
-    matTooltip="Speichern unter..."
+    [matTooltip]="'SAVE_AS' | translate"
     [matMenuTriggerFor]="saveMenu"
-    color="primary">
+    color="primary"
+    [disabled]="isDisabled()">
     <mat-icon>save_alt</mat-icon>
 </button>
 <mat-menu #saveMenu="matMenu">
     <button mat-menu-item (click)="onSave('json')">
         <mat-icon class="icon-json">data_object</mat-icon>
-        <span>Save as <strong>JSON</strong></span>
+        <span>{{ 'SAVE_AS_JSON' | translate }}</span>
     </button>
     <button mat-menu-item (click)="onSave('pnml')">
-        <mat-icon class="icon-pnml">account_tree</mat-icon> <span>Save as <strong>PNML</strong></span>
+        <mat-icon class="icon-pnml">account_tree</mat-icon>
+        <span>{{ 'SAVE_AS_PNML' | translate }}</span>
+    </button>
+    <button mat-menu-item (click)="onImageSave('png')" [disabled]="isImageExportDisabled()">
+        <mat-icon class="icon-png">image</mat-icon>
+        <span>{{ 'SAVE_AS_PNG' | translate }}</span>
+    </button>
+    <button mat-menu-item (click)="onImageSave('jpeg')" [disabled]="isImageExportDisabled()">
+        <mat-icon class="icon-jpeg">broken_image</mat-icon>
+        <span>{{ 'SAVE_AS_JPEG' | translate }}</span>
     </button>
 </mat-menu>

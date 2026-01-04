@@ -1,19 +1,32 @@
 export interface Pnml {
     pnml: {
-        net: PnmlNet;
+        net: PnmlNet | PnmlPtnet;
     };
 }
 
-export interface PnmlNet {
-    '@_id': string;
-    '@_type': string;
+export interface PnmlNetContent {
     place: PnmlPlace[];
     transition: PnmlTransition[];
     arc: PnmlArc[];
 }
 
+export interface PnmlNet extends PnmlNetContent {
+    '@_id': string;
+    '@_type': string;
+}
+
+export interface PnmlPtnet {
+    '@_id': string;
+    '@_type': string;
+    name: string;
+    page: PnmlNetContent;
+}
+
 export interface PnmlPlace {
     '@_id': string;
+    name?: {
+        text?: string;
+    };
     graphics: {
         position: PnmlPosition;
     };

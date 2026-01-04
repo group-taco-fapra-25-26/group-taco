@@ -1,5 +1,203 @@
-table th,
-td {
-    border: 1px solid;
+.firing-table {
+    table-layout: auto;
+    border-collapse: collapse;
+    width: auto;
+}
+
+.firing-table th,
+.firing-table td {
+    border: 1px solid #e0e0e0;
+    padding: 2px 5px 2px 5px;
+    text-align: left;
+}
+
+.firing-table th {
+    background-color: #f5f5f5;
+    font-weight: bold;
     padding: 5px;
+}
+
+.firing-sequence-th {
+    width: 22%;
+}
+
+.transition-count-th {
+    width: 7%;
+}
+
+.start-marking-th {
+    width: 35%;
+}
+
+.end-marking-th {
+    width: 35%;
+}
+
+.action-column-th {
+    width: auto;
+}
+
+.mat-mdc-icon-button,
+.mat-mdc-button-touch-target {
+    width: 30px !important;
+    height: 30px !important;
+    top: calc(40% - 15px) !important;
+    left: calc(40% - 15px) !important;
+    transform: none !important;
+}
+
+.play-sequence-button,
+.invalid-sequence-button,
+.delete-entry-button,
+.delete-all-entries-button {
+    height: 24px;
+    width: 24px;
+    padding: 0;
+    margin: 0;
+}
+
+.play-sequence-button:hover,
+.delete-entry-button:hover,
+.delete-all-entries-button:hover {
+    background-color: rgba(211, 47, 47, 0.1);
+    border-radius: 4px;
+}
+
+.invalid-sequence-button {
+    pointer-events: none;
+}
+
+.play-icon {
+    color: limegreen;
+}
+
+.marking-container {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 15px;
+    align-items: center;
+}
+
+.marking-entry {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.button-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+}
+
+.marking-button {
+    width: 20px;
+    height: 20px;
+    min-width: 20px;
+    min-height: 20px;
+    line-height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    overflow: hidden;
+}
+
+.marking-button mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    line-height: 18px;
+}
+
+input[type='text'] {
+    width: 100%;
+    box-sizing: border-box;
+    font-family: 'Courier New', sans-serif;
+    font-size: 16px;
+    text-wrap: wrap;
+    line-height: 2;
+}
+
+input[type='number'] {
+    width: 100%;
+    box-sizing: border-box;
+    font-family: 'Courier New', sans-serif;
+    font-size: 16px;
+    width: 5ch;
+}
+
+.tab-toolbar-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 10px;
+    border-radius: 4px;
+}
+
+.tab-toolbar-row {
+    display: flex;
+    width: 100%;
+    gap: 10px;
+    align-items: flex-start;
+}
+
+.main-button-container {
+    display: flex;
+    gap: 8px;
+}
+
+.find-sequences-form {
+    flex-grow: 1;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    padding: 12px;
+    background: white;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.marking-input-container {
+    display: flex;
+    flex-direction: row;
+    gap: 4px;
+}
+
+.custom-input-label {
+    min-width: 18ch;
+}
+
+.transition-count-input-label {
+    width: fit-content;
+    margin-right: 20px;
+}
+
+.marking-entries-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.marking-entry {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.transition-count-and-buttons-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    gap: 12px;
+}
+
+.form-button-container {
+    display: flex;
+    gap: 8px;
+    margin-right: 10px;
 }

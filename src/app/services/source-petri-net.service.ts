@@ -36,6 +36,20 @@ export class SourcePetriNetService {
      */
     public readonly isDirty$: Observable<boolean> = this._isDirty$.asObservable();
 
+    private readonly _isOptimalLayoutCalculated$ = new BehaviorSubject<boolean>(false);
+
+    /**
+     * Observable that emits whether the optimal layout has been calculated for the current source Petri net.
+     */
+    public readonly optimalLayoutCalculated$: Observable<boolean> = this._isOptimalLayoutCalculated$.asObservable();
+
+    /**
+     * Marks that the optimal layout has been calculated for the current source Petri net.
+     */
+    public optimalLayoutCalculated(): void {
+        this._isOptimalLayoutCalculated$.next(true);
+    }
+
     /**
      * Loads a new petri net as the current source net.
      * Resets the dirty flag to false (no unsaved changes).
@@ -48,6 +62,7 @@ export class SourcePetriNetService {
         this._sourceNet$.next(net);
         this._sourceText$.next(rawText);
         this._isDirty$.next(false);
+        this._isOptimalLayoutCalculated$.next(false);
     }
 
     /**
@@ -73,6 +88,7 @@ export class SourcePetriNetService {
         this._sourceText$.next(newText);
         this._sourceNet$.next(savedDiagram);
         this._isDirty$.next(false);
+        this._isOptimalLayoutCalculated$.next(false);
     }
 
     /**
@@ -107,5 +123,6 @@ export class SourcePetriNetService {
         this._sourceNet$.next(null);
         this._sourceText$.next('');
         this._isDirty$.next(false);
+        this._isOptimalLayoutCalculated$.next(false);
     }
 }

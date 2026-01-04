@@ -2,8 +2,15 @@
     <mat-icon class="toast-icon">{{ iconName }}</mat-icon>
 
     <div class="text-content">
-        <div class="heading">{{ data.heading }}</div>
-        <div class="message">{{ data.message }}</div>
+        <div class="heading">{{ data.heading | translate: data.headingParams }}</div>
+        <div class="message">{{ data.message | translate: data.messageParams }}</div>
+        @if (data.list && data.list.length > 0) {
+            <ul class="toast-list">
+                @for (item of data.list; track item) {
+                    <li>{{ item.message | translate: item.messageParams }}</li>
+                }
+            </ul>
+        }
     </div>
 
     <button class="close-button" (click)="closeToast()">

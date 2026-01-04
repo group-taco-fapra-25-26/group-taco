@@ -3,10 +3,11 @@ import { PetriNetLoaderService } from '../../../services/petri-net-loader.servic
 import { MatIcon } from '@angular/material/icon';
 import { MatIconButton } from '@angular/material/button';
 import { MatTooltip } from '@angular/material/tooltip';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
     selector: 'app-upload',
-    imports: [MatIcon, MatIconButton, MatTooltip],
+    imports: [MatIcon, MatIconButton, MatTooltip, TranslateModule],
     templateUrl: './upload.component.html',
     styleUrl: './upload.component.css',
 })

@@ -1,6 +1,14 @@
 import { inject, Injectable } from '@angular/core';
 import { MatSnackBar, MatSnackBarConfig } from '@angular/material/snack-bar';
-import { DEFAULT_TOAST_POSITION, ToastData, ToastDuration, ToastPosition, ToastType } from '../classes/toast';
+import {
+    DEFAULT_TOAST_POSITION,
+    ToastData,
+    ToastDuration,
+    ToastList,
+    ToastPosition,
+    ToastType,
+    TranslationParams,
+} from '../classes/toast';
 import { ToasterComponent } from '../components/toaster/toaster.component';
 
 @Injectable({
@@ -16,6 +24,9 @@ export class ToasterNotificationService {
         options?: {
             duration?: ToastDuration | number;
             toastPosition?: ToastPosition;
+            headingParams?: TranslationParams;
+            messageParams?: TranslationParams;
+            list?: ToastList[];
         },
     ) {
         const config: MatSnackBarConfig = {
@@ -25,7 +36,14 @@ export class ToasterNotificationService {
             duration: options?.duration ?? ToastDuration.MEDIUM,
         };
 
-        const data: ToastData = { type, heading, message };
+        const data: ToastData = {
+            type,
+            heading,
+            message,
+            headingParams: options?.headingParams,
+            messageParams: options?.messageParams,
+            list: options?.list,
+        };
 
         this._snackBar.openFromComponent(ToasterComponent, { ...config, data });
     }
@@ -33,7 +51,13 @@ export class ToasterNotificationService {
     showSuccess(
         heading: string,
         message: string,
-        options?: { duration?: ToastDuration | number; toastPosition?: ToastPosition },
+        options?: {
+            duration?: ToastDuration | number;
+            toastPosition?: ToastPosition;
+            headingParams?: TranslationParams;
+            messageParams?: TranslationParams;
+            list?: ToastList[];
+        },
     ) {
         this.showToast('success', heading, message, options);
     }
@@ -41,7 +65,13 @@ export class ToasterNotificationService {
     showInfo(
         heading: string,
         message: string,
-        options?: { duration?: ToastDuration | number; toastPosition?: ToastPosition },
+        options?: {
+            duration?: ToastDuration | number;
+            toastPosition?: ToastPosition;
+            headingParams?: TranslationParams;
+            messageParams?: TranslationParams;
+            list?: ToastList[];
+        },
     ) {
         this.showToast('info', heading, message, options);
     }
@@ -49,7 +79,13 @@ export class ToasterNotificationService {
     showWarning(
         heading: string,
         message: string,
-        options?: { duration?: ToastDuration | number; toastPosition?: ToastPosition },
+        options?: {
+            duration?: ToastDuration | number;
+            toastPosition?: ToastPosition;
+            headingParams?: TranslationParams;
+            messageParams?: TranslationParams;
+            list?: ToastList[];
+        },
     ) {
         this.showToast('warning', heading, message, options);
     }
@@ -57,7 +93,13 @@ export class ToasterNotificationService {
     showError(
         heading: string,
         message: string,
-        options?: { duration?: ToastDuration | number; toastPosition?: ToastPosition },
+        options?: {
+            duration?: ToastDuration | number;
+            toastPosition?: ToastPosition;
+            headingParams?: TranslationParams;
+            messageParams?: TranslationParams;
+            list?: ToastList[];
+        },
     ) {
         this.showToast('error', heading, message, options);
     }

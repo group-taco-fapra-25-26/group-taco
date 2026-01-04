@@ -1,7 +1,8 @@
-import { Component, computed, inject, input, output, signal, TemplateRef, untracked, viewChild } from '@angular/core';
+import { Component, computed, inject, input, output, signal } from '@angular/core';
 import { Coords } from '../../../classes/json-petri-net';
 import { SHAPE } from '../../../classes/diagram/diagram-node';
 import { DisplayableNode } from '../../../classes/displayable-graph.interface';
+import { ModeService } from '../../../services/mode.service';
 import { PlayService } from '../../../services/play.service';
 import { DiagramTransition } from '../../../classes/diagram/diagram-transition';
 import { DiagramPlace } from '../../../classes/diagram/diagram-place';
@@ -14,10 +15,20 @@ import { DiagramPlace } from '../../../classes/diagram/diagram-place';
 })
 export class SvgNodeComponent {
     readonly RADIUS = 25;
-    readonly RECT_WIDTH = 50;
     readonly RECT_HEIGHT = 30;
+    readonly CHAR_WIDTH = 8;
+    readonly MAX_CHARS = 15;
+
+    readonly rectWidth = computed(() => {
+        const label = this.displayLabel();
+        if (!label) {
+            return 50;
+        }
+        return Math.max(50, label.length * this.CHAR_WIDTH + 10);
+    });
 
     readonly diagramNode = input<DisplayableNode>();
+    private _modeService = inject(ModeService);
     private _playService = inject(PlayService);
 
     readonly showInnerLabel = input<boolean>(false);
@@ -26,7 +37,15 @@ export class SvgNodeComponent {
     readonly isTransitionAndActive = computed(() => {
         const node = this.diagramNode();
         if (node instanceof DiagramTransition) {
-            return this._playService.isTransitionAndActivated(node);
+            return this._playService.canBeFired(node) && !this._modeService.isExamMode();
+        }
+        return false;
+    });
+
+    readonly isFiring = computed(() => {
+        const node = this.diagramNode();
+        if (node instanceof DiagramTransition) {
+            return node.isFiring();
         }
         return false;
     });
@@ -39,6 +58,9 @@ export class SvgNodeComponent {
     readonly fillColor = signal('white');
 
     readonly transitionFillColor = computed(() => {
+        if (this.isFiring()) {
+            return 'lime';
+        }
         if (this.isTransitionAndActive()) {
             return 'dimgray';
         }
@@ -46,21 +68,21 @@ export class SvgNodeComponent {
     });
 
     readonly transitionStrokeColor = computed(() => {
-        if (this.isTransitionAndActive()) {
+        if (this.isFiring() || this.isTransitionAndActive()) {
             return 'darkgreen';
         }
         return 'black';
     });
 
     readonly transitionStrokeWidth = computed(() => {
-        if (this.isTransitionAndActive()) {
+        if (this.isFiring() || this.isTransitionAndActive()) {
             return 4;
         }
         return 2;
     });
 
     readonly transitionCornerRadius = computed(() => {
-        if (this.isTransitionAndActive()) {
+        if (this.isFiring() || this.isTransitionAndActive()) {
             return 5;
         }
         return 0;
@@ -78,10 +100,15 @@ export class SvgNodeComponent {
         return this.diagramNode()?.shape === SHAPE.CIRCLE;
     });
 
-    placeTemplate = viewChild('place', { read: TemplateRef });
-
+    /**
+     * Truncated display label for the node, adding ellipsis if it exceeds MAX_CHARS.
+     */
     readonly displayLabel = computed(() => {
-        return this.diagramNode()?.displayLabel || '';
+        const label = this.diagramNode()?.displayLabel || '';
+        if (label.length > this.MAX_CHARS) {
+            return label.substring(0, this.MAX_CHARS) + '...';
+        }
+        return label;
     });
 
     readonly innerLabel = computed(() => {
@@ -142,7 +169,7 @@ export class SvgNodeComponent {
 
     readonly rectX = computed(() => {
         const node = this.diagramNode();
-        return node ? node.x - this.RECT_WIDTH / 2 : 0;
+        return node ? node.x - this.rectWidth() / 2 : 0;
     });
 
     readonly rectY = computed(() => {
@@ -221,6 +248,4 @@ export class SvgNodeComponent {
         const node = this.diagramNode();
         if (node) this.clickNode.emit(node);
     }
-
-    protected readonly untracked = untracked;
 }

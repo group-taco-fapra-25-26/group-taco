@@ -1,10 +1,11 @@
 import { Component, inject, OnDestroy, OnInit } from '@angular/core';
-import { DisplayComponent } from '../../display/display.component';
+import { filter, Subscription, switchMap, tap } from 'rxjs';
+
 import { DisplayService } from '../../../services/display.service';
 import { PlayService } from '../../../services/play.service';
+import { DisplayComponent } from '../../display/display.component';
 import { FiringTableComponent } from './firing-table/firing-table.component';
 import { Diagram } from '../../../classes/diagram/diagram';
-import { filter, Subscription, switchMap, tap } from 'rxjs';
 
 @Component({
     selector: 'app-play',
@@ -24,6 +25,12 @@ export class PlayComponent implements OnInit, OnDestroy {
     ngOnInit(): void {
         this._sub = this._displayService.diagram$
             .pipe(
+                tap((diagram) => {
+                    if (!diagram) {
+                        this._playService.startMarking = {};
+                        this._playService.currentMarking = {};
+                    }
+                }),
                 filter((diagram) => !!diagram && diagram instanceof Diagram),
                 tap((diagram: Diagram) => {
                     this._playService.resetFiringEntries();

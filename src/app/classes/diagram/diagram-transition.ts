@@ -1,3 +1,4 @@
+import { signal } from '@angular/core';
 import { DiagramArc } from './diagram-arc';
 import { DiagramNode, SHAPE } from './diagram-node';
 import { DiagramPlace } from './diagram-place';
@@ -13,6 +14,8 @@ export class DiagramTransition extends DiagramNode {
     private readonly _inputArcs: DiagramArc[];
     private readonly _outputArcs: DiagramArc[];
     private readonly _innerLabel?: string;
+
+    isFiring = signal<boolean>(false);
 
     constructor(
         id: string,
@@ -52,7 +55,7 @@ export class DiagramTransition extends DiagramNode {
         return this._inputPlaces.every((place, index) => place.tokenCount() >= this._inputArcs[index].weight);
     }
 
-    public fire(): void {
+    public fire(displayFiring: boolean): void {
         this._inputArcs.forEach((arc, i) => {
             const place = this._inputPlaces[i];
             place.tokens = place.tokenCount() - arc.weight;
@@ -61,5 +64,9 @@ export class DiagramTransition extends DiagramNode {
             const place = this._outputPlaces[i];
             place.tokens = place.tokenCount() + arc.weight;
         });
+        if (displayFiring) {
+            this.isFiring.set(true);
+            setTimeout(() => this.isFiring.set(false), 300);
+        }
     }
 }

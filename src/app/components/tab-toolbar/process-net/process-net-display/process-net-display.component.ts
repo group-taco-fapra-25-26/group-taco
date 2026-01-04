@@ -1,10 +1,10 @@
-import { Component } from '@angular/core';
+import { Component, ElementRef, ViewChild } from '@angular/core';
 import { DisplayComponent } from '../../../display/display.component';
 import { SvgNodeComponent } from '../../../display/svg-node/svg-node.component';
 import { SvgArcComponent } from '../../../display/svg-arc/svg-arc.component';
 import { SHAPE } from '../../../../classes/diagram/diagram-node';
 import { DisplayableNode } from '../../../../classes/displayable-graph.interface';
-import { PanningService } from '../../../../services/panning.service';
+import { PanningService } from 'src/app/services/panning.service';
 
 // Added strongly typed drag data interfaces and Window augmentation
 interface BasicDragData {
@@ -33,6 +33,8 @@ declare global {
     styleUrls: ['./process-net-display.component.css'],
 })
 export class ProcessNetDisplayComponent extends DisplayComponent {
+    @ViewChild('drawingArea') override drawingArea!: ElementRef<SVGGraphicsElement>;
+
     private isDragging = false;
     private dragStartPos = { x: 0, y: 0 };
     private currentDragData: BasicDragData | null = null;

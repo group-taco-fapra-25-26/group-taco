@@ -24,7 +24,7 @@ export interface DisplayableEdge {
     target: string;
 
     readonly displayLabel: string;
-    readonly bendPoints: Coords[];
+    bendPoints: Coords[];
 }
 
 /**

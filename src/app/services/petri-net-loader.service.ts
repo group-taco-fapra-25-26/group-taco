@@ -33,8 +33,8 @@ export class PetriNetLoaderService {
                     this.parseAndDisplay(content);
                 } else {
                     this._toasterService.showWarning(
-                        'Lesefehler',
-                        'Die ausgewählte Datei ist leer oder konnte nicht gelesen werden.',
+                        'TOASTER.HEADER.READ_ERROR',
+                        'TOASTER.BODY.FILE_EMPTY_OR_UNREADABLE',
                     );
                 }
             });
@@ -52,10 +52,9 @@ export class PetriNetLoaderService {
             .pipe(
                 catchError((err) => {
                     const details = err?.message ? ` Grund: ${err.message}` : '';
-                    this._toasterService.showError(
-                        'Download fehlgeschlagen',
-                        `Datei unter ${url} konnte nicht geladen werden.${details}`,
-                    );
+                    this._toasterService.showError('TOASTER.HEADER.DOWNLOAD_FAILED', 'TOASTER.BODY.DOWNLOAD_FAILED', {
+                        messageParams: { url, details },
+                    });
                     return of(undefined);
                 }),
                 take(1),
@@ -64,10 +63,9 @@ export class PetriNetLoaderService {
                 if (content) {
                     this.parseAndDisplay(content);
                 } else {
-                    this._toasterService.showWarning(
-                        'Leere Antwort',
-                        `Vom Server unter ${url} wurden keine Inhalte geliefert.`,
-                    );
+                    this._toasterService.showWarning('TOASTER.HEADER.EMPTY_RESPONSE', 'TOASTER.BODY.EMPTY_RESPONSE', {
+                        messageParams: { url },
+                    });
                 }
             });
     }
@@ -82,15 +80,12 @@ export class PetriNetLoaderService {
             if (parsedNet) {
                 this._sourcePetriNetService.loadNewNet(parsedNet, content);
                 this._displayService.display(parsedNet);
-                this._toasterService.showSuccess('Erfolg', 'Petri-Netz wurde erfolgreich geladen.');
+                this._toasterService.showSuccess('TOASTER.HEADER.SUCCESS', 'TOASTER.BODY.NET_LOADED_SUCCESSFULLY');
             } else {
-                this._toasterService.showWarning('Parserfehler', 'Die Datei konnte nicht interpretiert werden.');
+                this._toasterService.showWarning('TOASTER.HEADER.PARSER_ERROR', 'TOASTER.BODY.FILE_NOT_INTERPRETABLE');
             }
         } catch (error) {
-            this._toasterService.showError(
-                'Verarbeitungsfehler',
-                'Beim Parsen der Datei ist ein kritischer Fehler aufgetreten.',
-            );
+            this._toasterService.showError('TOASTER.HEADER.PROCESSING_ERROR', 'TOASTER.BODY.CRITICAL_PARSING_ERROR');
         }
     }
 }

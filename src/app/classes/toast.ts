@@ -2,6 +2,16 @@ export interface ToastData {
     type: ToastType;
     heading: string;
     message: string;
+    headingParams?: TranslationParams;
+    messageParams?: TranslationParams;
+    list?: ToastList[];
+}
+
+export type TranslationParams = Record<string, string | number>;
+
+export interface ToastList {
+    message: string;
+    messageParams?: TranslationParams;
 }
 
 export type ToastType = 'success' | 'info' | 'warning' | 'error';

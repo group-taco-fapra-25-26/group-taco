@@ -1,9 +1,9 @@
 <button
     mat-icon-button
-    [matTooltip]="modeText()"
+    [matTooltip]="modeText() | translate"
     [color]="modeColor()"
     (click)="toggleMode()"
-    [attr.aria-label]="modeText()"
+    [attr.aria-label]="modeText() | translate"
     class="mode-toggle-button">
     <mat-icon>{{ modeIcon() }}</mat-icon>
 </button>

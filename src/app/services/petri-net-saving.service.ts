@@ -39,10 +39,7 @@ export class PetriNetSavingService {
         }
 
         if (!textContent) {
-            this._notificationService.showWarning(
-                'Speichern nicht möglich',
-                'Es ist kein Petri-Netz zum Speichern vorhanden.',
-            );
+            this._notificationService.showWarning('TOASTER.HEADER.SAVE_IMPOSSIBLE', 'TOASTER.BODY.NO_NET_TO_SAVE');
             return;
         }
         this.triggerDownload(textContent, fileName);

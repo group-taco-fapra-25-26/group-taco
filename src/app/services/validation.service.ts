@@ -1,6 +1,8 @@
 // Service / utility for validating a drawn process net against the original Petri net
 // Based on user-provided specification, with minor fixes (e.g., producer count increment).
 
+import { TranslationParams } from '../classes/toast';
+
 export interface PetriNet {
     places: string[];
     transitions: string[];
@@ -23,10 +25,15 @@ export interface ProcessConnection {
     weight: number; // arc weight in the process net (>= 1)
 }
 
+export interface ValidationMessage {
+    key: string;
+    params?: TranslationParams;
+}
+
 export interface ValidationResult {
     valid: boolean;
-    errors: string[];
-    infos: string[];
+    errors: ValidationMessage[];
+    infos: ValidationMessage[];
 }
 
 interface OriginalNetShape {
@@ -71,8 +78,8 @@ export function validateProcessNet(
     elements: ProcessElement[],
     connections: ProcessConnection[],
 ): ValidationResult {
-    const errors: string[] = [];
-    const infos: string[] = [];
+    const errors: ValidationMessage[] = [];
+    const infos: ValidationMessage[] = [];
 
     const elementMap = new Map<string, ProcessElement>(elements.map((e) => [e.id, e]));
     const placeLabelById = new Map<string, string>();
@@ -131,8 +138,8 @@ function validateTransitionsForStructure(
     connections: ProcessConnection[],
     elementMap: Map<string, ProcessElement>,
     originalShape: OriginalNetShape,
-): string[] {
-    const errors: string[] = [];
+): ValidationMessage[] {
+    const errors: ValidationMessage[] = [];
 
     const mapLabelToTransition = (label: string): string | undefined =>
         Object.keys(net.labels).find((t) => net.labels[t] === label);
@@ -175,7 +182,10 @@ function validateTransitionsForStructure(
         .forEach((tOcc) => {
             const originalT = mapLabelToTransition(tOcc.label);
             if (!originalT) {
-                errors.push(`❌ Transition ${tOcc.label} hat keine passende Beschriftung im Petrinetz.`);
+                errors.push({
+                    key: 'TOASTER.VALIDATION_MESSAGES.TRANSITION_NO_MATCH',
+                    params: { label: tOcc.label },
+                });
                 return;
             }
 
@@ -186,18 +196,29 @@ function validateTransitionsForStructure(
             const expectedPreSet = normalize(expectedPre);
             const actualPreSet = normalize(actualPre);
             if (JSON.stringify(expectedPreSet) !== JSON.stringify(actualPreSet)) {
-                errors.push(
-                    `❌ Vorbereich falsch bei ${tOcc.label}. Erwartet: ${expectedPreSet.join(',')} / Gefunden: ${actualPreSet.join(',')}`,
-                );
+                errors.push({
+                    key: 'TOASTER.VALIDATION_MESSAGES.PRESET_MISMATCH',
+                    params: {
+                        label: tOcc.label,
+                        expected: expectedPreSet.join(','),
+                        found: actualPreSet.join(','),
+                    },
+                });
             } else {
                 // If structure matches, verify weights for each required place label
                 expectedPreSet.forEach((pl) => {
                     const expW = origPreW[originalT][pl] ?? 1;
                     const actW = procPreW[tOcc.id][pl] ?? 0;
                     if (expW !== actW) {
-                        errors.push(
-                            `❌ Vorbereichsgewicht falsch bei ${tOcc.label} für Stelle ${pl}. Erwartet: ${expW} / Gefunden: ${actW}`,
-                        );
+                        errors.push({
+                            key: 'TOASTER.VALIDATION_MESSAGES.PRESET_WEIGHT_MISMATCH',
+                            params: {
+                                label: tOcc.label,
+                                place: pl,
+                                expected: expW,
+                                found: actW,
+                            },
+                        });
                     }
                 });
             }
@@ -207,17 +228,28 @@ function validateTransitionsForStructure(
             const expectedPostSet = normalize(expectedPost);
             const actualPostSet = normalize(actualPost);
             if (JSON.stringify(expectedPostSet) !== JSON.stringify(actualPostSet)) {
-                errors.push(
-                    `❌ Nachbereich falsch bei ${tOcc.label}. Erwartet: ${expectedPostSet.join(',')} / Gefunden: ${actualPostSet.join(',')}`,
-                );
+                errors.push({
+                    key: 'TOASTER.VALIDATION_MESSAGES.POSTSET_MISMATCH',
+                    params: {
+                        label: tOcc.label,
+                        expected: expectedPostSet.join(','),
+                        found: actualPostSet.join(','),
+                    },
+                });
             } else {
                 expectedPostSet.forEach((pl) => {
                     const expW = origPostW[originalT][pl] ?? 1;
                     const actW = procPostW[tOcc.id][pl] ?? 0;
                     if (expW !== actW) {
-                        errors.push(
-                            `❌ Nachbereichsgewicht falsch bei ${tOcc.label} für Stelle ${pl}. Erwartet: ${expW} / Gefunden: ${actW}`,
-                        );
+                        errors.push({
+                            key: 'TOASTER.VALIDATION_MESSAGES.POSTSET_WEIGHT_MISMATCH',
+                            params: {
+                                label: tOcc.label,
+                                place: pl,
+                                expected: expW,
+                                found: actW,
+                            },
+                        });
                     }
                 });
             }
@@ -230,8 +262,8 @@ function validatePlaceInputs(
     net: PetriNet,
     elements: ProcessElement[],
     connectionsByTarget: Record<string, ProcessConnection[]>,
-): string[] {
-    const errors: string[] = [];
+): ValidationMessage[] {
+    const errors: ValidationMessage[] = [];
 
     elements
         .filter((el) => el.type === 'Place')
@@ -239,9 +271,10 @@ function validatePlaceInputs(
             const isStartNode = place.isStartPlace ?? false;
             const incoming = connectionsByTarget[place.id] || [];
             if (!isStartNode && incoming.length === 0) {
-                errors.push(
-                    `❌ Stelle ${place.label} besitzt keinen eingehenden Bogen, obwohl sie kein Startplatz in diesem Prozessnetz ist.`,
-                );
+                errors.push({
+                    key: 'TOASTER.VALIDATION_MESSAGES.PLACE_NO_INCOMING',
+                    params: { label: place.label },
+                });
             }
         });
 
@@ -252,8 +285,8 @@ function validateProducerUniqueness(
     elements: ProcessElement[],
     connections: ProcessConnection[],
     elementMap: Map<string, ProcessElement>,
-): string[] {
-    const errors: string[] = [];
+): ValidationMessage[] {
+    const errors: ValidationMessage[] = [];
     const producerCount: Record<string, number> = {};
     connections.forEach((conn) => {
         const src = elementMap.get(conn.from);
@@ -265,14 +298,17 @@ function validateProducerUniqueness(
 
     Object.entries(producerCount).forEach(([placeId, count]) => {
         if (count > 1) {
-            errors.push(`❌ Stelle ${placeId} hat mehr als einen Produzenten – verletzt Kausalität.`);
+            errors.push({
+                key: 'TOASTER.VALIDATION_MESSAGES.PLACE_MULTIPLE_PRODUCERS',
+                params: { place: placeId },
+            });
         }
     });
     return errors;
 }
 
-function validateAcyclicity(elements: ProcessElement[], connections: ProcessConnection[]): string[] {
-    const errors: string[] = [];
+function validateAcyclicity(elements: ProcessElement[], connections: ProcessConnection[]): ValidationMessage[] {
+    const errors: ValidationMessage[] = [];
     const graph: Record<string, string[]> = {};
     elements.forEach((el) => (graph[el.id] = []));
     connections.forEach((c) => graph[c.from].push(c.to));
@@ -293,14 +329,16 @@ function validateAcyclicity(elements: ProcessElement[], connections: ProcessConn
     };
 
     if (Object.keys(graph).some((node) => visit(node))) {
-        errors.push('❌ Prozessnetz enthält einen Zyklus – Prozessnetze müssen azyklisch sein.');
+        errors.push({
+            key: 'TOASTER.VALIDATION_MESSAGES.CYCLE_DETECTED',
+        });
     }
 
     return errors;
 }
 
-function validateStartPlacesPresence(net: PetriNet, elements: ProcessElement[]): string[] {
-    const errors: string[] = [];
+function validateStartPlacesPresence(net: PetriNet, elements: ProcessElement[]): ValidationMessage[] {
+    const errors: ValidationMessage[] = [];
     const requiredStartPlaces = new Set(
         Object.entries(net.marking ?? {})
             .filter(([, tokens]) => (tokens ?? 0) > 0)
@@ -313,15 +351,19 @@ function validateStartPlacesPresence(net: PetriNet, elements: ProcessElement[]):
     const providedStartPlaces = new Set(net.startPlaces ?? []);
     const missingProvided = [...requiredStartPlaces].filter((placeId) => !providedStartPlaces.has(placeId));
     if (missingProvided.length > 0) {
-        errors.push(
-            `❌ Startplätze fehlen im Prozessnetz: ${missingProvided.join(', ')}. Bitte alle markierten Plätze platzieren.`,
-        );
+        errors.push({
+            key: 'TOASTER.VALIDATION_MESSAGES.MISSING_START_PLACES',
+            params: { places: missingProvided.join(', ') },
+        });
     }
 
     const drawnPlaceLabels = new Set(elements.filter((el) => el.type === 'Place').map((el) => el.label));
     const missingDrawn = [...requiredStartPlaces].filter((placeId) => !drawnPlaceLabels.has(placeId));
     if (missingDrawn.length > 0) {
-        errors.push(`❌ Die markierten Startplätze (${missingDrawn.join(', ')}) befinden sich nicht im Prozessnetz.`);
+        errors.push({
+            key: 'TOASTER.VALIDATION_MESSAGES.MARKED_START_PLACES_NOT_IN_NET',
+            params: { places: missingDrawn.join(', ') },
+        });
     }
 
     return errors;
@@ -332,8 +374,8 @@ function validateMaximality(
     elements: ProcessElement[],
     connectionsBySource: Record<string, ProcessConnection[]>,
     originalShape: OriginalNetShape,
-): string[] {
-    const infos: string[] = [];
+): ValidationMessage[] {
+    const infos: ValidationMessage[] = [];
 
     const terminalPlaces = elements.filter(
         (el) => el.type === 'Place' && (connectionsBySource[el.id] ?? []).length === 0,
@@ -360,11 +402,13 @@ function validateMaximality(
 
         if (allPlacesSatisfied) {
             const transitionLabel = net.labels[transitionId] ?? transitionId;
-            infos.push(
-                `Info: Prozessnetz ist nicht maximal. Transition ${transitionLabel} kann mit den Stellen (${requiredPlaces.join(
-                    ', ',
-                )}) noch ausgeführt werden.`,
-            );
+            infos.push({
+                key: 'TOASTER.VALIDATION_MESSAGES.NOT_MAXIMAL',
+                params: {
+                    label: transitionLabel,
+                    places: requiredPlaces.join(', '),
+                },
+            });
         }
     });
 

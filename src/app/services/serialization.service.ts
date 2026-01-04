@@ -33,6 +33,7 @@ export class SerializationService {
             places: [],
             transitions: [],
             arcs: {},
+            actions: [],
             marking: {},
             labels: {},
             layout: {},
@@ -51,6 +52,10 @@ export class SerializationService {
     private _serializePlaces(places: DiagramPlace[], rawNet: JsonPetriNet): void {
         for (const place of places) {
             rawNet.places.push(place.id);
+            rawNet.labels = rawNet.labels ?? {};
+            if (place.label !== place.id) {
+                rawNet.labels[place.id] = place.label || place.id;
+            }
             rawNet.layout = rawNet.layout ?? {};
             rawNet.layout[place.id] = { x: place.x, y: place.y };
 
@@ -73,6 +78,8 @@ export class SerializationService {
             if (transition.label !== transition.id) {
                 rawNet.labels = rawNet.labels ?? {};
                 rawNet.labels[transition.id] = transition.label;
+                rawNet.actions = rawNet.actions ?? [];
+                rawNet.actions.push(transition.label);
             }
         }
     }
@@ -88,11 +95,12 @@ export class SerializationService {
         }
 
         for (const arc of arcs) {
-            rawNet.arcs[arc.id] = arc.weight;
+            const id = `${arc.source},${arc.target}`;
+            rawNet.arcs[id] = arc.weight;
 
             if (arc.bendPoints && arc.bendPoints.length > 0) {
                 rawNet.layout = rawNet.layout ?? {};
-                rawNet.layout[arc.id] = arc.bendPoints;
+                rawNet.layout[id] = arc.bendPoints;
             }
         }
     }
