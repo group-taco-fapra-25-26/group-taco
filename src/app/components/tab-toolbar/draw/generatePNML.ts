@@ -1,34 +1,3 @@
-import { Component } from '@angular/core';
-import { DisplayComponent } from '../../display/display.component';
-
-@Component({
-    selector: 'app-draw',
-    standalone: true,
-    imports: [DisplayComponent],
-    templateUrl: './draw.component.html',
-    styleUrl: './draw.component.css',
-})
-export class DrawComponent {
-    
-  
-}
-
-const inputs = document.getElementById("kantenTerm") as HTMLInputElement;
-const button = document.getElementById("validierungTerm") as HTMLButtonElement;
-
-  const input =
-  "(A,p1) + (A,p2) + (p1,B) + 2*(B,p2) + (p2,A) + (p2,C) + (p3,C) + (C,p4) + 3*(p4,D)";
-
-
-  
-  //console.log(pnml);
-
-//button!.addEventListener("click", () => {
-  const arcs = parseExpression(input);
-  const pnml = generatePNML(arcs);
-//});
-
-
 type Arc = {
   source: string;
   target: string;
@@ -98,16 +67,5 @@ function generatePNML(arcs: Arc[]): string {
   });
 
   xml += `  </net>\n</pnml>`;
-  loadXML(xml);
   return xml;
 }
-async function loadXML(url: string) {
-  const response = await fetch(url);
-  const xmlText = await response.text();
-
-  const output = document.getElementById("output");
-  output!.textContent = xmlText;   // als Text anzeigen
-}
-
-
-
