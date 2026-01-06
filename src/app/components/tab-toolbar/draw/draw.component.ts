@@ -136,9 +136,6 @@ export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
         return lines;
     });
 
-    readonly viewBox = this.panning.viewBoxAsString;
-    readonly viewBoxObj = this.panning.viewBox;
-
     tupleString = '';
 
     private elementIdCounter = 0;
@@ -163,6 +160,10 @@ export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
     private _toaster = inject(ToasterNotificationService);
     private _modeService = inject(ModeService);
     private _translate = inject(TranslateService);
+    private panning = inject(PanningService);
+
+    readonly viewBox = this.panning.viewBoxAsString;
+    readonly viewBoxObj = this.panning.viewBox;
 
     readonly isExamMode = this._modeService.isExamMode;
 
@@ -170,8 +171,6 @@ export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
     private sourceTextSub?: Subscription;
     private suppressNextSourceLoad = false;
     private isClearing = false;
-
-    constructor(private panning: PanningService) {}
 
     private readonly _examTupleEffect = this.createExamTupleEffect();
 
@@ -202,7 +201,6 @@ export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
     }
 
     ngOnInit(): void {
-        this._examTupleEffect;
         this.sourceNetSub = this._sourceNetService.sourceNet$.subscribe((diagram: Diagram | null) => {
             if (this.suppressNextSourceLoad) {
                 this.suppressNextSourceLoad = false;
@@ -262,7 +260,9 @@ export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
 
     onDragOver(event: DragEvent) {
         event.preventDefault();
-        event.dataTransfer && (event.dataTransfer.dropEffect = 'copy');
+        if (event.dataTransfer) {
+            event.dataTransfer.dropEffect = 'copy';
+        }
         this.isDragOver.set(true);
     }
 

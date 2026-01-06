@@ -1,19 +1,13 @@
 <div class="draw-layout">
     <div class="palette">
         <h3>Palette</h3>
-        <button
-            draggable="true"
-            (dragstart)="startPaletteDrag($event, 'place')"
-            (dragend)="endPaletteDrag()">
+        <button draggable="true" (dragstart)="startPaletteDrag($event, 'place')" (dragend)="endPaletteDrag()">
             {{ 'TUPLE_INPUT.PLACE' | translate }}
         </button>
-        <button
-            draggable="true"
-            (dragstart)="startPaletteDrag($event, 'transition')"
-            (dragend)="endPaletteDrag()">
+        <button draggable="true" (dragstart)="startPaletteDrag($event, 'transition')" (dragend)="endPaletteDrag()">
             {{ 'TUPLE_INPUT.TRANSITION' | translate }}
         </button>
-        <p class="hint">{{ 'TUPLE_INPUT.CONTROLS' | translate }} </p>
+        <p class="hint">{{ 'TUPLE_INPUT.CONTROLS' | translate }}</p>
     </div>
 
     <div class="canvas-container">
@@ -48,18 +42,18 @@
             (wheel)="onCanvasWheel($event)">
             <defs>
                 <marker id="arrowhead-draw" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-                    <polygon points="0 0, 10 3.5, 0 7" fill="black"/>
+                    <polygon points="0 0, 10 3.5, 0 7" fill="black" />
                 </marker>
             </defs>
             <pattern id="grid" width="50" height="50" patternUnits="userSpaceOnUse">
-                <path d="M 50 0 L 0 0 0 50" fill="none" stroke="lightgray" stroke-width="0.5"/>
+                <path d="M 50 0 L 0 0 0 50" fill="none" stroke="lightgray" stroke-width="0.5" />
             </pattern>
             <rect
                 [attr.x]="viewBoxObj().minX"
                 [attr.y]="viewBoxObj().minY"
                 [attr.width]="viewBoxObj().width"
                 [attr.height]="viewBoxObj().height"
-                fill="url(#grid)"/>
+                fill="url(#grid)" />
 
             @for (line of connectionLines(); track line.id) {
                 <g class="connection-group" [attr.data-connection-id]="line.id">
@@ -70,14 +64,14 @@
                         [attr.x2]="line.x2"
                         [attr.y2]="line.y2"
                         (mousedown)="onConnectionMouseDown($event, line.id)"
-                        (wheel)="onConnectionWheel($event, line.id)"/>
+                        (wheel)="onConnectionWheel($event, line.id)" />
                     <line
                         class="connection-line"
                         [attr.x1]="line.x1"
                         [attr.y1]="line.y1"
                         [attr.x2]="line.x2"
                         [attr.y2]="line.y2"
-                        marker-end="url(#arrowhead-draw)"/>
+                        marker-end="url(#arrowhead-draw)" />
                     @if (line.weight > 1) {
                         <text
                             [attr.x]="(line.x1 + line.x2) / 2"
@@ -98,7 +92,7 @@
                         [diagramNode]="element.node"
                         [selected]="selectedElementId() === element.id"
                         [showInnerLabel]="false"
-                        [transitionLabelPlacement]="'inside'"/>
+                        [transitionLabelPlacement]="'inside'" />
                     <rect
                         class="drag-overlay"
                         [attr.x]="element.node.x - 60"
@@ -112,7 +106,7 @@
                         (mousedown)="onElementMouseDown($event, element)"
                         (contextmenu)="onElementRightClick($event, element)"
                         (dblclick)="onElementDoubleClick($event, element)"
-                        (wheel)="onElementWheel($event, element)"/>
+                        (wheel)="onElementWheel($event, element)" />
                 </g>
             }
         </svg>
