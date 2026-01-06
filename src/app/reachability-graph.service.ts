@@ -76,9 +76,13 @@ export class ReachabilityGraphService {
                 this._startMarkingRG,
             );
 
+            //Startmarkierung hervorheben, eingehender Arc aus dem Ursprung
+            const initialEdge = new FiringEdge('Initial', 'Initial', initialId, 'Initial','Initial');
+
+
             const newGraph = new ReachabilityGraph();
             newGraph.nodes = [initialStateNode];
-            newGraph.edges = [];
+            newGraph.edges = [initialEdge];
             this._reachabilityGraph.set(newGraph);
 
             console.log('initialReachabilityLabel' + initialReachabilityLabel);
