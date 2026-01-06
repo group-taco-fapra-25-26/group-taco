@@ -123,6 +123,10 @@ export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
             if (diagram) {
                 this.loadDiagramIntoCanvas(diagram);
                 this.resetViewIfReady();
+                const tuple = this._serializationService.serializeTuple(diagram);
+                if (tuple) {
+                    this.tupleString = tuple;
+                }
             } else {
                 this.clearCanvas();
             }
