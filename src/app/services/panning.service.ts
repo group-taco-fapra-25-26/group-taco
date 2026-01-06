@@ -108,7 +108,6 @@ export class PanningService {
         drawingArea: ElementRef<SVGGraphicsElement>,
         diagram: DisplayableGraph | undefined,
     ): void {
-        if (!diagram) return;
         event.preventDefault();
 
         const svg = drawingArea.nativeElement;

@@ -1,10 +1,29 @@
-import { AfterViewInit, Component, computed, ElementRef, OnDestroy, signal, ViewChild } from '@angular/core';
+import {
+    AfterViewInit,
+    Component,
+    computed,
+    ElementRef,
+    OnDestroy,
+    signal,
+    ViewChild,
+    inject,
+    OnInit,
+} from '@angular/core';
 import { SvgNodeComponent } from '../../display/svg-node/svg-node.component';
 import { DiagramNode } from '../../../classes/diagram/diagram-node';
 import { DiagramPlace, DiagramPlaceLabelPlacement } from '../../../classes/diagram/diagram-place';
 import { DiagramTransition, DiagramTransitionOptions } from '../../../classes/diagram/diagram-transition';
 import { PanningService } from '../../../services/panning.service';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
+import { ParserService } from '../../../services/parser.service';
+import { SourcePetriNetService } from '../../../services/source-petri-net.service';
+import { SpringEmbedderService } from '../../../services/spring-embedder.service';
+import { DisplayService } from '../../../services/display.service';
+import { ToasterNotificationService } from '../../../services/toaster-notification.service';
+import { Diagram } from '../../../classes/diagram/diagram';
+import { Subscription } from 'rxjs';
 
 interface DrawnElement {
     node: DiagramNode;
@@ -36,12 +55,12 @@ declare global {
 @Component({
     selector: 'app-draw',
     standalone: true,
-    imports: [CommonModule, SvgNodeComponent],
+    imports: [CommonModule, FormsModule, TranslateModule, SvgNodeComponent],
     templateUrl: './draw.component.html',
     styleUrl: './draw.component.css',
     providers: [PanningService],
 })
-export class DrawComponent implements AfterViewInit, OnDestroy {
+export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
     @ViewChild('drawingArea') drawingArea!: ElementRef<SVGGraphicsElement>;
 
     readonly drawnElements = signal<DrawnElement[]>([]);
@@ -66,6 +85,8 @@ export class DrawComponent implements AfterViewInit, OnDestroy {
     readonly viewBox = this.panning.viewBoxAsString;
     readonly viewBoxObj = this.panning.viewBox;
 
+    tupleString = '';
+
     private elementIdCounter = 0;
     private connectionIdCounter = 0;
     private placeLabelCounter = 0;
@@ -79,15 +100,36 @@ export class DrawComponent implements AfterViewInit, OnDestroy {
     private readonly TRANSITION_HALF_W = 25;
     private readonly TRANSITION_HALF_H = 15;
 
+    private _parserService = inject(ParserService);
+    private _sourcePetriNetService = inject(SourcePetriNetService);
+    private _springEmbedderService = inject(SpringEmbedderService);
+    private _displayService = inject(DisplayService);
+    private _toaster = inject(ToasterNotificationService);
+
+    private sourceNetSub?: Subscription;
+
     constructor(private panning: PanningService) {}
+
+    ngOnInit(): void {
+        this.sourceNetSub = this._sourcePetriNetService.sourceNet$.subscribe((diagram) => {
+            if (diagram) {
+                this.loadDiagramIntoCanvas(diagram);
+                this.resetViewIfReady();
+            } else {
+                this.clearCanvas();
+            }
+        });
+    }
 
     ngAfterViewInit() {
         this.svgElement = (this.drawingArea?.nativeElement as SVGSVGElement) ?? null;
+        this.resetViewIfReady();
     }
 
     ngOnDestroy(): void {
         document.removeEventListener('mousemove', this.onDocumentMouseMove, true);
         document.removeEventListener('mouseup', this.onDocumentMouseUp, true);
+        this.sourceNetSub?.unsubscribe();
     }
 
     // Palette drag helpers
@@ -173,6 +215,28 @@ export class DrawComponent implements AfterViewInit, OnDestroy {
         this.placeLabelCounter = 0;
         this.transitionLabelCounter = 0;
         this.panning.resetViewBox(this.drawingArea);
+    }
+
+    private resetViewIfReady() {
+        if (this.drawingArea) {
+            this.panning.resetViewBox(this.drawingArea);
+        }
+    }
+
+    generateNetFromInput() {
+        const input = this.tupleString.trim();
+        if (!input) return;
+
+        const diagram = this._parserService.parse(input);
+        if (diagram) {
+            this._sourcePetriNetService.loadNewNet(diagram, input);
+            this._displayService.display(diagram);
+            this.loadDiagramIntoCanvas(diagram);
+            this._springEmbedderService.calculateLayout().catch((error) => console.error(error));
+            this._toaster.showSuccess('TUPLE_INPUT.TOAST_SUCCESS_HEADER', 'TUPLE_INPUT.TOAST_SUCCESS_BODY');
+        } else {
+            this._toaster.showError('TUPLE_INPUT.TOAST_ERROR_HEADER', 'TUPLE_INPUT.TOAST_ERROR_BODY');
+        }
     }
 
     onElementMouseDown(event: MouseEvent, element: DrawnElement) {
@@ -405,6 +469,37 @@ export class DrawComponent implements AfterViewInit, OnDestroy {
         newNode.x = x;
         newNode.y = y;
         this.drawnElements.update((elements) => [...elements, { id: uniqueId, node: newNode }]);
+    }
+
+    private loadDiagramIntoCanvas(diagram: Diagram) {
+        this.connectionIdCounter = 0;
+        this.elementIdCounter = 0;
+        this.placeLabelCounter = diagram.places.length;
+        this.transitionLabelCounter = diagram.transitions.length;
+
+        const elements: DrawnElement[] = [];
+        diagram.places.forEach((place) => {
+            elements.push({ id: place.id, node: place });
+            this.elementIdCounter++;
+        });
+        diagram.transitions.forEach((transition) => {
+            elements.push({ id: transition.id, node: transition });
+            this.elementIdCounter++;
+        });
+
+        const conns: Connection[] = [];
+        diagram.arcs.forEach((arc) => {
+            conns.push({
+                id: `conn-${++this.connectionIdCounter}`,
+                aId: arc.source,
+                bId: arc.target,
+                weight: arc.weight,
+            });
+        });
+
+        this.drawnElements.set(elements);
+        this.connections.set(conns);
+        this.selectedElementId.set(null);
     }
 
     private deleteElement(element: DrawnElement) {

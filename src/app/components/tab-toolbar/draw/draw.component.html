@@ -18,6 +18,17 @@
     </div>
 
     <div class="canvas-container">
+        <div class="inline-tuple-input">
+            <input
+                type="text"
+                [(ngModel)]="tupleString"
+                [placeholder]="'TUPLE_INPUT.LABEL' | translate"
+                (keyup.enter)="generateNetFromInput()" />
+            <button (click)="generateNetFromInput()" [disabled]="!tupleString.trim().length">
+                {{ 'TUPLE_INPUT.GENERATE' | translate }}
+            </button>
+        </div>
+
         <svg
             #drawingArea
             class="drawing-canvas"

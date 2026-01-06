@@ -50,6 +50,42 @@
 
 .canvas-container {
     width: 100%;
+    position: relative;
+}
+
+.inline-tuple-input {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    display: flex;
+    gap: 8px;
+    padding: 8px 10px;
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid #d0d0d0;
+    border-radius: 6px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+    z-index: 2;
+}
+
+.inline-tuple-input input {
+    min-width: 280px;
+    padding: 6px 8px;
+    border: 1px solid #bdbdbd;
+    border-radius: 4px;
+}
+
+.inline-tuple-input button {
+    padding: 6px 12px;
+    border: 1px solid #1976d2;
+    background: #1976d2;
+    color: #fff;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.inline-tuple-input button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 .drawing-canvas {
