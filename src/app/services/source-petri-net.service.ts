@@ -125,4 +125,11 @@ export class SourcePetriNetService {
         this._isDirty$.next(false);
         this._isOptimalLayoutCalculated$.next(false);
     }
+
+    public setSourceText(rawText: string): void {
+        this._sourceText$.next(rawText);
+        this._sourceNet$.next(null);
+        this._isDirty$.next(false);
+        this._isOptimalLayoutCalculated$.next(false);
+    }
 }

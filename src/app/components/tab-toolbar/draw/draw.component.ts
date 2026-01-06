@@ -115,6 +115,7 @@ export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
     readonly isExamMode = this._modeService.isExamMode;
 
     private sourceNetSub?: Subscription;
+    private sourceTextSub?: Subscription;
     private suppressNextSourceLoad = false;
 
     constructor(private panning: PanningService) {}
@@ -136,6 +137,12 @@ export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
                 this.clearCanvas();
             }
         });
+
+        this.sourceTextSub = this._sourcePetriNetService.sourceText$.subscribe((text) => {
+            if (this.isExamMode() && text) {
+                this.tupleString = text;
+            }
+        });
     }
 
     ngAfterViewInit() {
@@ -147,6 +154,7 @@ export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
         document.removeEventListener('mousemove', this.onDocumentMouseMove, true);
         document.removeEventListener('mouseup', this.onDocumentMouseUp, true);
         this.sourceNetSub?.unsubscribe();
+        this.sourceTextSub?.unsubscribe();
     }
 
     // Palette drag helpers
