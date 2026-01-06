@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, OnDestroy, ViewChild, ElementRef, OnInit } from '@angular/core';
+import { AfterViewInit, Component, OnDestroy, ViewChild, ElementRef, OnInit, inject } from '@angular/core';
 import { SvgNodeComponent } from '../../display/svg-node/svg-node.component';
 import { PanningService } from '../../../services/panning.service';
 import { CommonModule } from '@angular/common';
@@ -17,7 +17,7 @@ import { DrawService, DrawnElement } from '../../../services/draw.service';
 export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
     @ViewChild('drawingArea') drawingArea!: ElementRef<SVGGraphicsElement>;
 
-    constructor(public draw: DrawService) {}
+    draw = inject(DrawService);
 
     readonly drawnElements = this.draw.drawnElements;
     readonly isDragOver = this.draw.isDragOver;
