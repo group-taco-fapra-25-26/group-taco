@@ -9,6 +9,8 @@ import { PnmlArc, PnmlPlace, PnmlPosition, PnmlTransition } from '../classes/pnm
 
 export type SUPPORTED_FORMAT = 'pnml' | 'json';
 
+const formatTupleSet = (items: string[]) => `{${items.join(', ')}}`;
+
 @Injectable({
     providedIn: 'root',
 })
@@ -22,6 +24,29 @@ export class SerializationService {
             default:
                 throw new Error(`Unsupported format: ${format}`);
         }
+    }
+
+    public serializeTuple(diagram: Diagram): string {
+        const places = formatTupleSet(diagram.places.map((p) => p.id));
+        const transitions = formatTupleSet(diagram.transitions.map((t) => t.id));
+
+        const arcs = diagram.arcs
+            .map((arc) => {
+                const weightPart = arc.weight !== 1 ? `${arc.weight}*` : '';
+                return `${weightPart}(${arc.source}, ${arc.target})`;
+            })
+            .join(' + ');
+
+        const markingParts = diagram.places
+            .map((p) => {
+                const tokens = p.tokenCount();
+                if (!tokens) return '';
+                return tokens === 1 ? p.id : `${tokens}*${p.id}`;
+            })
+            .filter((m) => m.length > 0);
+        const marking = markingParts.join(' + ');
+
+        return `(${places}, ${transitions}, ${arcs}, ${marking})`;
     }
 
     /**

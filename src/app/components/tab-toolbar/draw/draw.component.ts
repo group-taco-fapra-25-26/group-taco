@@ -25,6 +25,7 @@ import { DisplayService } from '../../../services/display.service';
 import { ToasterNotificationService } from '../../../services/toaster-notification.service';
 import { Diagram } from '../../../classes/diagram/diagram';
 import { Subscription } from 'rxjs';
+import { SerializationService } from '../../../services/serialization.service';
 
 interface DrawnElement {
     node: DiagramNode;
@@ -102,17 +103,23 @@ export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
     private readonly TRANSITION_HALF_H = 15;
 
     private _parserService = inject(ParserService);
+    private _serializationService = inject(SerializationService);
     private _sourcePetriNetService = inject(SourcePetriNetService);
     private _springEmbedderService = inject(SpringEmbedderService);
     private _displayService = inject(DisplayService);
     private _toaster = inject(ToasterNotificationService);
 
     private sourceNetSub?: Subscription;
+    private suppressNextSourceLoad = false;
 
     constructor(private panning: PanningService) {}
 
     ngOnInit(): void {
         this.sourceNetSub = this._sourcePetriNetService.sourceNet$.subscribe((diagram) => {
+            if (this.suppressNextSourceLoad) {
+                this.suppressNextSourceLoad = false;
+                return;
+            }
             if (diagram) {
                 this.loadDiagramIntoCanvas(diagram);
                 this.resetViewIfReady();
@@ -567,8 +574,14 @@ export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
         });
 
         const diagram = new Diagram(places, transitions, arcs);
+        this.suppressNextSourceLoad = true;
         this._sourcePetriNetService.updateEditedNet(diagram);
         this._displayService.display(diagram);
+
+        const tuple = this._serializationService.serializeTuple(diagram);
+        if (tuple) {
+            this.tupleString = tuple;
+        }
     }
 
     private getSvgCoordinates(event: MouseEvent | DragEvent): { x: number; y: number } | null {
