@@ -410,6 +410,10 @@ export class DrawService implements OnDestroy {
                 .prompt(this._translate.instant('DRAW.PROMPT_EDIT_TRANSITION_TITLE'), currentLabel)
                 ?.trim();
             if (!newLabel || newLabel === currentLabel) return;
+            if (this.isLabelTaken(newLabel, element.id)) {
+                this.showDuplicateLabelError(newLabel);
+                return;
+            }
 
             const oldId = element.id;
             this.drawnElements.update((elements) =>
@@ -441,6 +445,10 @@ export class DrawService implements OnDestroy {
                 .prompt(this._translate.instant('DRAW.PROMPT_EDIT_PLACE_TITLE'), currentLabel)
                 ?.trim();
             if (!newLabel || newLabel === currentLabel) return;
+            if (this.isLabelTaken(newLabel, element.id)) {
+                this.showDuplicateLabelError(newLabel);
+                return;
+            }
 
             const oldId = element.id;
             this.drawnElements.update((elements) =>
@@ -711,6 +719,17 @@ export class DrawService implements OnDestroy {
         });
     }
 
+    private showDuplicateLabelError(label: string) {
+        this._toaster.showError('DRAW.TOAST_DUPLICATE_LABEL_HEADER', 'DRAW.TOAST_DUPLICATE_LABEL_BODY', {
+            messageParams: { label },
+        });
+    }
+
+    private isLabelTaken(label: string, ignoreId?: string): boolean {
+        if (label === ignoreId) return false;
+        return this.drawnElements().some((el) => el.id === label);
+    }
+
     private onDocumentMouseMove = (event: MouseEvent) => {
         if (!this.draggedElement || !this.isDraggingElement) return;
 
@@ -774,8 +793,12 @@ export class DrawService implements OnDestroy {
     }
 
     private addElement(type: 'place' | 'transition', label: string, x: number, y: number) {
-        let newNode: DiagramNode;
         const newId = label;
+        if (this.isLabelTaken(newId)) {
+            this.showDuplicateLabelError(newId);
+            return;
+        }
+        let newNode: DiagramNode;
         if (type === 'place') {
             newNode = this.buildPlace(newId, label, 0, {
                 labelPlacement: 'below',
@@ -973,11 +996,19 @@ export class DrawService implements OnDestroy {
     }
 
     private getNextPlaceLabel() {
-        return `p${++this.placeLabelCounter}`;
+        let candidate: string;
+        do {
+            candidate = `p${++this.placeLabelCounter}`;
+        } while (this.isLabelTaken(candidate));
+        return candidate;
     }
 
     private getNextTransitionLabel() {
-        return `t${++this.transitionLabelCounter}`;
+        let candidate: string;
+        do {
+            candidate = `t${++this.transitionLabelCounter}`;
+        } while (this.isLabelTaken(candidate));
+        return candidate;
     }
 
     private getSvgCoordinates(event: MouseEvent | DragEvent): { x: number; y: number } | null {

@@ -61,7 +61,9 @@
     },
     "DRAW": {
         "PROMPT_EDIT_PLACE_TITLE": "Edit place label",
-        "PROMPT_EDIT_TRANSITION_TITLE": "Edit transition label"
+        "PROMPT_EDIT_TRANSITION_TITLE": "Edit transition label",
+        "TOAST_DUPLICATE_LABEL_HEADER": "Duplicate label",
+        "TOAST_DUPLICATE_LABEL_BODY": "The label '{{label}}' is already used. Please choose a unique label."
     },
     "HEADER_SUBTITLE": "Fachpraktikum Programmiersysteme WiSe25/26 by Marie G., Florian M., Ben L. and Alexander K.",
     "TACO_COUNT": "Number of tacos: {{count}}!",
