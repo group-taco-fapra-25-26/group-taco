@@ -32,7 +32,7 @@ export class PanningService {
         diagram: DisplayableGraph | undefined,
         drawingArea: ElementRef<SVGGraphicsElement>,
     ): void {
-        if (event.button !== 0 || !diagram) return;
+        if (event.button !== 0) return;
         this._isPanning = true;
         this._panStartPoint = { x: event.clientX, y: event.clientY };
         drawingArea.nativeElement.style.cursor = 'grabbing';
