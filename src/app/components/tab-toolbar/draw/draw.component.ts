@@ -27,6 +27,7 @@ import { Diagram } from '../../../classes/diagram/diagram';
 import { Subscription } from 'rxjs';
 import { SerializationService } from '../../../services/serialization.service';
 import { ModeService } from '../../../services/mode.service';
+import { TOAST_POSITIONS, ToastList } from '../../../classes/toast';
 
 interface DrawnElement {
     node: DiagramNode;
@@ -258,7 +259,10 @@ export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
     }
 
     onTupleButtonClick(): void {
-        if (this.isExamMode()) return;
+        if (this.isExamMode()) {
+            this.validateDrawnNetAgainstTuple();
+            return;
+        }
         this.generateNetFromInput();
     }
 
@@ -420,7 +424,7 @@ export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
             this.drawnElements.update((elements) =>
                 elements.map((el) => {
                     if (el.id !== element.id || !(el.node instanceof DiagramPlace)) return el;
-                    const currentTokens = el.node.tokenCount();
+                    const currentTokens = el.node.tokenCount() ?? 0;
                     const newTokens = Math.max(0, currentTokens - delta); // scroll up adds tokens, down removes
                     const updated = this.buildPlace(el.node.id, el.node.label ?? el.node.displayLabel, newTokens, {
                         hideTokens: el.node.hideTokens,
@@ -434,6 +438,102 @@ export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
             );
             this.syncSourceNetFromCanvas();
         }
+    }
+
+    private validateDrawnNetAgainstTuple() {
+        const tupleText = this.tupleString.trim();
+        if (!tupleText) {
+            this._toaster.showError('TUPLE_INPUT.TOAST_INVALIDATION_HEADER', 'TUPLE_INPUT.TOAST_INVALIDATION_BODY', {
+                duration: 0,
+                toastPosition: TOAST_POSITIONS.TOP_CENTER,
+            });
+            return;
+        }
+
+        const parsed = this._parserService.parse(tupleText);
+        if (!parsed) {
+            this._toaster.showError('TUPLE_INPUT.TOAST_INVALIDATION_HEADER', 'TUPLE_INPUT.TOAST_INVALIDATION_BODY', {
+                duration: 0,
+                toastPosition: TOAST_POSITIONS.TOP_CENTER,
+            });
+            return;
+        }
+
+        const drawnDiagram = this.buildDiagramFromCanvas();
+
+        const expectedPlaces = new Set(parsed.places.map((p) => p.id));
+        const drawnPlaces = new Set(drawnDiagram.places.map((p) => p.id));
+
+        const expectedTransitions = new Set(parsed.transitions.map((t) => t.id));
+        const drawnTransitions = new Set(drawnDiagram.transitions.map((t) => t.id));
+
+        const expectedArcs = new Map<string, number>(
+            parsed.arcs.map((a) => [`${a.source}->${a.target}`, a.weight ?? 1]),
+        );
+        const drawnArcs = new Map<string, number>(
+            drawnDiagram.arcs.map((a) => [`${a.source}->${a.target}`, a.weight ?? 1]),
+        );
+
+        const expectedTokens = new Map<string, number>(parsed.places.map((p) => [p.id, p.tokenCount()]));
+        const drawnTokens = new Map<string, number>(drawnDiagram.places.map((p) => [p.id, p.tokenCount()]));
+
+        const errors: string[] = [];
+
+        const missingPlaces = [...expectedPlaces].filter((p) => !drawnPlaces.has(p));
+        const extraPlaces = [...drawnPlaces].filter((p) => !expectedPlaces.has(p));
+        if (missingPlaces.length) errors.push(`Missing places: ${missingPlaces.join(', ')}`);
+        if (extraPlaces.length) errors.push(`Extra places: ${extraPlaces.join(', ')}`);
+
+        const missingTransitions = [...expectedTransitions].filter((t) => !drawnTransitions.has(t));
+        const extraTransitions = [...drawnTransitions].filter((t) => !expectedTransitions.has(t));
+        if (missingTransitions.length) errors.push(`Missing transitions: ${missingTransitions.join(', ')}`);
+        if (extraTransitions.length) errors.push(`Extra transitions: ${extraTransitions.join(', ')}`);
+
+        expectedArcs.forEach((weight, key) => {
+            const drawnWeight = drawnArcs.get(key);
+            if (drawnWeight === undefined) {
+                errors.push(`Missing arc: ${key}`);
+            } else if (drawnWeight !== weight) {
+                errors.push(`Arc weight mismatch at ${key}: expected ${weight}, found ${drawnWeight}`);
+            }
+        });
+        drawnArcs.forEach((weight, key) => {
+            if (!expectedArcs.has(key)) {
+                errors.push(`Extra arc: ${key}`);
+            }
+        });
+
+        expectedTokens.forEach((weight, placeId) => {
+            const drawnToken = drawnTokens.get(placeId) ?? 0;
+            if (drawnToken !== weight) {
+                const diff = weight - drawnToken;
+                errors.push(
+                    diff > 0
+                        ? `${Math.abs(diff)} token(s) missing at ${placeId} (expected ${weight}, found ${drawnToken})`
+                        : `${Math.abs(diff)} extra token(s) at ${placeId} (expected ${weight}, found ${drawnToken})`,
+                );
+            }
+        });
+        drawnTokens.forEach((weight, placeId) => {
+            if (!expectedTokens.has(placeId) && weight !== 0) {
+                errors.push(`Unexpected tokens at ${placeId}: found ${weight}`);
+            }
+        });
+
+        if (errors.length === 0) {
+            this._toaster.showSuccess('TUPLE_INPUT.TOAST_VALIDATION_HEADER', 'TUPLE_INPUT.TOAST_VALIDATION_BODY', {
+                duration: 0,
+                toastPosition: TOAST_POSITIONS.TOP_CENTER,
+            });
+            return;
+        }
+
+        const list: ToastList[] = errors.map((message) => ({ message }));
+        this._toaster.showError('TUPLE_INPUT.TOAST_INVALIDATION_HEADER', 'TUPLE_INPUT.TOAST_INVALIDATION_BODY', {
+            duration: 0,
+            toastPosition: TOAST_POSITIONS.TOP_CENTER,
+            list,
+        });
     }
 
     private onDocumentMouseMove = (event: MouseEvent) => {
@@ -566,10 +666,22 @@ export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
     }
 
     private syncSourceNetFromCanvas() {
+        const diagram = this.buildDiagramFromCanvas();
+
+        this.suppressNextSourceLoad = true;
+        this._sourcePetriNetService.updateEditedNet(diagram);
+        this._displayService.display(diagram);
+
+        const tuple = this._serializationService.serializeTuple(diagram);
+        if (tuple && !this.isExamMode()) {
+            this.tupleString = tuple;
+        }
+    }
+
+    private buildDiagramFromCanvas(): Diagram {
         const places: DiagramPlace[] = [];
         const transitions: DiagramTransition[] = [];
 
-        // Keep references to transition connection arrays so we can fill them when wiring arcs
         const placeMap = new Map<string, DiagramPlace>();
         const transitionMap = new Map<
             string,
@@ -639,7 +751,6 @@ export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
             const transitionSource = transitionMap.get(conn.aId);
             const transitionTarget = transitionMap.get(conn.bId);
 
-            // Wire arcs to transitions so play/reachability tabs see correct pre/post sets
             if (placeSource && transitionTarget) {
                 transitionTarget.inputPlaces.push(placeSource);
                 transitionTarget.inputArcs.push(arc);
@@ -649,15 +760,7 @@ export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
             }
         });
 
-        const diagram = new Diagram(places, transitions, arcs);
-        this.suppressNextSourceLoad = true;
-        this._sourcePetriNetService.updateEditedNet(diagram);
-        this._displayService.display(diagram);
-
-        const tuple = this._serializationService.serializeTuple(diagram);
-        if (tuple && !this.isExamMode()) {
-            this.tupleString = tuple;
-        }
+        return new Diagram(places, transitions, arcs);
     }
 
     private getSvgCoordinates(event: MouseEvent | DragEvent): { x: number; y: number } | null {
