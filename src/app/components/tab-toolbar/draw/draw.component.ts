@@ -156,8 +156,8 @@ export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
     private readonly CONNECTION_PARALLEL_OFFSET = 26;
 
     private _parserService = inject(ParserService);
-    private _serializationService = inject(SerializationService);
-    private _sourcePetriNetService = inject(SourcePetriNetService);
+    private readonly _serializationService = inject(SerializationService);
+    private _sourceNetService = inject(SourcePetriNetService);
     private _springEmbedderService = inject(SpringEmbedderService);
     private _displayService = inject(DisplayService);
     private _toaster = inject(ToasterNotificationService);
@@ -171,32 +171,39 @@ export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
     private suppressNextSourceLoad = false;
     private isClearing = false;
 
-    private readonly examTupleEffect = effect(() => {
-        if (!this.isExamMode()) return;
-        const sourceDiagram = this._sourcePetriNetService.getCurrentSourceNet();
-        const tupleFromSource = sourceDiagram ? this._serializationService.serializeTuple(sourceDiagram) : undefined;
-        if (tupleFromSource) {
-            this.tupleString = tupleFromSource;
-            return;
-        }
-
-        const diagramFromCanvas = this.buildDiagramFromCanvas();
-        const tupleFromCanvas = this._serializationService.serializeTuple(diagramFromCanvas);
-        if (tupleFromCanvas) {
-            this.tupleString = tupleFromCanvas;
-            return;
-        }
-
-        const sourceText = this._sourcePetriNetService.getSourceText();
-        if (sourceText) {
-            this.tupleString = sourceText;
-        }
-    });
-
     constructor(private panning: PanningService) {}
 
+    private readonly _examTupleEffect = this.createExamTupleEffect();
+
+    private createExamTupleEffect() {
+        return effect(() => {
+            if (!this.isExamMode()) return;
+            const sourceDiagram = this._sourceNetService.getCurrentSourceNet();
+            const tupleFromSource = sourceDiagram
+                ? this._serializationService.serializeTuple(sourceDiagram)
+                : undefined;
+            if (tupleFromSource) {
+                this.tupleString = tupleFromSource;
+                return;
+            }
+
+            const diagramFromCanvas = this.buildDiagramFromCanvas();
+            const tupleFromCanvas = this._serializationService.serializeTuple(diagramFromCanvas);
+            if (tupleFromCanvas) {
+                this.tupleString = tupleFromCanvas;
+                return;
+            }
+
+            const sourceText = this._sourceNetService.getSourceText();
+            if (sourceText) {
+                this.tupleString = sourceText;
+            }
+        });
+    }
+
     ngOnInit(): void {
-        this.sourceNetSub = this._sourcePetriNetService.sourceNet$.subscribe((diagram) => {
+        this._examTupleEffect;
+        this.sourceNetSub = this._sourceNetService.sourceNet$.subscribe((diagram: Diagram | null) => {
             if (this.suppressNextSourceLoad) {
                 this.suppressNextSourceLoad = false;
                 return;
@@ -213,7 +220,7 @@ export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
             }
         });
 
-        this.sourceTextSub = this._sourcePetriNetService.sourceText$.subscribe((text) => {
+        this.sourceTextSub = this._sourceNetService.sourceText$.subscribe((text: string | null) => {
             if (this.isExamMode() && text) {
                 this.tupleString = text;
             }
@@ -318,7 +325,7 @@ export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
         this.transitionLabelCounter = 0;
         this.panning.resetViewBox(this.drawingArea);
         if (!triggeredByService) {
-            this._sourcePetriNetService.clear();
+            this._sourceNetService.clear();
         }
         this._displayService.clear();
         this.isClearing = false;
@@ -336,7 +343,7 @@ export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
 
         const diagram = this._parserService.parse(input);
         if (diagram) {
-            this._sourcePetriNetService.loadNewNet(diagram, input);
+            this._sourceNetService.loadNewNet(diagram, input);
             this._displayService.display(diagram);
             this.loadDiagramIntoCanvas(diagram);
             this._springEmbedderService.calculateLayout().catch((error) => console.error(error));
@@ -847,7 +854,7 @@ export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
         const diagram = this.buildDiagramFromCanvas();
 
         this.suppressNextSourceLoad = true;
-        this._sourcePetriNetService.updateEditedNet(diagram);
+        this._sourceNetService.updateEditedNet(diagram);
         this._displayService.display(diagram);
 
         const tuple = this._serializationService.serializeTuple(diagram);
@@ -938,7 +945,116 @@ export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
             }
         });
 
+        const nodeLookup = new Map<string, DiagramNode>();
+        placeMap.forEach((p, id) => nodeLookup.set(id, p));
+        transitionMap.forEach((t, id) => nodeLookup.set(id, t.transition));
+        this.applyParallelOffsetsToArcs(arcs, nodeLookup);
+
         return new Diagram(places, transitions, arcs);
+    }
+
+    private applyParallelOffsetsToArcs(arcs: DiagramArc[], nodeMap: Map<string, DiagramNode>): void {
+        const groups = new Map<string, DiagramArc[]>();
+        arcs.forEach((arc) => {
+            const key = arc.source < arc.target ? `${arc.source}~${arc.target}` : `${arc.target}~${arc.source}`;
+            const list = groups.get(key) || [];
+            list.push(arc);
+            groups.set(key, list);
+        });
+
+        groups.forEach((group, key) => {
+            if (group.length < 2) return;
+            const [aId, bId] = key.split('~');
+            const nodeA = nodeMap.get(aId);
+            const nodeB = nodeMap.get(bId);
+            if (!nodeA || !nodeB) return;
+
+            const dx = nodeB.x - nodeA.x;
+            const dy = nodeB.y - nodeA.y;
+            const distance = Math.hypot(dx, dy);
+            if (distance < 1) return;
+
+            const perpX = -dy / distance;
+            const perpY = dx / distance;
+
+            const forward = group
+                .filter((arc) => arc.source === aId && arc.target === bId)
+                .sort((a, b) => a.id.localeCompare(b.id));
+            const backward = group
+                .filter((arc) => arc.source === bId && arc.target === aId)
+                .sort((a, b) => a.id.localeCompare(b.id));
+
+            const applyOffsets = (list: DiagramArc[], baseShiftSign: -1 | 0 | 1, pairedExists: boolean) => {
+                const centerIndex = (list.length - 1) / 2;
+                list.forEach((arc, index) => {
+                    const start = nodeMap.get(arc.source);
+                    const end = nodeMap.get(arc.target);
+                    if (!start || !end) return;
+
+                    let offset = (index - centerIndex) * this.CONNECTION_PARALLEL_OFFSET;
+                    if (baseShiftSign !== 0) {
+                        offset += baseShiftSign * (this.CONNECTION_PARALLEL_OFFSET / 2);
+                    }
+                    if (Math.abs(offset) < 0.01 && pairedExists) {
+                        offset = this.CONNECTION_PARALLEL_OFFSET / 2;
+                    }
+
+                    if (Math.abs(offset) < 0.01) {
+                        arc.bendPoints = [];
+                        return;
+                    }
+
+                    const p1 = 1 / 3;
+                    const p2 = 2 / 3;
+                    arc.bendPoints = [
+                        {
+                            x: start.x + (end.x - start.x) * p1 + perpX * offset,
+                            y: start.y + (end.y - start.y) * p1 + perpY * offset,
+                        },
+                        {
+                            x: start.x + (end.x - start.x) * p2 + perpX * offset,
+                            y: start.y + (end.y - start.y) * p2 + perpY * offset,
+                        },
+                    ];
+                });
+            };
+
+            applyOffsets(forward, 0, backward.length > 0);
+            applyOffsets(backward, -1, forward.length > 0);
+        });
+    }
+
+    private buildPlace(
+        id: string,
+        label?: string,
+        initialTokens = 0,
+        options?: {
+            innerLabel?: string;
+            hideTokens?: boolean;
+            labelPlacement?: DiagramPlaceLabelPlacement;
+            isStartPlace?: boolean;
+        },
+    ): DiagramPlace {
+        return new DiagramPlace(id, initialTokens, label, {
+            innerLabel: options?.innerLabel ?? undefined,
+            hideTokens: options?.hideTokens ?? false,
+            labelPlacement: options?.labelPlacement ?? 'below',
+            isStartPlace: options?.isStartPlace ?? false,
+        });
+    }
+
+    private buildTransition(id: string, label: string, options?: DiagramTransitionOptions): DiagramTransition {
+        return new DiagramTransition(id, label, [], [], [], [], {
+            innerLabel: options?.innerLabel ?? label,
+        });
+    }
+
+    private getNextPlaceLabel() {
+        return `p${++this.placeLabelCounter}`;
+    }
+
+    private getNextTransitionLabel() {
+        return `t${++this.transitionLabelCounter}`;
     }
 
     private getSvgCoordinates(event: MouseEvent | DragEvent): { x: number; y: number } | null {
@@ -957,33 +1073,6 @@ export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
         if (!ctm) return null;
         const svgPoint = point.matrixTransform(ctm.inverse());
         return { x: svgPoint.x, y: svgPoint.y };
-    }
-
-    private computeTrimmedLine(a: DrawnElement, b: DrawnElement) {
-        const ax = a.node.x;
-        const ay = a.node.y;
-        const bx = b.node.x;
-        const by = b.node.y;
-        const dx = bx - ax;
-        const dy = by - ay;
-        const len = Math.hypot(dx, dy) || 1;
-        const ux = dx / len;
-        const uy = dy / len;
-
-        const aOffset =
-            a.node instanceof DiagramPlace
-                ? this.PLACE_RADIUS
-                : Math.min(this.TRANSITION_HALF_W, this.TRANSITION_HALF_H);
-        const bOffset =
-            b.node instanceof DiagramPlace
-                ? this.PLACE_RADIUS
-                : Math.min(this.TRANSITION_HALF_W, this.TRANSITION_HALF_H);
-
-        const x1 = ax + ux * aOffset;
-        const y1 = ay + uy * aOffset;
-        const x2 = bx - ux * bOffset;
-        const y2 = by - uy * bOffset;
-        return { x1, y1, x2, y2 };
     }
 
     private computeOffsetTrimmedLine(
@@ -1024,38 +1113,5 @@ export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
         const x2 = shiftedBx - ux * bOffset;
         const y2 = shiftedBy - uy * bOffset;
         return { x1, y1, x2, y2 };
-    }
-
-    private buildPlace(
-        id: string,
-        label?: string,
-        initialTokens = 0,
-        options?: {
-            innerLabel?: string;
-            hideTokens?: boolean;
-            labelPlacement?: DiagramPlaceLabelPlacement;
-            isStartPlace?: boolean;
-        },
-    ): DiagramPlace {
-        return new DiagramPlace(id, initialTokens, label, {
-            innerLabel: options?.innerLabel ?? undefined,
-            hideTokens: options?.hideTokens ?? false,
-            labelPlacement: options?.labelPlacement ?? 'below',
-            isStartPlace: options?.isStartPlace ?? false,
-        });
-    }
-
-    private buildTransition(id: string, label: string, options?: DiagramTransitionOptions): DiagramTransition {
-        return new DiagramTransition(id, label, [], [], [], [], {
-            innerLabel: options?.innerLabel ?? label,
-        });
-    }
-
-    private getNextPlaceLabel() {
-        return `p${++this.placeLabelCounter}`;
-    }
-
-    private getNextTransitionLabel() {
-        return `t${++this.transitionLabelCounter}`;
     }
 }
