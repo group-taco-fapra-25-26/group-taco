@@ -41,7 +41,7 @@
         "TOAST_SUCCESS_BODY": "Tupel erfolgreich verarbeitet",
         "TOAST_SUCCESS_HEADER": "Netz geladen",
         "TOAST_VALIDATION_HEADER": "Richtige Zeichnung",
-        "TOAST_VALIDATION_BODY": "Tuple und Zeichnung stimmen überein",
+        "TOAST_VALIDATION_BODY": "Tupel und Zeichnung stimmen überein",
         "TOAST_ERROR_HEADER": "Ungültiges Tupel",
         "TOAST_ERROR_BODY": "Das angegebene Tupel konnte nicht geparst werden.",
         "TOAST_INVALIDATION_HEADER": "Zeichnung stimmt nicht überein",
