@@ -76,13 +76,13 @@ export class ReachabilityGraphService {
                 this._startMarkingRG,
             );
 
-            //Startmarkierung hervorheben, eingehender Arc aus dem Ursprung
-            const initialEdge = new FiringEdge('Initial', 'Initial', initialId, 'Initial','Initial');
+            //TO-DO Startmarkierung hervorheben, eingehender Arc aus dem Ursprung
+            // const initialEdge = new FiringEdge('Initial', 'Initial', initialId, 'Initial','Initial');
 
 
             const newGraph = new ReachabilityGraph();
             newGraph.nodes = [initialStateNode];
-            newGraph.edges = [initialEdge];
+            newGraph.edges = [];
             this._reachabilityGraph.set(newGraph);
 
             console.log('initialReachabilityLabel' + initialReachabilityLabel);
@@ -99,6 +99,10 @@ export class ReachabilityGraphService {
      * @param label The label of the fired transition.
      */
     convertFiringEntryLabelToReachabilityGraphID(firingEntry: FiringEntry, label: string) {
+
+	// boolean markierungVorhanden = false;
+	// 	boolean verbindungVorhanden = false;
+
         //Zustand nach Schalten / Target für Arcs
         const currentReachabilityLabel: string = Object.entries(firingEntry.endMarking)
             .map(([, value]) => `${value}`)
@@ -123,6 +127,30 @@ export class ReachabilityGraphService {
 
         const nextEdgeIndex = graph.edges.length + 1;
         const currentRgEdgeId = 'Edge' + nextEdgeIndex;
+
+
+// Vorhandensein der Verbindung prüfen, wenn Markierung bereits existiert;
+						// so wird sichergestellt, dass eine Markierung, die von einer anderen Transiion
+						// erzeugt wurde, ebenfalls verbunden bzw. eingefügt wird
+						// direkt anhand EGVerbindung prüfen, da ID uneindeutig
+						// es wird die EG-VerbindungsHauotID der geschalteten Transition
+						// überprüft, um alle Fälle abzudecken (Verbindung da, aber anderes t,
+						// Verbindung nicht da)
+
+
+        //Prüfung auf Vorhandensein der Verbindung:
+        	// public void erzeugeEgVerbindungsHauptID() {
+	// 	String tempIDErzeugungsID = (egVerbindungsTransitionsID + markierungsSourceID + markierungsTargetID);
+	// 	setEgVerbindungsHauptID(tempIDErzeugungsID);
+	// }
+
+// for (int k = 0; k < egNachfolgerEGVerbindungsListe.size(); k++) {
+// 							String pruefTransitionsID = egNachfolgerEGVerbindungsListe.get(k).getEgVerbindungsHauptID();
+
+// 							if (pruefTransitionsID == hinzugefuegteMarkierung.getMarkierungsEGVerbindung()
+// 									.getEgVerbindungsHauptID()) {
+// 								// identische Verbindung ist bereits vorhanden
+// 								verbindungVorhanden = true;
 
         const currentFiringEdge = new FiringEdge(
             currentRgEdgeId,
