@@ -79,21 +79,33 @@ export class SvgArcComponent {
 
         if (!source || !target || !arc) return { x: 0, y: 0 };
 
-        // If there are bend points, use the middle bend point
-        const bendPoints = arc.bendPoints;
-        if (bendPoints.length > 0) {
-            const midIndex = Math.floor(bendPoints.length / 2);
-            return {
-                x: bendPoints[midIndex].x,
-                y: bendPoints[midIndex].y - 10,
-            };
+        const points: Coords[] = [{ x: source.x, y: source.y }, ...arc.bendPoints, { x: target.x, y: target.y }];
+
+        const segmentLengths: number[] = [];
+        let total = 0;
+        for (let i = 0; i < points.length - 1; i++) {
+            const dx = points[i + 1].x - points[i].x;
+            const dy = points[i + 1].y - points[i].y;
+            const len = Math.sqrt(dx * dx + dy * dy);
+            segmentLengths.push(len);
+            total += len;
+        }
+        if (total === 0) return { x: source.x, y: source.y - 10 };
+
+        let targetDist = total / 2;
+        for (let i = 0; i < segmentLengths.length; i++) {
+            if (targetDist <= segmentLengths[i]) {
+                const t = targetDist / segmentLengths[i];
+                return {
+                    x: points[i].x + (points[i + 1].x - points[i].x) * t,
+                    y: points[i].y + (points[i + 1].y - points[i].y) * t - 10,
+                };
+            }
+            targetDist -= segmentLengths[i];
         }
 
-        // Otherwise, use the midpoint between source and target
-        return {
-            x: (source.x + target.x) / 2,
-            y: (source.y + target.y) / 2 - 10,
-        };
+        const last = points[points.length - 1];
+        return { x: last.x, y: last.y - 10 };
     });
 
     readonly hasLabel = computed(() => {
