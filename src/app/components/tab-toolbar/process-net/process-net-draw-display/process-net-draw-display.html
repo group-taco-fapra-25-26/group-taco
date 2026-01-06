@@ -61,7 +61,7 @@
         }
         <!-- Render all drawn elements -->
         @for (element of drawnElements(); track $index) {
-        <g class="element-wrapper" [attr.data-element-id]="element.node.displayLabel">
+        <g class="element-wrapper" [attr.data-element-id]="element.id">
             <g
                 appSvgNode
                 [diagramNode]="element.node"
