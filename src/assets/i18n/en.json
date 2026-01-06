@@ -37,7 +37,7 @@
         "VALIDATE": "Validate",
         "PLACE": "+ Place",
         "TRANSITION": "+ Transition",
-        "CONTROLS": "Drag and drop to create new places and transitions. Right click a transition and a place to create a connection between them. Scroll up or down on a connection to change its weight or on a place to change its marking. Middel click removes a place, transition or connection. Double click a transition or place to rename it.",
+        "CONTROLS": "Drag and drop to create new places and transitions. Right click a transition and a place to create a connection between them. Scroll up or down on a connection to change its weight or on a place to change its marking. Middle click removes a place, transition or connection. Double click a transition or place to rename it.",
         "TOAST_SUCCESS_BODY": "Tuple processed successfully",
         "TOAST_SUCCESS_HEADER": "Net loaded",
         "TOAST_VALIDATION_HEADER": "Correct Drawing",
