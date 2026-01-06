@@ -74,17 +74,66 @@ export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
     readonly selectedElementId = signal<string | null>(null);
 
     readonly connectionLines = computed(() => {
-        return this.connections()
-            .map((c) => {
-                const a = this.getElementById(c.aId);
-                const b = this.getElementById(c.bId);
-                if (!a || !b) return null;
-                const { x1, y1, x2, y2 } = this.computeTrimmedLine(a, b);
-                return { id: c.id, x1, y1, x2, y2, weight: c.weight };
-            })
-            .filter(
-                (v): v is { id: string; x1: number; y1: number; x2: number; y2: number; weight: number } => v !== null,
-            );
+        const nodeMap = new Map<string, DrawnElement>();
+        this.drawnElements().forEach((el) => nodeMap.set(el.id, el));
+
+        const groups = new Map<string, Connection[]>();
+        this.connections().forEach((conn) => {
+            if (!nodeMap.has(conn.aId) || !nodeMap.has(conn.bId)) return;
+            const key = conn.aId < conn.bId ? `${conn.aId}~${conn.bId}` : `${conn.bId}~${conn.aId}`;
+            const list = groups.get(key) || [];
+            list.push(conn);
+            groups.set(key, list);
+        });
+
+        const lines: { id: string; x1: number; y1: number; x2: number; y2: number; weight: number }[] = [];
+
+        groups.forEach((group, key) => {
+            const [aId, bId] = key.split('~');
+            const nodeA = nodeMap.get(aId);
+            const nodeB = nodeMap.get(bId);
+            if (!nodeA || !nodeB) return;
+
+            const baseDx = nodeB.node.x - nodeA.node.x;
+            const baseDy = nodeB.node.y - nodeA.node.y;
+            const baseLen = Math.hypot(baseDx, baseDy) || 1;
+            const basePerpX = -baseDy / baseLen;
+            const basePerpY = baseDx / baseLen;
+
+            const forward = group
+                .filter((c) => c.aId === aId && c.bId === bId)
+                .sort((c1, c2) => c1.id.localeCompare(c2.id));
+            const backward = group
+                .filter((c) => c.aId === bId && c.bId === aId)
+                .sort((c1, c2) => c1.id.localeCompare(c2.id));
+
+            const addLines = (list: Connection[], baseShiftSign: -1 | 0 | 1, pairedExists: boolean) => {
+                const centerIndex = (list.length - 1) / 2;
+                list.forEach((conn, idx) => {
+                    const a = nodeMap.get(conn.aId);
+                    const b = nodeMap.get(conn.bId);
+                    if (!a || !b) return;
+                    let offset = (idx - centerIndex) * this.CONNECTION_PARALLEL_OFFSET;
+                    if (baseShiftSign !== 0) {
+                        offset += baseShiftSign * (this.CONNECTION_PARALLEL_OFFSET / 2);
+                    }
+                    if (Math.abs(offset) < 0.01 && pairedExists) {
+                        offset = this.CONNECTION_PARALLEL_OFFSET / 2;
+                    }
+                    const { x1, y1, x2, y2 } = this.computeOffsetTrimmedLine(a, b, offset, basePerpX, basePerpY);
+                    lines.push({ id: conn.id, x1, y1, x2, y2, weight: conn.weight });
+                });
+            };
+
+            if (group.length === 1) {
+                addLines(group, 0, false);
+                return;
+            }
+            addLines(forward, 0, backward.length > 0);
+            addLines(backward, -1, forward.length > 0);
+        });
+
+        return lines;
     });
 
     readonly viewBox = this.panning.viewBoxAsString;
@@ -104,6 +153,7 @@ export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
     private readonly PLACE_RADIUS = 25;
     private readonly TRANSITION_HALF_W = 25;
     private readonly TRANSITION_HALF_H = 15;
+    private readonly CONNECTION_PARALLEL_OFFSET = 26;
 
     private _parserService = inject(ParserService);
     private _serializationService = inject(SerializationService);
@@ -933,6 +983,46 @@ export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
         const y1 = ay + uy * aOffset;
         const x2 = bx - ux * bOffset;
         const y2 = by - uy * bOffset;
+        return { x1, y1, x2, y2 };
+    }
+
+    private computeOffsetTrimmedLine(
+        a: DrawnElement,
+        b: DrawnElement,
+        offset: number,
+        basePerpX?: number,
+        basePerpY?: number,
+    ) {
+        const ax = a.node.x;
+        const ay = a.node.y;
+        const bx = b.node.x;
+        const by = b.node.y;
+        const dx = bx - ax;
+        const dy = by - ay;
+        const len = Math.hypot(dx, dy) || 1;
+        const ux = dx / len;
+        const uy = dy / len;
+        const perpX = basePerpX ?? -dy / len;
+        const perpY = basePerpY ?? dx / len;
+
+        const shiftedAx = ax + perpX * offset;
+        const shiftedAy = ay + perpY * offset;
+        const shiftedBx = bx + perpX * offset;
+        const shiftedBy = by + perpY * offset;
+
+        const aOffset =
+            a.node instanceof DiagramPlace
+                ? this.PLACE_RADIUS
+                : Math.min(this.TRANSITION_HALF_W, this.TRANSITION_HALF_H);
+        const bOffset =
+            b.node instanceof DiagramPlace
+                ? this.PLACE_RADIUS
+                : Math.min(this.TRANSITION_HALF_W, this.TRANSITION_HALF_H);
+
+        const x1 = shiftedAx + ux * aOffset;
+        const y1 = shiftedAy + uy * aOffset;
+        const x2 = shiftedBx - ux * bOffset;
+        const y2 = shiftedBy - uy * bOffset;
         return { x1, y1, x2, y2 };
     }
 

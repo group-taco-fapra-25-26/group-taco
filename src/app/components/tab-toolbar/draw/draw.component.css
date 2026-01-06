@@ -130,6 +130,10 @@
 .connection-weight-label {
     font-size: 1.2em;
     fill: #222;
+    stroke: white;
+    stroke-width: 1px;
+    paint-order: stroke fill;
+    stroke-linejoin: round;
     pointer-events: none;
 }
 
