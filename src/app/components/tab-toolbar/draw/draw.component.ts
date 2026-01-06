@@ -1,61 +1,10 @@
-import {
-    AfterViewInit,
-    Component,
-    computed,
-    ElementRef,
-    OnDestroy,
-    signal,
-    ViewChild,
-    inject,
-    OnInit,
-    effect,
-} from '@angular/core';
+import { AfterViewInit, Component, OnDestroy, ViewChild, ElementRef, OnInit } from '@angular/core';
 import { SvgNodeComponent } from '../../display/svg-node/svg-node.component';
-import { DiagramNode } from '../../../classes/diagram/diagram-node';
-import { DiagramPlace, DiagramPlaceLabelPlacement } from '../../../classes/diagram/diagram-place';
-import { DiagramTransition, DiagramTransitionOptions } from '../../../classes/diagram/diagram-transition';
-import { DiagramArc } from '../../../classes/diagram/diagram-arc';
 import { PanningService } from '../../../services/panning.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { ParserService } from '../../../services/parser.service';
-import { SourcePetriNetService } from '../../../services/source-petri-net.service';
-import { SpringEmbedderService } from '../../../services/spring-embedder.service';
-import { DisplayService } from '../../../services/display.service';
-import { ToasterNotificationService } from '../../../services/toaster-notification.service';
-import { Diagram } from '../../../classes/diagram/diagram';
-import { Subscription } from 'rxjs';
-import { SerializationService } from '../../../services/serialization.service';
-import { ModeService } from '../../../services/mode.service';
-import { TOAST_POSITIONS, ToastList } from '../../../classes/toast';
-
-interface DrawnElement {
-    node: DiagramNode;
-    id: string;
-}
-
-interface Connection {
-    id: string;
-    aId: string;
-    bId: string;
-    weight: number;
-}
-
-interface GlobalDragData {
-    elementType: 'place' | 'transition';
-    elementId: string;
-    elementLabel: string;
-    elementTokens?: number;
-    clientX: number;
-    clientY: number;
-}
-
-declare global {
-    interface Window {
-        __dragData?: GlobalDragData;
-    }
-}
+import { TranslateModule } from '@ngx-translate/core';
+import { DrawService, DrawnElement } from '../../../services/draw.service';
 
 @Component({
     selector: 'app-draw',
@@ -63,1055 +12,107 @@ declare global {
     imports: [CommonModule, FormsModule, TranslateModule, SvgNodeComponent],
     templateUrl: './draw.component.html',
     styleUrl: './draw.component.css',
-    providers: [PanningService],
+    providers: [PanningService, DrawService],
 })
 export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
     @ViewChild('drawingArea') drawingArea!: ElementRef<SVGGraphicsElement>;
 
-    readonly drawnElements = signal<DrawnElement[]>([]);
-    readonly connections = signal<Connection[]>([]);
-    readonly isDragOver = signal(false);
-    readonly selectedElementId = signal<string | null>(null);
+    constructor(public draw: DrawService) {}
 
-    readonly connectionLines = computed(() => {
-        const nodeMap = new Map<string, DrawnElement>();
-        this.drawnElements().forEach((el) => nodeMap.set(el.id, el));
+    readonly drawnElements = this.draw.drawnElements;
+    readonly isDragOver = this.draw.isDragOver;
+    readonly selectedElementId = this.draw.selectedElementId;
+    readonly connectionLines = this.draw.connectionLines;
 
-        const groups = new Map<string, Connection[]>();
-        this.connections().forEach((conn) => {
-            if (!nodeMap.has(conn.aId) || !nodeMap.has(conn.bId)) return;
-            const key = conn.aId < conn.bId ? `${conn.aId}~${conn.bId}` : `${conn.bId}~${conn.aId}`;
-            const list = groups.get(key) || [];
-            list.push(conn);
-            groups.set(key, list);
-        });
-
-        const lines: { id: string; x1: number; y1: number; x2: number; y2: number; weight: number }[] = [];
-
-        groups.forEach((group, key) => {
-            const [aId, bId] = key.split('~');
-            const nodeA = nodeMap.get(aId);
-            const nodeB = nodeMap.get(bId);
-            if (!nodeA || !nodeB) return;
-
-            const baseDx = nodeB.node.x - nodeA.node.x;
-            const baseDy = nodeB.node.y - nodeA.node.y;
-            const baseLen = Math.hypot(baseDx, baseDy) || 1;
-            const basePerpX = -baseDy / baseLen;
-            const basePerpY = baseDx / baseLen;
-
-            const forward = group
-                .filter((c) => c.aId === aId && c.bId === bId)
-                .sort((c1, c2) => c1.id.localeCompare(c2.id));
-            const backward = group
-                .filter((c) => c.aId === bId && c.bId === aId)
-                .sort((c1, c2) => c1.id.localeCompare(c2.id));
-
-            const addLines = (list: Connection[], baseShiftSign: -1 | 0 | 1, pairedExists: boolean) => {
-                const centerIndex = (list.length - 1) / 2;
-                list.forEach((conn, idx) => {
-                    const a = nodeMap.get(conn.aId);
-                    const b = nodeMap.get(conn.bId);
-                    if (!a || !b) return;
-                    let offset = (idx - centerIndex) * this.CONNECTION_PARALLEL_OFFSET;
-                    if (baseShiftSign !== 0) {
-                        offset += baseShiftSign * (this.CONNECTION_PARALLEL_OFFSET / 2);
-                    }
-                    if (Math.abs(offset) < 0.01 && pairedExists) {
-                        offset = this.CONNECTION_PARALLEL_OFFSET / 2;
-                    }
-                    const { x1, y1, x2, y2 } = this.computeOffsetTrimmedLine(a, b, offset, basePerpX, basePerpY);
-                    lines.push({ id: conn.id, x1, y1, x2, y2, weight: conn.weight });
-                });
-            };
-
-            if (group.length === 1) {
-                addLines(group, 0, false);
-                return;
-            }
-            addLines(forward, 0, backward.length > 0);
-            addLines(backward, -1, forward.length > 0);
-        });
-
-        return lines;
-    });
-
-    tupleString = '';
-
-    private elementIdCounter = 0;
-    private connectionIdCounter = 0;
-    private placeLabelCounter = 0;
-    private transitionLabelCounter = 0;
-    private draggedElement: DrawnElement | null = null;
-    private dragOffset = { x: 0, y: 0 };
-    private svgElement: SVGSVGElement | null = null;
-    private isDraggingElement = false;
-
-    private readonly PLACE_RADIUS = 25;
-    private readonly TRANSITION_HALF_W = 25;
-    private readonly TRANSITION_HALF_H = 15;
-    private readonly CONNECTION_PARALLEL_OFFSET = 26;
-
-    private _parserService = inject(ParserService);
-    private readonly _serializationService = inject(SerializationService);
-    private _sourceNetService = inject(SourcePetriNetService);
-    private _springEmbedderService = inject(SpringEmbedderService);
-    private _displayService = inject(DisplayService);
-    private _toaster = inject(ToasterNotificationService);
-    private _modeService = inject(ModeService);
-    private _translate = inject(TranslateService);
-    private panning = inject(PanningService);
-
-    readonly viewBox = this.panning.viewBoxAsString;
-    readonly viewBoxObj = this.panning.viewBox;
-
-    readonly isExamMode = this._modeService.isExamMode;
-
-    private sourceNetSub?: Subscription;
-    private sourceTextSub?: Subscription;
-    private suppressNextSourceLoad = false;
-    private isClearing = false;
-
-    private readonly _examTupleEffect = this.createExamTupleEffect();
-
-    private createExamTupleEffect() {
-        return effect(() => {
-            if (!this.isExamMode()) return;
-            const sourceDiagram = this._sourceNetService.getCurrentSourceNet();
-            const tupleFromSource = sourceDiagram
-                ? this._serializationService.serializeTuple(sourceDiagram)
-                : undefined;
-            if (tupleFromSource) {
-                this.tupleString = tupleFromSource;
-                return;
-            }
-
-            const diagramFromCanvas = this.buildDiagramFromCanvas();
-            const tupleFromCanvas = this._serializationService.serializeTuple(diagramFromCanvas);
-            if (tupleFromCanvas) {
-                this.tupleString = tupleFromCanvas;
-                return;
-            }
-
-            const sourceText = this._sourceNetService.getSourceText();
-            if (sourceText) {
-                this.tupleString = sourceText;
-            }
-        });
+    get tupleString() {
+        return this.draw.tupleString();
+    }
+    set tupleString(value: string) {
+        this.draw.setTupleString(value);
     }
 
-    ngOnInit(): void {
-        this.sourceNetSub = this._sourceNetService.sourceNet$.subscribe((diagram: Diagram | null) => {
-            if (this.suppressNextSourceLoad) {
-                this.suppressNextSourceLoad = false;
-                return;
-            }
-            if (diagram) {
-                this.loadDiagramIntoCanvas(diagram);
-                this.resetViewIfReady();
-                const tuple = this._serializationService.serializeTuple(diagram);
-                if (tuple && !this.isExamMode()) {
-                    this.tupleString = tuple;
-                }
-            } else {
-                this.clearCanvas(true);
-            }
-        });
+    readonly viewBox = this.draw.viewBox;
+    readonly viewBoxObj = this.draw.viewBoxObj;
+    readonly isExamMode = this.draw.isExamMode;
 
-        this.sourceTextSub = this._sourceNetService.sourceText$.subscribe((text: string | null) => {
-            if (this.isExamMode() && text) {
-                this.tupleString = text;
-            }
-        });
+    ngOnInit(): void {
+        this.draw.init();
     }
 
     ngAfterViewInit() {
-        this.svgElement = (this.drawingArea?.nativeElement as SVGSVGElement) ?? null;
-        this.resetViewIfReady();
+        this.draw.setDrawingArea(this.drawingArea);
     }
 
     ngOnDestroy(): void {
-        document.removeEventListener('mousemove', this.onDocumentMouseMove, true);
-        document.removeEventListener('mouseup', this.onDocumentMouseUp, true);
-        this.sourceNetSub?.unsubscribe();
-        this.sourceTextSub?.unsubscribe();
+        this.draw.destroy();
     }
 
     // Palette drag helpers
     startPaletteDrag(event: DragEvent, type: 'place' | 'transition') {
-        const label = type === 'place' ? this.getNextPlaceLabel() : this.getNextTransitionLabel();
-        const id = `${type}-${Date.now()}`;
-        if (event.dataTransfer) {
-            event.dataTransfer.setData('element-type', type);
-            event.dataTransfer.effectAllowed = 'copy';
-        }
-        window.__dragData = {
-            elementType: type,
-            elementId: id,
-            elementLabel: label,
-            clientX: 0,
-            clientY: 0,
-        };
+        this.draw.startPaletteDrag(event, type);
     }
 
     endPaletteDrag() {
-        delete window.__dragData;
+        this.draw.endPaletteDrag();
     }
 
     onDragOver(event: DragEvent) {
-        event.preventDefault();
-        if (event.dataTransfer) {
-            event.dataTransfer.dropEffect = 'copy';
-        }
-        this.isDragOver.set(true);
+        this.draw.onDragOver(event);
     }
 
     onDragLeave() {
-        this.isDragOver.set(false);
+        this.draw.onDragLeave();
     }
 
     onDrop(event: DragEvent) {
-        event.preventDefault();
-        this.isDragOver.set(false);
-
-        const dragData = window.__dragData;
-        if (dragData) {
-            this.placeElementAtClient(dragData.elementType, dragData.elementLabel, event.clientX, event.clientY);
-            delete window.__dragData;
-            return;
-        }
-
-        const elementType = event.dataTransfer?.getData('element-type');
-        if (elementType === 'place' || elementType === 'transition') {
-            const label = elementType === 'place' ? this.getNextPlaceLabel() : this.getNextTransitionLabel();
-            this.placeElement(event, elementType, label);
-        }
+        this.draw.onDrop(event);
     }
 
     onCanvasPanStart(event: MouseEvent) {
-        if (this.isDraggingElement) return;
-        const target = event.target as Element | null;
-        const isOnElement = target?.closest('.element-wrapper') || target?.classList.contains('drag-overlay');
-        if (isOnElement) return;
-        this.panning.startPan(event, undefined, this.drawingArea);
+        this.draw.onCanvasPanStart(event);
     }
 
     onCanvasPan(event: MouseEvent) {
-        if (this.isDraggingElement) return;
-        this.panning.pan(event, this.drawingArea);
+        this.draw.onCanvasPan(event);
     }
 
     onCanvasPanEnd() {
-        this.panning.endPan(this.drawingArea);
+        this.draw.onCanvasPanEnd();
     }
 
     onCanvasWheel(event: WheelEvent) {
-        this.panning.zoom(event, this.drawingArea, undefined);
+        this.draw.onCanvasWheel(event);
     }
 
     preventContext(event: MouseEvent) {
-        event.preventDefault();
-    }
-
-    clearCanvas(triggeredByService = false) {
-        if (this.isClearing) return;
-        this.isClearing = true;
-        this.drawnElements.set([]);
-        this.connections.set([]);
-        this.selectedElementId.set(null);
-        this.elementIdCounter = 0;
-        this.connectionIdCounter = 0;
-        this.placeLabelCounter = 0;
-        this.transitionLabelCounter = 0;
-        this.panning.resetViewBox(this.drawingArea);
-        if (!triggeredByService) {
-            this._sourceNetService.clear();
-        }
-        this._displayService.clear();
-        this.isClearing = false;
-    }
-
-    private resetViewIfReady() {
-        if (this.drawingArea) {
-            this.panning.resetViewBox(this.drawingArea);
-        }
-    }
-
-    generateNetFromInput() {
-        const input = this.tupleString.trim();
-        if (!input) return;
-
-        const diagram = this._parserService.parse(input);
-        if (diagram) {
-            this._sourceNetService.loadNewNet(diagram, input);
-            this._displayService.display(diagram);
-            this.loadDiagramIntoCanvas(diagram);
-            this._springEmbedderService.calculateLayout().catch((error) => console.error(error));
-            this._toaster.showSuccess('TUPLE_INPUT.TOAST_SUCCESS_HEADER', 'TUPLE_INPUT.TOAST_SUCCESS_BODY');
-        } else {
-            this._toaster.showError('TUPLE_INPUT.TOAST_ERROR_HEADER', 'TUPLE_INPUT.TOAST_ERROR_BODY');
-        }
+        this.draw.preventContext(event);
     }
 
     onTupleButtonClick(): void {
-        if (this.isExamMode()) {
-            this.validateDrawnNetAgainstTuple();
-            return;
-        }
-        this.generateNetFromInput();
+        this.draw.onTupleButtonClick();
     }
 
     onElementMouseDown(event: MouseEvent, element: DrawnElement) {
-        if (event.button === 1) {
-            event.stopImmediatePropagation();
-            event.preventDefault();
-            this.deleteElement(element);
-            return;
-        }
-        if (event.button !== 0) return;
-
-        event.stopImmediatePropagation();
-        event.preventDefault();
-        this.isDraggingElement = true;
-        this.draggedElement = element;
-
-        const svgPoint = this.getSvgCoordinates(event);
-        if (svgPoint) {
-            this.dragOffset.x = svgPoint.x - element.node.x;
-            this.dragOffset.y = svgPoint.y - element.node.y;
-        }
-
-        document.addEventListener('mousemove', this.onDocumentMouseMove, true);
-        document.addEventListener('mouseup', this.onDocumentMouseUp, true);
+        this.draw.onElementMouseDown(event, element);
     }
 
     onElementRightClick(event: MouseEvent, element: DrawnElement) {
-        event.preventDefault();
-        event.stopImmediatePropagation();
-        const currentSelected = this.selectedElementId();
-        if (!currentSelected) {
-            this.selectedElementId.set(element.id);
-            return;
-        }
-        if (currentSelected === element.id) {
-            this.selectedElementId.set(null);
-            return;
-        }
-        const first = this.getElementById(currentSelected);
-        const second = element;
-        if (!first) {
-            this.selectedElementId.set(null);
-            return;
-        }
-        const firstIsPlace = first.node instanceof DiagramPlace;
-        const firstIsTransition = first.node instanceof DiagramTransition;
-        const secondIsPlace = second.node instanceof DiagramPlace;
-        const secondIsTransition = second.node instanceof DiagramTransition;
-
-        if ((firstIsPlace && secondIsTransition) || (firstIsTransition && secondIsPlace)) {
-            this.connections.update((cs) => cs.filter((c) => !(c.aId === first.id && c.bId === second.id)));
-            const newConn: Connection = {
-                id: `conn-${++this.connectionIdCounter}`,
-                aId: first.id,
-                bId: second.id,
-                weight: 1,
-            };
-            this.connections.update((cs) => [...cs, newConn]);
-            this.selectedElementId.set(null);
-            this.syncSourceNetFromCanvas();
-        } else {
-            this.selectedElementId.set(element.id);
-        }
+        this.draw.onElementRightClick(event, element);
     }
 
     onConnectionMouseDown(event: MouseEvent, connectionId: string) {
-        if (event.button === 1) {
-            event.stopImmediatePropagation();
-            event.preventDefault();
-            this.deleteConnection(connectionId);
-        }
+        this.draw.onConnectionMouseDown(event, connectionId);
     }
 
     onConnectionWheel(event: WheelEvent, connectionId: string) {
-        event.preventDefault();
-        event.stopPropagation();
-        const delta = Math.sign(event.deltaY) || 0;
-        if (delta === 0) return;
-        this.connections.update((cs) =>
-            cs.map((c) => {
-                if (c.id !== connectionId) return c;
-                const newWeight = Math.max(1, c.weight - delta); // scroll up (negative deltaY) increases weight
-                return { ...c, weight: newWeight };
-            }),
-        );
-        this.syncSourceNetFromCanvas();
+        this.draw.onConnectionWheel(event, connectionId);
     }
 
     onElementDoubleClick(event: MouseEvent, element: DrawnElement) {
-        event.stopImmediatePropagation();
-        event.preventDefault();
-        if (element.node instanceof DiagramTransition) {
-            const currentLabel = element.node.displayLabel ?? element.node.id;
-            const newLabel = window
-                .prompt(this._translate.instant('DRAW.PROMPT_EDIT_TRANSITION_TITLE'), currentLabel)
-                ?.trim();
-            if (!newLabel || newLabel === currentLabel) return;
-
-            const oldId = element.id;
-            this.drawnElements.update((elements) =>
-                elements.map((el) => {
-                    if (el.id !== oldId) return el;
-                    const updated = this.buildTransition(newLabel, newLabel, { innerLabel: newLabel });
-                    updated.x = el.node.x;
-                    updated.y = el.node.y;
-                    return { id: newLabel, node: updated };
-                }),
-            );
-            this.connections.update((cs) =>
-                cs.map((c) => ({
-                    ...c,
-                    aId: c.aId === oldId ? newLabel : c.aId,
-                    bId: c.bId === oldId ? newLabel : c.bId,
-                })),
-            );
-            if (this.selectedElementId() === oldId) {
-                this.selectedElementId.set(newLabel);
-            }
-            this.syncSourceNetFromCanvas();
-            return;
-        }
-
-        if (element.node instanceof DiagramPlace) {
-            const currentLabel = element.node.label ?? element.node.displayLabel;
-            const newLabel = window
-                .prompt(this._translate.instant('DRAW.PROMPT_EDIT_PLACE_TITLE'), currentLabel)
-                ?.trim();
-            if (!newLabel || newLabel === currentLabel) return;
-
-            const oldId = element.id;
-            this.drawnElements.update((elements) =>
-                elements.map((el) => {
-                    if (el.id !== oldId) return el;
-                    const updated = this.buildPlace(newLabel, newLabel, el.node.tokenCount(), {
-                        labelPlacement: 'below',
-                    });
-                    updated.x = el.node.x;
-                    updated.y = el.node.y;
-                    return { id: newLabel, node: updated };
-                }),
-            );
-            this.connections.update((cs) =>
-                cs.map((c) => ({
-                    ...c,
-                    aId: c.aId === oldId ? newLabel : c.aId,
-                    bId: c.bId === oldId ? newLabel : c.bId,
-                })),
-            );
-            if (this.selectedElementId() === oldId) {
-                this.selectedElementId.set(newLabel);
-            }
-            this.syncSourceNetFromCanvas();
-        }
+        this.draw.onElementDoubleClick(event, element);
     }
 
     onElementWheel(event: WheelEvent, element: DrawnElement) {
-        event.preventDefault();
-        event.stopPropagation();
-        if (element.node instanceof DiagramPlace) {
-            const delta = Math.sign(event.deltaY) || 0;
-            if (delta === 0) return;
-            this.drawnElements.update((elements) =>
-                elements.map((el) => {
-                    if (el.id !== element.id || !(el.node instanceof DiagramPlace)) return el;
-                    const currentTokens = el.node.tokenCount() ?? 0;
-                    const newTokens = Math.max(0, currentTokens - delta); // scroll up adds tokens, down removes
-                    const updated = this.buildPlace(el.node.id, el.node.label ?? el.node.displayLabel, newTokens, {
-                        hideTokens: el.node.hideTokens,
-                        labelPlacement: el.node.labelPlacement,
-                        isStartPlace: el.node.isStartPlace,
-                    });
-                    updated.x = el.node.x;
-                    updated.y = el.node.y;
-                    return { ...el, node: updated };
-                }),
-            );
-            this.syncSourceNetFromCanvas();
-        }
-    }
-
-    private validateDrawnNetAgainstTuple() {
-        const tupleText = this.tupleString.trim();
-        if (!tupleText) {
-            this._toaster.showError('TUPLE_INPUT.TOAST_INVALIDATION_HEADER', 'TUPLE_INPUT.TOAST_INVALIDATION_BODY', {
-                duration: 0,
-                toastPosition: TOAST_POSITIONS.TOP_CENTER,
-            });
-            return;
-        }
-
-        const parsed = this._parserService.parse(tupleText);
-        if (!parsed) {
-            this._toaster.showError('TUPLE_INPUT.TOAST_INVALIDATION_HEADER', 'TUPLE_INPUT.TOAST_INVALIDATION_BODY', {
-                duration: 0,
-                toastPosition: TOAST_POSITIONS.TOP_CENTER,
-            });
-            return;
-        }
-
-        const drawnDiagram = this.buildDiagramFromCanvas();
-
-        const placeLabel = (p: DiagramPlace) => p.label ?? p.displayLabel ?? p.id;
-        const transitionLabel = (t: DiagramTransition) => t.label ?? t.displayLabel ?? t.id;
-
-        const parsedPlaceLabelById = new Map(parsed.places.map((p) => [p.id, placeLabel(p)]));
-        const parsedTransitionLabelById = new Map(parsed.transitions.map((t) => [t.id, transitionLabel(t)]));
-        const drawnPlaceLabelById = new Map(drawnDiagram.places.map((p) => [p.id, placeLabel(p)]));
-        const drawnTransitionLabelById = new Map(drawnDiagram.transitions.map((t) => [t.id, transitionLabel(t)]));
-
-        const idToLabel = (id: string, placeMap: Map<string, string>, transitionMap: Map<string, string>) =>
-            placeMap.get(id) ?? transitionMap.get(id) ?? id;
-
-        const expectedPlaces = new Set(
-            parsed.places.map((p) => idToLabel(p.id, parsedPlaceLabelById, parsedTransitionLabelById)),
-        );
-        const drawnPlaces = new Set(
-            drawnDiagram.places.map((p) => idToLabel(p.id, drawnPlaceLabelById, drawnTransitionLabelById)),
-        );
-
-        const expectedTransitions = new Set(
-            parsed.transitions.map((t) => idToLabel(t.id, parsedPlaceLabelById, parsedTransitionLabelById)),
-        );
-        const drawnTransitions = new Set(
-            drawnDiagram.transitions.map((t) => idToLabel(t.id, drawnPlaceLabelById, drawnTransitionLabelById)),
-        );
-
-        const expectedArcs = new Map<string, number>(
-            parsed.arcs.map((a) => {
-                const srcLabel = idToLabel(a.source, parsedPlaceLabelById, parsedTransitionLabelById);
-                const tgtLabel = idToLabel(a.target, parsedPlaceLabelById, parsedTransitionLabelById);
-                return [`${srcLabel}->${tgtLabel}`, a.weight ?? 1];
-            }),
-        );
-        const drawnArcs = new Map<string, number>(
-            drawnDiagram.arcs.map((a) => {
-                const srcLabel = idToLabel(a.source, drawnPlaceLabelById, drawnTransitionLabelById);
-                const tgtLabel = idToLabel(a.target, drawnPlaceLabelById, drawnTransitionLabelById);
-                return [`${srcLabel}->${tgtLabel}`, a.weight ?? 1];
-            }),
-        );
-
-        const expectedTokens = new Map<string, number>(
-            parsed.places.map((p) => [
-                idToLabel(p.id, parsedPlaceLabelById, parsedTransitionLabelById),
-                p.tokenCount(),
-            ]),
-        );
-        const drawnTokens = new Map<string, number>(
-            drawnDiagram.places.map((p) => [
-                idToLabel(p.id, drawnPlaceLabelById, drawnTransitionLabelById),
-                p.tokenCount(),
-            ]),
-        );
-
-        const errors: string[] = [];
-
-        const missingPlaces = [...expectedPlaces].filter((p) => !drawnPlaces.has(p));
-        const extraPlaces = [...drawnPlaces].filter((p) => !expectedPlaces.has(p));
-        if (missingPlaces.length)
-            errors.push(
-                this._translate.instant('TUPLE_INPUT.VALIDATION.MISSING_PLACES', {
-                    items: missingPlaces.join(', '),
-                }),
-            );
-        if (extraPlaces.length)
-            errors.push(
-                this._translate.instant('TUPLE_INPUT.VALIDATION.EXTRA_PLACES', {
-                    items: extraPlaces.join(', '),
-                }),
-            );
-
-        const missingTransitions = [...expectedTransitions].filter((t) => !drawnTransitions.has(t));
-        const extraTransitions = [...drawnTransitions].filter((t) => !expectedTransitions.has(t));
-        if (missingTransitions.length)
-            errors.push(
-                this._translate.instant('TUPLE_INPUT.VALIDATION.MISSING_TRANSITIONS', {
-                    items: missingTransitions.join(', '),
-                }),
-            );
-        if (extraTransitions.length)
-            errors.push(
-                this._translate.instant('TUPLE_INPUT.VALIDATION.EXTRA_TRANSITIONS', {
-                    items: extraTransitions.join(', '),
-                }),
-            );
-
-        expectedArcs.forEach((weight, key) => {
-            const drawnWeight = drawnArcs.get(key);
-            if (drawnWeight === undefined) {
-                errors.push(
-                    this._translate.instant('TUPLE_INPUT.VALIDATION.MISSING_ARC', {
-                        arc: key,
-                    }),
-                );
-            } else if (drawnWeight !== weight) {
-                errors.push(
-                    this._translate.instant('TUPLE_INPUT.VALIDATION.ARC_WEIGHT_MISMATCH', {
-                        arc: key,
-                        expected: weight,
-                        found: drawnWeight,
-                    }),
-                );
-            }
-        });
-        drawnArcs.forEach((weight, key) => {
-            if (!expectedArcs.has(key)) {
-                errors.push(
-                    this._translate.instant('TUPLE_INPUT.VALIDATION.EXTRA_ARC', {
-                        arc: key,
-                    }),
-                );
-            }
-        });
-
-        expectedTokens.forEach((weight, placeId) => {
-            const drawnToken = drawnTokens.get(placeId) ?? 0;
-            if (drawnToken !== weight) {
-                const diff = weight - drawnToken;
-                errors.push(
-                    diff > 0
-                        ? this._translate.instant('TUPLE_INPUT.VALIDATION.TOKENS_MISSING', {
-                              count: Math.abs(diff),
-                              place: placeId,
-                              expected: weight,
-                              found: drawnToken,
-                          })
-                        : this._translate.instant('TUPLE_INPUT.VALIDATION.TOKENS_EXTRA', {
-                              count: Math.abs(diff),
-                              place: placeId,
-                              expected: weight,
-                              found: drawnToken,
-                          }),
-                );
-            }
-        });
-        drawnTokens.forEach((weight, placeId) => {
-            if (!expectedTokens.has(placeId) && weight !== 0) {
-                errors.push(
-                    this._translate.instant('TUPLE_INPUT.VALIDATION.TOKENS_UNEXPECTED', {
-                        place: placeId,
-                        found: weight,
-                    }),
-                );
-            }
-        });
-
-        if (errors.length === 0) {
-            this._toaster.showSuccess('TUPLE_INPUT.TOAST_VALIDATION_HEADER', 'TUPLE_INPUT.TOAST_VALIDATION_BODY', {
-                duration: 0,
-                toastPosition: TOAST_POSITIONS.TOP_CENTER,
-            });
-            return;
-        }
-
-        const list: ToastList[] = errors.map((message) => ({ message }));
-        this._toaster.showError('TUPLE_INPUT.TOAST_INVALIDATION_HEADER', 'TUPLE_INPUT.TOAST_INVALIDATION_BODY', {
-            duration: 0,
-            toastPosition: TOAST_POSITIONS.TOP_CENTER,
-            list,
-        });
-    }
-
-    private onDocumentMouseMove = (event: MouseEvent) => {
-        if (!this.draggedElement || !this.isDraggingElement) return;
-
-        event.preventDefault();
-        event.stopImmediatePropagation();
-
-        const svgPoint = this.getSvgCoordinates(event);
-        if (!svgPoint) return;
-
-        const newX = svgPoint.x - this.dragOffset.x;
-        const newY = svgPoint.y - this.dragOffset.y;
-
-        this.drawnElements.update((elements) =>
-            elements.map((el) => {
-                if (el.id !== this.draggedElement?.id) return el;
-                let newNode: DiagramNode;
-                if (el.node instanceof DiagramPlace) {
-                    const tokens = (el.node as DiagramPlace).tokenCount() ?? 0;
-                    const originalLabel = el.node.label ?? el.node.displayLabel;
-                    newNode = this.buildPlace(el.node.id, originalLabel, tokens, {
-                        innerLabel: undefined,
-                        hideTokens: el.node.hideTokens,
-                        labelPlacement: 'below',
-                        isStartPlace: el.node.isStartPlace,
-                    });
-                } else if (el.node instanceof DiagramTransition) {
-                    const label = (el.node as DiagramTransition).displayLabel ?? el.node.id;
-                    newNode = this.buildTransition(el.node.id, label, { innerLabel: label });
-                } else {
-                    newNode = el.node;
-                }
-                newNode.x = newX;
-                newNode.y = newY;
-                return { ...el, node: newNode };
-            }),
-        );
-    };
-
-    private onDocumentMouseUp = (event: MouseEvent) => {
-        if (this.isDraggingElement) {
-            event.preventDefault();
-            event.stopImmediatePropagation();
-        }
-        this.draggedElement = null;
-        this.isDraggingElement = false;
-        document.removeEventListener('mousemove', this.onDocumentMouseMove, true);
-        document.removeEventListener('mouseup', this.onDocumentMouseUp, true);
-        this.syncSourceNetFromCanvas();
-    };
-
-    private placeElement(event: DragEvent, type: 'place' | 'transition', label: string) {
-        const svgPoint = this.getSvgCoordinates(event);
-        if (!svgPoint) return;
-        this.addElement(type, label, svgPoint.x, svgPoint.y);
-    }
-
-    private placeElementAtClient(type: 'place' | 'transition', label: string, clientX: number, clientY: number) {
-        const svgPoint = this.getSvgCoordinatesFromClient(clientX, clientY);
-        if (!svgPoint) return;
-        this.addElement(type, label, svgPoint.x, svgPoint.y);
-    }
-
-    private addElement(type: 'place' | 'transition', label: string, x: number, y: number) {
-        let newNode: DiagramNode;
-        const newId = label;
-        if (type === 'place') {
-            newNode = this.buildPlace(newId, label, 0, {
-                labelPlacement: 'below',
-                innerLabel: undefined,
-                hideTokens: false,
-            });
-        } else {
-            newNode = this.buildTransition(newId, label, { innerLabel: label });
-        }
-        newNode.x = x;
-        newNode.y = y;
-        this.drawnElements.update((elements) => [...elements, { id: newId, node: newNode }]);
-        this.syncSourceNetFromCanvas();
-    }
-
-    private loadDiagramIntoCanvas(diagram: Diagram) {
-        this.connectionIdCounter = 0;
-        this.elementIdCounter = 0;
-        this.placeLabelCounter = diagram.places.length;
-        this.transitionLabelCounter = diagram.transitions.length;
-
-        const elements: DrawnElement[] = [];
-        diagram.places.forEach((place) => {
-            elements.push({ id: place.id, node: place });
-            this.elementIdCounter++;
-        });
-        diagram.transitions.forEach((transition) => {
-            elements.push({ id: transition.id, node: transition });
-            this.elementIdCounter++;
-        });
-
-        const conns: Connection[] = [];
-        diagram.arcs.forEach((arc) => {
-            conns.push({
-                id: `conn-${++this.connectionIdCounter}`,
-                aId: arc.source,
-                bId: arc.target,
-                weight: arc.weight,
-            });
-        });
-
-        this.drawnElements.set(elements);
-        this.connections.set(conns);
-        this.selectedElementId.set(null);
-    }
-
-    private deleteElement(element: DrawnElement) {
-        this.drawnElements.update((els) => els.filter((e) => e.id !== element.id));
-        this.connections.update((cs) => cs.filter((c) => c.aId !== element.id && c.bId !== element.id));
-        if (this.selectedElementId() === element.id) {
-            this.selectedElementId.set(null);
-        }
-        this.syncSourceNetFromCanvas();
-    }
-
-    private deleteConnection(connectionId: string) {
-        this.connections.update((cs) => cs.filter((c) => c.id !== connectionId));
-        this.syncSourceNetFromCanvas();
-    }
-
-    private getElementById(id: string): DrawnElement | undefined {
-        return this.drawnElements().find((e) => e.id === id);
-    }
-
-    private syncSourceNetFromCanvas() {
-        const diagram = this.buildDiagramFromCanvas();
-
-        this.suppressNextSourceLoad = true;
-        this._sourceNetService.updateEditedNet(diagram);
-        this._displayService.display(diagram);
-
-        const tuple = this._serializationService.serializeTuple(diagram);
-        if (tuple && !this.isExamMode()) {
-            this.tupleString = tuple;
-        }
-    }
-
-    private buildDiagramFromCanvas(): Diagram {
-        const places: DiagramPlace[] = [];
-        const transitions: DiagramTransition[] = [];
-
-        const placeMap = new Map<string, DiagramPlace>();
-        const transitionMap = new Map<
-            string,
-            {
-                transition: DiagramTransition;
-                inputPlaces: DiagramPlace[];
-                outputPlaces: DiagramPlace[];
-                inputArcs: DiagramArc[];
-                outputArcs: DiagramArc[];
-            }
-        >();
-
-        this.drawnElements().forEach((el) => {
-            if (el.node instanceof DiagramPlace) {
-                const place = new DiagramPlace(
-                    el.node.id,
-                    el.node.tokenCount(),
-                    el.node.label ?? el.node.displayLabel,
-                    {
-                        labelPlacement: el.node.labelPlacement,
-                        hideTokens: el.node.hideTokens,
-                        innerLabel: el.node.innerLabel,
-                        isStartPlace: el.node.isStartPlace,
-                    },
-                );
-                place.x = el.node.x;
-                place.y = el.node.y;
-                places.push(place);
-                placeMap.set(place.id, place);
-            } else if (el.node instanceof DiagramTransition) {
-                const label = el.node.displayLabel ?? el.node.id;
-                const inputPlaces: DiagramPlace[] = [];
-                const outputPlaces: DiagramPlace[] = [];
-                const inputArcs: DiagramArc[] = [];
-                const outputArcs: DiagramArc[] = [];
-                const transition = new DiagramTransition(
-                    el.node.id,
-                    label,
-                    inputPlaces,
-                    outputPlaces,
-                    inputArcs,
-                    outputArcs,
-                    {
-                        innerLabel: el.node.innerLabel ?? label,
-                    },
-                );
-                transition.x = el.node.x;
-                transition.y = el.node.y;
-                transitions.push(transition);
-                transitionMap.set(transition.id, {
-                    transition,
-                    inputPlaces,
-                    outputPlaces,
-                    inputArcs,
-                    outputArcs,
-                });
-            }
-        });
-
-        const arcs: DiagramArc[] = [];
-        this.connections().forEach((conn, idx) => {
-            const arc = new DiagramArc(conn.id || `arc-${idx + 1}`, conn.aId, conn.bId, conn.weight);
-            arcs.push(arc);
-
-            const placeSource = placeMap.get(conn.aId);
-            const placeTarget = placeMap.get(conn.bId);
-            const transitionSource = transitionMap.get(conn.aId);
-            const transitionTarget = transitionMap.get(conn.bId);
-
-            if (placeSource && transitionTarget) {
-                transitionTarget.inputPlaces.push(placeSource);
-                transitionTarget.inputArcs.push(arc);
-            } else if (transitionSource && placeTarget) {
-                transitionSource.outputPlaces.push(placeTarget);
-                transitionSource.outputArcs.push(arc);
-            }
-        });
-
-        const nodeLookup = new Map<string, DiagramNode>();
-        placeMap.forEach((p, id) => nodeLookup.set(id, p));
-        transitionMap.forEach((t, id) => nodeLookup.set(id, t.transition));
-        this.applyParallelOffsetsToArcs(arcs, nodeLookup);
-
-        return new Diagram(places, transitions, arcs);
-    }
-
-    private applyParallelOffsetsToArcs(arcs: DiagramArc[], nodeMap: Map<string, DiagramNode>): void {
-        const groups = new Map<string, DiagramArc[]>();
-        arcs.forEach((arc) => {
-            const key = arc.source < arc.target ? `${arc.source}~${arc.target}` : `${arc.target}~${arc.source}`;
-            const list = groups.get(key) || [];
-            list.push(arc);
-            groups.set(key, list);
-        });
-
-        groups.forEach((group, key) => {
-            if (group.length < 2) return;
-            const [aId, bId] = key.split('~');
-            const nodeA = nodeMap.get(aId);
-            const nodeB = nodeMap.get(bId);
-            if (!nodeA || !nodeB) return;
-
-            const dx = nodeB.x - nodeA.x;
-            const dy = nodeB.y - nodeA.y;
-            const distance = Math.hypot(dx, dy);
-            if (distance < 1) return;
-
-            const perpX = -dy / distance;
-            const perpY = dx / distance;
-
-            const forward = group
-                .filter((arc) => arc.source === aId && arc.target === bId)
-                .sort((a, b) => a.id.localeCompare(b.id));
-            const backward = group
-                .filter((arc) => arc.source === bId && arc.target === aId)
-                .sort((a, b) => a.id.localeCompare(b.id));
-
-            const applyOffsets = (list: DiagramArc[], baseShiftSign: -1 | 0 | 1, pairedExists: boolean) => {
-                const centerIndex = (list.length - 1) / 2;
-                list.forEach((arc, index) => {
-                    const start = nodeMap.get(arc.source);
-                    const end = nodeMap.get(arc.target);
-                    if (!start || !end) return;
-
-                    let offset = (index - centerIndex) * this.CONNECTION_PARALLEL_OFFSET;
-                    if (baseShiftSign !== 0) {
-                        offset += baseShiftSign * (this.CONNECTION_PARALLEL_OFFSET / 2);
-                    }
-                    if (Math.abs(offset) < 0.01 && pairedExists) {
-                        offset = this.CONNECTION_PARALLEL_OFFSET / 2;
-                    }
-
-                    if (Math.abs(offset) < 0.01) {
-                        arc.bendPoints = [];
-                        return;
-                    }
-
-                    const p1 = 1 / 3;
-                    const p2 = 2 / 3;
-                    arc.bendPoints = [
-                        {
-                            x: start.x + (end.x - start.x) * p1 + perpX * offset,
-                            y: start.y + (end.y - start.y) * p1 + perpY * offset,
-                        },
-                        {
-                            x: start.x + (end.x - start.x) * p2 + perpX * offset,
-                            y: start.y + (end.y - start.y) * p2 + perpY * offset,
-                        },
-                    ];
-                });
-            };
-
-            applyOffsets(forward, 0, backward.length > 0);
-            applyOffsets(backward, -1, forward.length > 0);
-        });
-    }
-
-    private buildPlace(
-        id: string,
-        label?: string,
-        initialTokens = 0,
-        options?: {
-            innerLabel?: string;
-            hideTokens?: boolean;
-            labelPlacement?: DiagramPlaceLabelPlacement;
-            isStartPlace?: boolean;
-        },
-    ): DiagramPlace {
-        return new DiagramPlace(id, initialTokens, label, {
-            innerLabel: options?.innerLabel ?? undefined,
-            hideTokens: options?.hideTokens ?? false,
-            labelPlacement: options?.labelPlacement ?? 'below',
-            isStartPlace: options?.isStartPlace ?? false,
-        });
-    }
-
-    private buildTransition(id: string, label: string, options?: DiagramTransitionOptions): DiagramTransition {
-        return new DiagramTransition(id, label, [], [], [], [], {
-            innerLabel: options?.innerLabel ?? label,
-        });
-    }
-
-    private getNextPlaceLabel() {
-        return `p${++this.placeLabelCounter}`;
-    }
-
-    private getNextTransitionLabel() {
-        return `t${++this.transitionLabelCounter}`;
-    }
-
-    private getSvgCoordinates(event: MouseEvent | DragEvent): { x: number; y: number } | null {
-        return this.getSvgCoordinatesFromClient(event.clientX, event.clientY);
-    }
-
-    private getSvgCoordinatesFromClient(clientX: number, clientY: number): { x: number; y: number } | null {
-        if (!this.svgElement) {
-            this.svgElement = (this.drawingArea?.nativeElement as SVGSVGElement) ?? null;
-        }
-        if (!this.svgElement) return null;
-        const point = this.svgElement.createSVGPoint();
-        point.x = clientX;
-        point.y = clientY;
-        const ctm = this.svgElement.getScreenCTM();
-        if (!ctm) return null;
-        const svgPoint = point.matrixTransform(ctm.inverse());
-        return { x: svgPoint.x, y: svgPoint.y };
-    }
-
-    private computeOffsetTrimmedLine(
-        a: DrawnElement,
-        b: DrawnElement,
-        offset: number,
-        basePerpX?: number,
-        basePerpY?: number,
-    ) {
-        const ax = a.node.x;
-        const ay = a.node.y;
-        const bx = b.node.x;
-        const by = b.node.y;
-        const dx = bx - ax;
-        const dy = by - ay;
-        const len = Math.hypot(dx, dy) || 1;
-        const ux = dx / len;
-        const uy = dy / len;
-        const perpX = basePerpX ?? -dy / len;
-        const perpY = basePerpY ?? dx / len;
-
-        const shiftedAx = ax + perpX * offset;
-        const shiftedAy = ay + perpY * offset;
-        const shiftedBx = bx + perpX * offset;
-        const shiftedBy = by + perpY * offset;
-
-        const aOffset =
-            a.node instanceof DiagramPlace
-                ? this.PLACE_RADIUS
-                : Math.min(this.TRANSITION_HALF_W, this.TRANSITION_HALF_H);
-        const bOffset =
-            b.node instanceof DiagramPlace
-                ? this.PLACE_RADIUS
-                : Math.min(this.TRANSITION_HALF_W, this.TRANSITION_HALF_H);
-
-        const x1 = shiftedAx + ux * aOffset;
-        const y1 = shiftedAy + uy * aOffset;
-        const x2 = shiftedBx - ux * bOffset;
-        const y2 = shiftedBy - uy * bOffset;
-        return { x1, y1, x2, y2 };
+        this.draw.onElementWheel(event, element);
     }
 }
