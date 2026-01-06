@@ -301,12 +301,7 @@ export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
         const secondIsTransition = second.node instanceof DiagramTransition;
 
         if ((firstIsPlace && secondIsTransition) || (firstIsTransition && secondIsPlace)) {
-            this.connections.update((cs) =>
-                cs.filter(
-                    (c) =>
-                        !((c.aId === first.id && c.bId === second.id) || (c.aId === second.id && c.bId === first.id)),
-                ),
-            );
+            this.connections.update((cs) => cs.filter((c) => !(c.aId === first.id && c.bId === second.id)));
             const newConn: Connection = {
                 id: `conn-${++this.connectionIdCounter}`,
                 aId: first.id,
