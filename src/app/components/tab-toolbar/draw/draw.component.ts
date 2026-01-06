@@ -119,6 +119,29 @@ export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
     private sourceNetSub?: Subscription;
     private sourceTextSub?: Subscription;
     private suppressNextSourceLoad = false;
+    private isClearing = false;
+
+    private readonly examTupleEffect = effect(() => {
+        if (!this.isExamMode()) return;
+        const sourceDiagram = this._sourcePetriNetService.getCurrentSourceNet();
+        const tupleFromSource = sourceDiagram ? this._serializationService.serializeTuple(sourceDiagram) : undefined;
+        if (tupleFromSource) {
+            this.tupleString = tupleFromSource;
+            return;
+        }
+
+        const diagramFromCanvas = this.buildDiagramFromCanvas();
+        const tupleFromCanvas = this._serializationService.serializeTuple(diagramFromCanvas);
+        if (tupleFromCanvas) {
+            this.tupleString = tupleFromCanvas;
+            return;
+        }
+
+        const sourceText = this._sourcePetriNetService.getSourceText();
+        if (sourceText) {
+            this.tupleString = sourceText;
+        }
+    });
 
     constructor(private panning: PanningService) {}
 
@@ -136,37 +159,13 @@ export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
                     this.tupleString = tuple;
                 }
             } else {
-                this.clearCanvas();
+                this.clearCanvas(true);
             }
         });
 
         this.sourceTextSub = this._sourcePetriNetService.sourceText$.subscribe((text) => {
             if (this.isExamMode() && text) {
                 this.tupleString = text;
-            }
-        });
-
-        effect(() => {
-            if (!this.isExamMode()) return;
-            const sourceDiagram = this._sourcePetriNetService.getCurrentSourceNet();
-            const tupleFromSource = sourceDiagram
-                ? this._serializationService.serializeTuple(sourceDiagram)
-                : undefined;
-            if (tupleFromSource) {
-                this.tupleString = tupleFromSource;
-                return;
-            }
-
-            const diagramFromCanvas = this.buildDiagramFromCanvas();
-            const tupleFromCanvas = this._serializationService.serializeTuple(diagramFromCanvas);
-            if (tupleFromCanvas) {
-                this.tupleString = tupleFromCanvas;
-                return;
-            }
-
-            const sourceText = this._sourcePetriNetService.getSourceText();
-            if (sourceText) {
-                this.tupleString = sourceText;
             }
         });
     }
@@ -257,7 +256,9 @@ export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
         event.preventDefault();
     }
 
-    clearCanvas() {
+    clearCanvas(triggeredByService = false) {
+        if (this.isClearing) return;
+        this.isClearing = true;
         this.drawnElements.set([]);
         this.connections.set([]);
         this.selectedElementId.set(null);
@@ -266,8 +267,11 @@ export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
         this.placeLabelCounter = 0;
         this.transitionLabelCounter = 0;
         this.panning.resetViewBox(this.drawingArea);
-        this._sourcePetriNetService.clear();
+        if (!triggeredByService) {
+            this._sourcePetriNetService.clear();
+        }
         this._displayService.clear();
+        this.isClearing = false;
     }
 
     private resetViewIfReady() {
