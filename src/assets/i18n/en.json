@@ -45,7 +45,23 @@
         "TOAST_ERROR_HEADER": "Invalid Tuple",
         "TOAST_ERROR_BODY": "Could not parse the provided tuple.",
         "TOAST_INVALIDATION_HEADER": "Drawing does not match",
-        "TOAST_INVALIDATION_BODY": "Tuple and drawing do not match"
+        "TOAST_INVALIDATION_BODY": "Tuple and drawing do not match",
+        "VALIDATION": {
+            "MISSING_PLACES": "Missing places: {{items}}",
+            "EXTRA_PLACES": "Extra places: {{items}}",
+            "MISSING_TRANSITIONS": "Missing transitions: {{items}}",
+            "EXTRA_TRANSITIONS": "Extra transitions: {{items}}",
+            "MISSING_ARC": "Missing arc: {{arc}}",
+            "EXTRA_ARC": "Extra arc: {{arc}}",
+            "ARC_WEIGHT_MISMATCH": "Arc weight mismatch at {{arc}}: expected {{expected}}, found {{found}}",
+            "TOKENS_MISSING": "{{count}} token(s) missing at {{place}} (expected {{expected}}, found {{found}})",
+            "TOKENS_EXTRA": "{{count}} extra token(s) at {{place}} (expected {{expected}}, found {{found}})",
+            "TOKENS_UNEXPECTED": "Unexpected tokens at {{place}}: found {{found}}"
+        }
+    },
+    "DRAW": {
+        "PROMPT_EDIT_PLACE_TITLE": "Edit place label",
+        "PROMPT_EDIT_TRANSITION_TITLE": "Edit transition label"
     },
     "HEADER_SUBTITLE": "Fachpraktikum Programmiersysteme WiSe25/26 by Marie G., Florian M., Ben L. and Alexander K.",
     "TACO_COUNT": "Number of tacos: {{count}}!",

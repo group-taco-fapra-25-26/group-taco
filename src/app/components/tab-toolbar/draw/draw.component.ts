@@ -18,7 +18,7 @@ import { DiagramArc } from '../../../classes/diagram/diagram-arc';
 import { PanningService } from '../../../services/panning.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ParserService } from '../../../services/parser.service';
 import { SourcePetriNetService } from '../../../services/source-petri-net.service';
 import { SpringEmbedderService } from '../../../services/spring-embedder.service';
@@ -112,6 +112,7 @@ export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
     private _displayService = inject(DisplayService);
     private _toaster = inject(ToasterNotificationService);
     private _modeService = inject(ModeService);
+    private _translate = inject(TranslateService);
 
     readonly isExamMode = this._modeService.isExamMode;
 
@@ -390,7 +391,9 @@ export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
         event.preventDefault();
         if (element.node instanceof DiagramTransition) {
             const currentLabel = element.node.displayLabel ?? element.node.id;
-            const newLabel = window.prompt('Edit transition label', currentLabel)?.trim();
+            const newLabel = window
+                .prompt(this._translate.instant('DRAW.PROMPT_EDIT_TRANSITION_TITLE'), currentLabel)
+                ?.trim();
             if (!newLabel || newLabel === currentLabel) return;
 
             const oldId = element.id;
@@ -419,7 +422,9 @@ export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
 
         if (element.node instanceof DiagramPlace) {
             const currentLabel = element.node.label ?? element.node.displayLabel;
-            const newLabel = window.prompt('Edit place label', currentLabel)?.trim();
+            const newLabel = window
+                .prompt(this._translate.instant('DRAW.PROMPT_EDIT_PLACE_TITLE'), currentLabel)
+                ?.trim();
             if (!newLabel || newLabel === currentLabel) return;
 
             const oldId = element.id;
@@ -551,25 +556,59 @@ export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
 
         const missingPlaces = [...expectedPlaces].filter((p) => !drawnPlaces.has(p));
         const extraPlaces = [...drawnPlaces].filter((p) => !expectedPlaces.has(p));
-        if (missingPlaces.length) errors.push(`Missing places: ${missingPlaces.join(', ')}`);
-        if (extraPlaces.length) errors.push(`Extra places: ${extraPlaces.join(', ')}`);
+        if (missingPlaces.length)
+            errors.push(
+                this._translate.instant('TUPLE_INPUT.VALIDATION.MISSING_PLACES', {
+                    items: missingPlaces.join(', '),
+                }),
+            );
+        if (extraPlaces.length)
+            errors.push(
+                this._translate.instant('TUPLE_INPUT.VALIDATION.EXTRA_PLACES', {
+                    items: extraPlaces.join(', '),
+                }),
+            );
 
         const missingTransitions = [...expectedTransitions].filter((t) => !drawnTransitions.has(t));
         const extraTransitions = [...drawnTransitions].filter((t) => !expectedTransitions.has(t));
-        if (missingTransitions.length) errors.push(`Missing transitions: ${missingTransitions.join(', ')}`);
-        if (extraTransitions.length) errors.push(`Extra transitions: ${extraTransitions.join(', ')}`);
+        if (missingTransitions.length)
+            errors.push(
+                this._translate.instant('TUPLE_INPUT.VALIDATION.MISSING_TRANSITIONS', {
+                    items: missingTransitions.join(', '),
+                }),
+            );
+        if (extraTransitions.length)
+            errors.push(
+                this._translate.instant('TUPLE_INPUT.VALIDATION.EXTRA_TRANSITIONS', {
+                    items: extraTransitions.join(', '),
+                }),
+            );
 
         expectedArcs.forEach((weight, key) => {
             const drawnWeight = drawnArcs.get(key);
             if (drawnWeight === undefined) {
-                errors.push(`Missing arc: ${key}`);
+                errors.push(
+                    this._translate.instant('TUPLE_INPUT.VALIDATION.MISSING_ARC', {
+                        arc: key,
+                    }),
+                );
             } else if (drawnWeight !== weight) {
-                errors.push(`Arc weight mismatch at ${key}: expected ${weight}, found ${drawnWeight}`);
+                errors.push(
+                    this._translate.instant('TUPLE_INPUT.VALIDATION.ARC_WEIGHT_MISMATCH', {
+                        arc: key,
+                        expected: weight,
+                        found: drawnWeight,
+                    }),
+                );
             }
         });
         drawnArcs.forEach((weight, key) => {
             if (!expectedArcs.has(key)) {
-                errors.push(`Extra arc: ${key}`);
+                errors.push(
+                    this._translate.instant('TUPLE_INPUT.VALIDATION.EXTRA_ARC', {
+                        arc: key,
+                    }),
+                );
             }
         });
 
@@ -579,14 +618,29 @@ export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
                 const diff = weight - drawnToken;
                 errors.push(
                     diff > 0
-                        ? `${Math.abs(diff)} token(s) missing at ${placeId} (expected ${weight}, found ${drawnToken})`
-                        : `${Math.abs(diff)} extra token(s) at ${placeId} (expected ${weight}, found ${drawnToken})`,
+                        ? this._translate.instant('TUPLE_INPUT.VALIDATION.TOKENS_MISSING', {
+                              count: Math.abs(diff),
+                              place: placeId,
+                              expected: weight,
+                              found: drawnToken,
+                          })
+                        : this._translate.instant('TUPLE_INPUT.VALIDATION.TOKENS_EXTRA', {
+                              count: Math.abs(diff),
+                              place: placeId,
+                              expected: weight,
+                              found: drawnToken,
+                          }),
                 );
             }
         });
         drawnTokens.forEach((weight, placeId) => {
             if (!expectedTokens.has(placeId) && weight !== 0) {
-                errors.push(`Unexpected tokens at ${placeId}: found ${weight}`);
+                errors.push(
+                    this._translate.instant('TUPLE_INPUT.VALIDATION.TOKENS_UNEXPECTED', {
+                        place: placeId,
+                        found: weight,
+                    }),
+                );
             }
         });
 

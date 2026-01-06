@@ -45,7 +45,23 @@
         "TOAST_ERROR_HEADER": "Ungültiges Tupel",
         "TOAST_ERROR_BODY": "Das angegebene Tupel konnte nicht geparst werden.",
         "TOAST_INVALIDATION_HEADER": "Zeichnung stimmt nicht überein",
-        "TOAST_INVALIDATION_BODY": "Tupel und Zeichnung stimmen nicht überein"
+        "TOAST_INVALIDATION_BODY": "Tupel und Zeichnung stimmen nicht überein",
+        "VALIDATION": {
+            "MISSING_PLACES": "Fehlende Stellen: {{items}}",
+            "EXTRA_PLACES": "Zusätzliche Stellen: {{items}}",
+            "MISSING_TRANSITIONS": "Fehlende Transitionen: {{items}}",
+            "EXTRA_TRANSITIONS": "Zusätzliche Transitionen: {{items}}",
+            "MISSING_ARC": "Fehlender Bogen: {{arc}}",
+            "EXTRA_ARC": "Zusätzlicher Bogen: {{arc}}",
+            "ARC_WEIGHT_MISMATCH": "Bogengewicht stimmt nicht bei {{arc}}: erwartet {{expected}}, gefunden {{found}}",
+            "TOKENS_MISSING": "{{count}} Marke(n) fehlen bei {{place}} (erwartet {{expected}}, gefunden {{found}})",
+            "TOKENS_EXTRA": "{{count}} Marke(n) zu viel bei {{place}} (erwartet {{expected}}, gefunden {{found}})",
+            "TOKENS_UNEXPECTED": "Unerwartete Marken bei {{place}}: gefunden {{found}}"
+        }
+    },
+    "DRAW": {
+        "PROMPT_EDIT_PLACE_TITLE": "Stellenbeschriftung bearbeiten",
+        "PROMPT_EDIT_TRANSITION_TITLE": "Transitionsbeschriftung bearbeiten"
     },
     "HEADER_SUBTITLE": "Fachpraktikum Programmiersysteme WiSe25/26 von Marie G., Florian M., Ben L. und Alexander K.",
     "TACO_COUNT": "Anzahl der Tacos: {{count}}!",
