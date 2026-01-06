@@ -1,4 +1,7 @@
 <div class="editor-container">
+    <div class="mode-sidebar">
+        <app-mode-toggle></app-mode-toggle>
+    </div>
     <mat-tab-group class="flex-tab-group" [selectedIndex]="selectedIndex" (selectedTabChange)="onTabChange($event)">
         <mat-tab>
             <ng-template mat-tab-label>
@@ -34,11 +37,12 @@
     </mat-tab-group>
     <div class="action-sidebar">
         <app-upload></app-upload>
+        <app-tuple-input-button></app-tuple-input-button>
         <app-save></app-save>
         <app-clear-net-button></app-clear-net-button>
         <app-layout-button></app-layout-button>
         <div class="divider-horizontal"></div>
-        <app-mode-toggle></app-mode-toggle>
+        <app-example-menu></app-example-menu>
         <app-language-button></app-language-button>
     </div>
 </div>

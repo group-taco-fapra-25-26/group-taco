@@ -1,0 +1,53 @@
+<button
+    mat-icon-button
+    color="primary"
+    [matMenuTriggerFor]="mainMenu"
+    [matTooltip]="'EXAMPLE_MENU.TOOLTIP' | translate"
+    aria-label="Open example files"
+    class="blue-icon-button">
+    <mat-icon>file_open</mat-icon>
+</button>
+
+<mat-menu #mainMenu="matMenu">
+    <button mat-menu-item (click)="loadExample('example.json')">{{ 'EXAMPLE_MENU.EXAMPLE_NET' | translate }}</button>
+    <button mat-menu-item [matMenuTriggerFor]="menuMK">{{ 'EXAMPLE_MENU.MK' | translate }}</button>
+    <button mat-menu-item [matMenuTriggerFor]="menuSS24">{{ 'EXAMPLE_MENU.SS24' | translate }}</button>
+    <button mat-menu-item [matMenuTriggerFor]="menuWS24">{{ 'EXAMPLE_MENU.WS24' | translate }}</button>
+    <button mat-menu-item [matMenuTriggerFor]="menuSS25">{{ 'EXAMPLE_MENU.SS25' | translate }}</button>
+</mat-menu>
+
+<mat-menu #menuMK="matMenu">
+    <button mat-menu-item (click)="loadExampleFromCategory('MK', 'task1.json')">
+        {{ 'EXAMPLE_MENU.TASK1' | translate }}
+    </button>
+    <button mat-menu-item (click)="loadExampleFromCategory('MK', 'task2.json')">
+        {{ 'EXAMPLE_MENU.TASK2' | translate }}
+    </button>
+</mat-menu>
+
+<mat-menu #menuSS24="matMenu">
+    <button mat-menu-item (click)="loadExampleFromCategory('SS24', 'task1.json')">
+        {{ 'EXAMPLE_MENU.TASK1' | translate }}
+    </button>
+    <button mat-menu-item (click)="loadExampleFromCategory('SS24', 'task2.json')">
+        {{ 'EXAMPLE_MENU.TASK2' | translate }}
+    </button>
+</mat-menu>
+
+<mat-menu #menuWS24="matMenu">
+    <button mat-menu-item (click)="loadExampleFromCategory('WS24', 'task1.json')">
+        {{ 'EXAMPLE_MENU.TASK1' | translate }}
+    </button>
+    <button mat-menu-item (click)="loadExampleFromCategory('WS24', 'task2.json')">
+        {{ 'EXAMPLE_MENU.TASK2' | translate }}
+    </button>
+</mat-menu>
+
+<mat-menu #menuSS25="matMenu">
+    <button mat-menu-item (click)="loadExampleFromCategory('SS25', 'task1.json')">
+        {{ 'EXAMPLE_MENU.TASK1' | translate }}
+    </button>
+    <button mat-menu-item (click)="loadExampleFromCategory('SS25', 'task2.json')">
+        {{ 'EXAMPLE_MENU.TASK2' | translate }}
+    </button>
+</mat-menu>

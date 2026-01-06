@@ -1,0 +1,19 @@
+.tuple-input-container {
+    padding: 20px;
+    min-width: 400px;
+}
+
+.full-width {
+    width: 100%;
+}
+
+.format {
+    font-weight: bold;
+}
+
+.actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+}

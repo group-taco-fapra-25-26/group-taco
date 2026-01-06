@@ -14,34 +14,6 @@
         <app-main-tab></app-main-tab>
     </div>
 
-    <div class="flexRowAlignSpaceBetweenStart">
-        <div class="buttonWrapperWidth flexColumnAlignStartCenter">
-            <app-example-button
-                [title]="'EXAMPLE_BUTTON_TITLE' | translate"
-                (buttonPressed)="processButtonClick()"></app-example-button>
-
-            @if (buttonClickCount() > 0) {
-                {{ 'TACO_COUNT' | translate: { count: buttonClickCount() } }}
-            }
-        </div>
-
-        <app-example-file
-            [title]="'EXAMPLE_FILE_TITLE' | translate"
-            link="assets/example.json"
-            [description]="'EXAMPLE_FILE_DESC' | translate">
-        </app-example-file>
-
-        <mat-form-field appearance="outline">
-            <mat-label>{{ 'FILE_CONTENT' | translate }}</mat-label>
-            <textarea
-                matInput
-                cdkTextareaAutosize
-                cdkAutosizeMinRows="10"
-                cdkAutosizeMaxRows="20"
-                [formControl]="textareaFc"></textarea>
-        </mat-form-field>
-    </div>
-
     <!--  Footer  -->
     <hr />
     <app-footer></app-footer>

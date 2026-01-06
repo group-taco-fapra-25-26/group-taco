@@ -9,6 +9,9 @@
     "TOGGLE_MODE": "Toggle Mode",
     "SWITCH_TO_LEARNING_MODE": "Switch to Learning Mode",
     "SWITCH_TO_EXAM_MODE": "Switch to Exam Mode",
+    "EXAM_MODE": "Exam Mode",
+    "LEARNING_MODE": "Learning Mode",
+    "MODE_INFO_TOOLTIP": "Use the slider to switch between two modes: The Learning Mode helps you better understand the various areas. The Exam Mode is for your exam preparation with less support from the application and fewer hints.",
     "FIRING_SEQUENCE": "Firing Sequence",
     "TRANSITION_COUNT": "Transition Count",
     "START_MARKING": "Start Marking",
@@ -24,7 +27,19 @@
     "SAVE_AS_PNG": "Save as Image (PNG)",
     "SAVE_AS_JPEG": "Save as Image (JPEG)",
     "UPLOAD_NET": "Upload Net",
-    "HEADER_SUBTITLE": "Fachpraktikum Programmiersysteme WiSe25/26 by Marie G., Florian M., Ben L., Oliver S. and Alexander K.",
+    "TUPLE_INPUT": {
+        "HEADER": "Input Petri Net Tuple",
+        "DESCRIPTION": "Enter a Petri net tuple in the format:",
+        "FORMAT": "({places}, {transitions}, arcs, marking)",
+        "LABEL": "Tuple String",
+        "BUTTON_TOOLTIP": "Input Tuple",
+        "GENERATE": "Generate",
+        "TOAST_SUCCESS_BODY": "Tuple processed successfully",
+        "TOAST_SUCCESS_HEADER": "Net loaded",
+        "TOAST_ERROR_HEADER": "Invalid Tuple",
+        "TOAST_ERROR_BODY": "Could not parse the provided tuple."
+    },
+    "HEADER_SUBTITLE": "Fachpraktikum Programmiersysteme WiSe25/26 by Marie G., Florian M., Ben L. and Alexander K.",
     "TACO_COUNT": "Number of tacos: {{count}}!",
     "FILE_CONTENT": "File content",
     "EXAMPLE_BUTTON_TITLE": "Button",
@@ -89,5 +104,15 @@
         "INSTRUCTION_RIGHT_CLICK_CONNECT": "Right-click a place or transition to select it as source; then right-click the opposite type to create a directed connection to the second element.",
         "INSTRUCTION_MIDDLE_CLICK_DELETE_CONN": "Middle-click a connection to delete it.",
         "INSTRUCTION_VALIDATE_TOAST": "Validate to see a toast message with the result."
+    },
+    "EXAMPLE_MENU": {
+        "TOOLTIP": "Open exam files",
+        "EXAMPLE_NET": "Example Net",
+        "MK": "MK",
+        "SS24": "SS24",
+        "SS25": "SS25",
+        "WS24": "WS24",
+        "TASK1": "Task 1",
+        "TASK2": "Task 2"
     }
 }

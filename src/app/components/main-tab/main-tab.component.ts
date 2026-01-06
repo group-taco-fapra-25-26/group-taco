@@ -6,7 +6,7 @@ import { PlayComponent } from '../tab-toolbar/play/play.component';
 import { ReachabilityGraphComponent } from '../tab-toolbar/reachability-graph/reachability-graph.component';
 import { ProcessNetComponent } from '../tab-toolbar/process-net/process-net.component';
 import { Tab } from '../../classes/tabs';
-import { Diagram } from '../../../app/classes/diagram/diagram';
+import { Diagram } from '../../classes/diagram/diagram';
 import { TabStateService } from '../../services/tab-state.service';
 import { SourcePetriNetService } from '../../services/source-petri-net.service';
 import { DisplayService } from '../../services/display.service';
@@ -17,7 +17,9 @@ import { ClearNetButtonComponent } from '../clear-net-button/clear-net-button.co
 import { ModeToggleComponent } from '../tab-toolbar/mode-toggle/mode-toggle.component';
 import { LayoutButtonComponent } from '../layout-button/layout-button.component';
 import { LanguageButtonComponent } from '../language-button/language-button.component';
+import { ExampleMenuComponent } from '../example-menu/example-menu.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { TupleInputButtonComponent } from '../tab-toolbar/tuple-input-button/tuple-input-button.component';
 
 @Component({
     selector: 'app-main-tab',
@@ -35,7 +37,9 @@ import { TranslateModule } from '@ngx-translate/core';
         ModeToggleComponent,
         LayoutButtonComponent,
         LanguageButtonComponent,
+        ExampleMenuComponent,
         TranslateModule,
+        TupleInputButtonComponent,
     ],
     templateUrl: './main-tab.component.html',
     styleUrl: './main-tab.component.css',

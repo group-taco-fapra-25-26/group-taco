@@ -1,7 +1,6 @@
 import { Component, computed, ElementRef, inject, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { DisplayService } from '../../services/display.service';
 import { Subscription } from 'rxjs';
-import { ExampleFileComponent } from '../example-file/example-file.component';
 import { SvgNodeComponent } from './svg-node/svg-node.component';
 import { SvgArcComponent } from './svg-arc/svg-arc.component';
 import { TabStateService } from '../../services/tab-state.service';
@@ -70,11 +69,7 @@ export class DisplayComponent implements OnInit, OnDestroy {
 
     public processDropEvent(e: DragEvent) {
         e.preventDefault();
-        const fileLocation = e.dataTransfer?.getData(ExampleFileComponent.META_DATA_CODE);
-
-        if (fileLocation) {
-            this._loaderService.loadFileFromUrl(fileLocation);
-        } else if (e.dataTransfer?.files) {
+        if (e.dataTransfer?.files) {
             const files = e.dataTransfer.files;
             if (files.length > 0) {
                 this._loaderService.loadFile(files[0]);
