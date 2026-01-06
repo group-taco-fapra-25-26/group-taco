@@ -19,11 +19,11 @@
 
     <div class="canvas-container">
         <div class="inline-tuple-input">
-            <input
-                type="text"
+            <textarea
                 [(ngModel)]="tupleString"
                 [placeholder]="'TUPLE_INPUT.LABEL' | translate"
-                (keyup.enter)="generateNetFromInput()" />
+                rows="3"
+                (keyup.enter)="generateNetFromInput()"></textarea>
             <button (click)="generateNetFromInput()" [disabled]="!tupleString.trim().length">
                 {{ 'TUPLE_INPUT.GENERATE' | translate }}
             </button>
