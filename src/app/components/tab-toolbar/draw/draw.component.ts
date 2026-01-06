@@ -13,6 +13,7 @@ import { SvgNodeComponent } from '../../display/svg-node/svg-node.component';
 import { DiagramNode } from '../../../classes/diagram/diagram-node';
 import { DiagramPlace, DiagramPlaceLabelPlacement } from '../../../classes/diagram/diagram-place';
 import { DiagramTransition, DiagramTransitionOptions } from '../../../classes/diagram/diagram-transition';
+import { DiagramArc } from '../../../classes/diagram/diagram-arc';
 import { PanningService } from '../../../services/panning.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -215,6 +216,8 @@ export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
         this.placeLabelCounter = 0;
         this.transitionLabelCounter = 0;
         this.panning.resetViewBox(this.drawingArea);
+        this._sourcePetriNetService.clear();
+        this._displayService.clear();
     }
 
     private resetViewIfReady() {
@@ -301,6 +304,7 @@ export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
             };
             this.connections.update((cs) => [...cs, newConn]);
             this.selectedElementId.set(null);
+            this.syncSourceNetFromCanvas();
         } else {
             this.selectedElementId.set(element.id);
         }
@@ -326,6 +330,7 @@ export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
                 return { ...c, weight: newWeight };
             }),
         );
+        this.syncSourceNetFromCanvas();
     }
 
     onElementDoubleClick(event: MouseEvent, element: DrawnElement) {
@@ -345,6 +350,7 @@ export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
                     return { ...el, node: updated };
                 }),
             );
+            this.syncSourceNetFromCanvas();
             return;
         }
 
@@ -366,6 +372,7 @@ export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
                     return { ...el, node: updated };
                 }),
             );
+            this.syncSourceNetFromCanvas();
         }
     }
 
@@ -390,6 +397,7 @@ export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
                     return { ...el, node: updated };
                 }),
             );
+            this.syncSourceNetFromCanvas();
         }
     }
 
@@ -440,6 +448,7 @@ export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
         this.isDraggingElement = false;
         document.removeEventListener('mousemove', this.onDocumentMouseMove, true);
         document.removeEventListener('mouseup', this.onDocumentMouseUp, true);
+        this.syncSourceNetFromCanvas();
     };
 
     private placeElement(event: DragEvent, type: 'place' | 'transition', label: string) {
@@ -469,6 +478,7 @@ export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
         newNode.x = x;
         newNode.y = y;
         this.drawnElements.update((elements) => [...elements, { id: uniqueId, node: newNode }]);
+        this.syncSourceNetFromCanvas();
     }
 
     private loadDiagramIntoCanvas(diagram: Diagram) {
@@ -508,14 +518,57 @@ export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
         if (this.selectedElementId() === element.id) {
             this.selectedElementId.set(null);
         }
+        this.syncSourceNetFromCanvas();
     }
 
     private deleteConnection(connectionId: string) {
         this.connections.update((cs) => cs.filter((c) => c.id !== connectionId));
+        this.syncSourceNetFromCanvas();
     }
 
     private getElementById(id: string): DrawnElement | undefined {
         return this.drawnElements().find((e) => e.id === id);
+    }
+
+    private syncSourceNetFromCanvas() {
+        const places: DiagramPlace[] = [];
+        const transitions: DiagramTransition[] = [];
+
+        this.drawnElements().forEach((el) => {
+            if (el.node instanceof DiagramPlace) {
+                const place = new DiagramPlace(
+                    el.node.id,
+                    el.node.tokenCount(),
+                    el.node.label ?? el.node.displayLabel,
+                    {
+                        labelPlacement: el.node.labelPlacement,
+                        hideTokens: el.node.hideTokens,
+                        innerLabel: el.node.innerLabel,
+                        isStartPlace: el.node.isStartPlace,
+                    },
+                );
+                place.x = el.node.x;
+                place.y = el.node.y;
+                places.push(place);
+            } else if (el.node instanceof DiagramTransition) {
+                const label = el.node.displayLabel ?? el.node.id;
+                const transition = new DiagramTransition(el.node.id, label, [], [], [], [], {
+                    innerLabel: el.node.innerLabel ?? label,
+                });
+                transition.x = el.node.x;
+                transition.y = el.node.y;
+                transitions.push(transition);
+            }
+        });
+
+        const arcs: DiagramArc[] = [];
+        this.connections().forEach((conn, idx) => {
+            arcs.push(new DiagramArc(conn.id || `arc-${idx + 1}`, conn.aId, conn.bId, conn.weight));
+        });
+
+        const diagram = new Diagram(places, transitions, arcs);
+        this._sourcePetriNetService.updateEditedNet(diagram);
+        this._displayService.display(diagram);
     }
 
     private getSvgCoordinates(event: MouseEvent | DragEvent): { x: number; y: number } | null {
