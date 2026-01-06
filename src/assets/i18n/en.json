@@ -34,6 +34,7 @@
         "LABEL": "Tuple String",
         "BUTTON_TOOLTIP": "Input Tuple",
         "GENERATE": "Generate",
+        "VALIDATE": "Validate",
         "TOAST_SUCCESS_BODY": "Tuple processed successfully",
         "TOAST_SUCCESS_HEADER": "Net loaded",
         "TOAST_ERROR_HEADER": "Invalid Tuple",

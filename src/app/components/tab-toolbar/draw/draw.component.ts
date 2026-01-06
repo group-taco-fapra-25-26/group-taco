@@ -26,6 +26,7 @@ import { ToasterNotificationService } from '../../../services/toaster-notificati
 import { Diagram } from '../../../classes/diagram/diagram';
 import { Subscription } from 'rxjs';
 import { SerializationService } from '../../../services/serialization.service';
+import { ModeService } from '../../../services/mode.service';
 
 interface DrawnElement {
     node: DiagramNode;
@@ -108,6 +109,9 @@ export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
     private _springEmbedderService = inject(SpringEmbedderService);
     private _displayService = inject(DisplayService);
     private _toaster = inject(ToasterNotificationService);
+    private _modeService = inject(ModeService);
+
+    readonly isExamMode = this._modeService.isExamMode;
 
     private sourceNetSub?: Subscription;
     private suppressNextSourceLoad = false;
@@ -124,7 +128,7 @@ export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
                 this.loadDiagramIntoCanvas(diagram);
                 this.resetViewIfReady();
                 const tuple = this._serializationService.serializeTuple(diagram);
-                if (tuple) {
+                if (tuple && !this.isExamMode()) {
                     this.tupleString = tuple;
                 }
             } else {
@@ -251,6 +255,11 @@ export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
         } else {
             this._toaster.showError('TUPLE_INPUT.TOAST_ERROR_HEADER', 'TUPLE_INPUT.TOAST_ERROR_BODY');
         }
+    }
+
+    onTupleButtonClick(): void {
+        if (this.isExamMode()) return;
+        this.generateNetFromInput();
     }
 
     onElementMouseDown(event: MouseEvent, element: DrawnElement) {
@@ -646,7 +655,7 @@ export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
         this._displayService.display(diagram);
 
         const tuple = this._serializationService.serializeTuple(diagram);
-        if (tuple) {
+        if (tuple && !this.isExamMode()) {
             this.tupleString = tuple;
         }
     }

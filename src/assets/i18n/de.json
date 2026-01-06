@@ -34,6 +34,7 @@
         "LABEL": "Tupel String",
         "BUTTON_TOOLTIP": "Tupel eingeben",
         "GENERATE": "Generieren",
+        "VALIDATE": "Validieren",
         "TOAST_SUCCESS_BODY": "Tupel erfolgreich verarbeitet",
         "TOAST_SUCCESS_HEADER": "Netz geladen",
         "TOAST_ERROR_HEADER": "Ungültiges Tupel",

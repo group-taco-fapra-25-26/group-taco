@@ -22,9 +22,12 @@
                 [(ngModel)]="tupleString"
                 [placeholder]="'TUPLE_INPUT.LABEL' | translate"
                 rows="3"
-                (keyup.enter)="generateNetFromInput()"></textarea>
-            <button (click)="generateNetFromInput()" [disabled]="!tupleString.trim().length">
-                {{ 'TUPLE_INPUT.GENERATE' | translate }}
+                (keyup.enter)="onTupleButtonClick()"></textarea>
+            <button
+                (click)="onTupleButtonClick()"
+                [disabled]="!tupleString.trim().length"
+                [title]="(isExamMode() ? 'TUPLE_INPUT.VALIDATE' : 'TUPLE_INPUT.GENERATE') | translate">
+                {{ (isExamMode() ? 'TUPLE_INPUT.VALIDATE' : 'TUPLE_INPUT.GENERATE') | translate }}
             </button>
         </div>
 
