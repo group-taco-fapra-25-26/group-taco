@@ -15,6 +15,7 @@ import { SerializationService } from './serialization.service';
 import { ModeService } from './mode.service';
 import { TranslateService } from '@ngx-translate/core';
 import { TOAST_POSITIONS, ToastList } from '../classes/toast';
+import { applyParallelOffsetsToArcs, DEFAULT_PARALLEL_OFFSET } from './arc-parallel-offset.util';
 
 export interface DrawnElement {
     node: DiagramNode;
@@ -130,7 +131,7 @@ export class DrawService implements OnDestroy {
     private readonly PLACE_RADIUS = 25;
     private readonly TRANSITION_HALF_W = 25;
     private readonly TRANSITION_HALF_H = 15;
-    private readonly CONNECTION_PARALLEL_OFFSET = 26;
+    private readonly CONNECTION_PARALLEL_OFFSET = DEFAULT_PARALLEL_OFFSET;
 
     private _parserService = inject(ParserService);
     private readonly _serializationService = inject(SerializationService);
@@ -943,74 +944,7 @@ export class DrawService implements OnDestroy {
     }
 
     private applyParallelOffsetsToArcs(arcs: DiagramArc[], nodeMap: Map<string, DiagramNode>): void {
-        const groups = new Map<string, DiagramArc[]>();
-        arcs.forEach((arc) => {
-            const key = arc.source < arc.target ? `${arc.source}~${arc.target}` : `${arc.target}~${arc.source}`;
-            const list = groups.get(key) || [];
-            list.push(arc);
-            groups.set(key, list);
-        });
-
-        groups.forEach((group, key) => {
-            if (group.length < 2) return;
-            const [aId, bId] = key.split('~');
-            const nodeA = nodeMap.get(aId);
-            const nodeB = nodeMap.get(bId);
-            if (!nodeA || !nodeB) return;
-
-            const dx = nodeB.x - nodeA.x;
-            const dy = nodeB.y - nodeA.y;
-            const distance = Math.hypot(dx, dy);
-            if (distance < 1) return;
-
-            const perpX = -dy / distance;
-            const perpY = dx / distance;
-
-            const forward = group
-                .filter((arc) => arc.source === aId && arc.target === bId)
-                .sort((a, b) => a.id.localeCompare(b.id));
-            const backward = group
-                .filter((arc) => arc.source === bId && arc.target === aId)
-                .sort((a, b) => a.id.localeCompare(b.id));
-
-            const applyOffsets = (list: DiagramArc[], baseShiftSign: -1 | 0 | 1, pairedExists: boolean) => {
-                const centerIndex = (list.length - 1) / 2;
-                list.forEach((arc, index) => {
-                    const start = nodeMap.get(arc.source);
-                    const end = nodeMap.get(arc.target);
-                    if (!start || !end) return;
-
-                    let offset = (index - centerIndex) * this.CONNECTION_PARALLEL_OFFSET;
-                    if (baseShiftSign !== 0) {
-                        offset += baseShiftSign * (this.CONNECTION_PARALLEL_OFFSET / 2);
-                    }
-                    if (Math.abs(offset) < 0.01 && pairedExists) {
-                        offset = this.CONNECTION_PARALLEL_OFFSET / 2;
-                    }
-
-                    if (Math.abs(offset) < 0.01) {
-                        arc.bendPoints = [];
-                        return;
-                    }
-
-                    const p1 = 1 / 3;
-                    const p2 = 2 / 3;
-                    arc.bendPoints = [
-                        {
-                            x: start.x + (end.x - start.x) * p1 + perpX * offset,
-                            y: start.y + (end.y - start.y) * p1 + perpY * offset,
-                        },
-                        {
-                            x: start.x + (end.x - start.x) * p2 + perpX * offset,
-                            y: start.y + (end.y - start.y) * p2 + perpY * offset,
-                        },
-                    ];
-                });
-            };
-
-            applyOffsets(forward, 0, backward.length > 0);
-            applyOffsets(backward, -1, forward.length > 0);
-        });
+        applyParallelOffsetsToArcs(arcs, nodeMap, this.CONNECTION_PARALLEL_OFFSET);
     }
 
     private buildPlace(

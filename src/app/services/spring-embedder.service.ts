@@ -4,6 +4,7 @@ import { SourcePetriNetService } from './source-petri-net.service';
 import { DiagramArc } from '../classes/diagram/diagram-arc';
 import { Coords } from '../classes/json-petri-net';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { applyParallelOffsetsToArcs, DEFAULT_PARALLEL_OFFSET } from './arc-parallel-offset.util';
 
 @Injectable({
     providedIn: 'root',
@@ -15,7 +16,7 @@ export class SpringEmbedderService {
     private readonly LENGTH_CONSTANT = 150;
     private readonly STIFFNESS_CONSTANT = 0.2;
     private readonly REPULSION_CONSTANT = 15000;
-    private readonly PARALLEL_OFFSET = 26;
+    private readonly PARALLEL_OFFSET = DEFAULT_PARALLEL_OFFSET;
 
     private readonly MAX_ITERATIONS = 100000;
     private readonly MIN_MOVEMENT = 0.1;
@@ -149,77 +150,6 @@ export class SpringEmbedderService {
     }
 
     private _separateParallelArcs(arcs: DiagramArc[], nodes: DiagramNode[]): void {
-        const nodeMap = new Map<string, DiagramNode>();
-        nodes.forEach((node) => nodeMap.set(node.id, node));
-
-        const groups = new Map<string, DiagramArc[]>();
-        arcs.forEach((arc) => {
-            const key = arc.source < arc.target ? `${arc.source}~${arc.target}` : `${arc.target}~${arc.source}`;
-            const list = groups.get(key) || [];
-            list.push(arc);
-            groups.set(key, list);
-        });
-
-        groups.forEach((group, key) => {
-            if (group.length < 2) return;
-
-            const [aId, bId] = key.split('~');
-            const nodeA = nodeMap.get(aId);
-            const nodeB = nodeMap.get(bId);
-            if (!nodeA || !nodeB) return;
-
-            const dx = nodeB.x - nodeA.x;
-            const dy = nodeB.y - nodeA.y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
-            if (distance < 1) return;
-
-            const perpX = -dy / distance;
-            const perpY = dx / distance;
-
-            const forward = group
-                .filter((arc) => arc.source === aId && arc.target === bId)
-                .sort((a, b) => a.id.localeCompare(b.id));
-            const backward = group
-                .filter((arc) => arc.source === bId && arc.target === aId)
-                .sort((a, b) => a.id.localeCompare(b.id));
-
-            const applyOffsets = (list: DiagramArc[], baseShiftSign: -1 | 0 | 1, pairedExists: boolean) => {
-                const centerIndex = (list.length - 1) / 2;
-                list.forEach((arc, index) => {
-                    const start = nodeMap.get(arc.source);
-                    const end = nodeMap.get(arc.target);
-                    if (!start || !end) return;
-
-                    let offset = (index - centerIndex) * this.PARALLEL_OFFSET;
-                    if (baseShiftSign !== 0) {
-                        offset += baseShiftSign * (this.PARALLEL_OFFSET / 2);
-                    }
-                    if (Math.abs(offset) < 0.01 && pairedExists) {
-                        offset = this.PARALLEL_OFFSET / 2;
-                    }
-
-                    if (Math.abs(offset) < 0.01) {
-                        arc.bendPoints = [];
-                        return;
-                    }
-
-                    const p1Ratio = 1 / 3;
-                    const p2Ratio = 2 / 3;
-                    arc.bendPoints = [
-                        {
-                            x: start.x + (end.x - start.x) * p1Ratio + perpX * offset,
-                            y: start.y + (end.y - start.y) * p1Ratio + perpY * offset,
-                        },
-                        {
-                            x: start.x + (end.x - start.x) * p2Ratio + perpX * offset,
-                            y: start.y + (end.y - start.y) * p2Ratio + perpY * offset,
-                        },
-                    ];
-                });
-            };
-
-            applyOffsets(forward, 0, backward.length > 0);
-            applyOffsets(backward, -1, forward.length > 0);
-        });
+        applyParallelOffsetsToArcs(arcs, nodes, this.PARALLEL_OFFSET);
     }
 }
