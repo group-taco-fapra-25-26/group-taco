@@ -8,6 +8,7 @@ import {
     ViewChild,
     inject,
     OnInit,
+    effect,
 } from '@angular/core';
 import { SvgNodeComponent } from '../../display/svg-node/svg-node.component';
 import { DiagramNode } from '../../../classes/diagram/diagram-node';
@@ -141,6 +142,30 @@ export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
         this.sourceTextSub = this._sourcePetriNetService.sourceText$.subscribe((text) => {
             if (this.isExamMode() && text) {
                 this.tupleString = text;
+            }
+        });
+
+        effect(() => {
+            if (!this.isExamMode()) return;
+            const sourceDiagram = this._sourcePetriNetService.getCurrentSourceNet();
+            const tupleFromSource = sourceDiagram
+                ? this._serializationService.serializeTuple(sourceDiagram)
+                : undefined;
+            if (tupleFromSource) {
+                this.tupleString = tupleFromSource;
+                return;
+            }
+
+            const diagramFromCanvas = this.buildDiagramFromCanvas();
+            const tupleFromCanvas = this._serializationService.serializeTuple(diagramFromCanvas);
+            if (tupleFromCanvas) {
+                this.tupleString = tupleFromCanvas;
+                return;
+            }
+
+            const sourceText = this._sourcePetriNetService.getSourceText();
+            if (sourceText) {
+                this.tupleString = sourceText;
             }
         });
     }
@@ -469,21 +494,58 @@ export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
 
         const drawnDiagram = this.buildDiagramFromCanvas();
 
-        const expectedPlaces = new Set(parsed.places.map((p) => p.id));
-        const drawnPlaces = new Set(drawnDiagram.places.map((p) => p.id));
+        const placeLabel = (p: DiagramPlace) => p.label ?? p.displayLabel ?? p.id;
+        const transitionLabel = (t: DiagramTransition) => t.label ?? t.displayLabel ?? t.id;
 
-        const expectedTransitions = new Set(parsed.transitions.map((t) => t.id));
-        const drawnTransitions = new Set(drawnDiagram.transitions.map((t) => t.id));
+        const parsedPlaceLabelById = new Map(parsed.places.map((p) => [p.id, placeLabel(p)]));
+        const parsedTransitionLabelById = new Map(parsed.transitions.map((t) => [t.id, transitionLabel(t)]));
+        const drawnPlaceLabelById = new Map(drawnDiagram.places.map((p) => [p.id, placeLabel(p)]));
+        const drawnTransitionLabelById = new Map(drawnDiagram.transitions.map((t) => [t.id, transitionLabel(t)]));
+
+        const idToLabel = (id: string, placeMap: Map<string, string>, transitionMap: Map<string, string>) =>
+            placeMap.get(id) ?? transitionMap.get(id) ?? id;
+
+        const expectedPlaces = new Set(
+            parsed.places.map((p) => idToLabel(p.id, parsedPlaceLabelById, parsedTransitionLabelById)),
+        );
+        const drawnPlaces = new Set(
+            drawnDiagram.places.map((p) => idToLabel(p.id, drawnPlaceLabelById, drawnTransitionLabelById)),
+        );
+
+        const expectedTransitions = new Set(
+            parsed.transitions.map((t) => idToLabel(t.id, parsedPlaceLabelById, parsedTransitionLabelById)),
+        );
+        const drawnTransitions = new Set(
+            drawnDiagram.transitions.map((t) => idToLabel(t.id, drawnPlaceLabelById, drawnTransitionLabelById)),
+        );
 
         const expectedArcs = new Map<string, number>(
-            parsed.arcs.map((a) => [`${a.source}->${a.target}`, a.weight ?? 1]),
+            parsed.arcs.map((a) => {
+                const srcLabel = idToLabel(a.source, parsedPlaceLabelById, parsedTransitionLabelById);
+                const tgtLabel = idToLabel(a.target, parsedPlaceLabelById, parsedTransitionLabelById);
+                return [`${srcLabel}->${tgtLabel}`, a.weight ?? 1];
+            }),
         );
         const drawnArcs = new Map<string, number>(
-            drawnDiagram.arcs.map((a) => [`${a.source}->${a.target}`, a.weight ?? 1]),
+            drawnDiagram.arcs.map((a) => {
+                const srcLabel = idToLabel(a.source, drawnPlaceLabelById, drawnTransitionLabelById);
+                const tgtLabel = idToLabel(a.target, drawnPlaceLabelById, drawnTransitionLabelById);
+                return [`${srcLabel}->${tgtLabel}`, a.weight ?? 1];
+            }),
         );
 
-        const expectedTokens = new Map<string, number>(parsed.places.map((p) => [p.id, p.tokenCount()]));
-        const drawnTokens = new Map<string, number>(drawnDiagram.places.map((p) => [p.id, p.tokenCount()]));
+        const expectedTokens = new Map<string, number>(
+            parsed.places.map((p) => [
+                idToLabel(p.id, parsedPlaceLabelById, parsedTransitionLabelById),
+                p.tokenCount(),
+            ]),
+        );
+        const drawnTokens = new Map<string, number>(
+            drawnDiagram.places.map((p) => [
+                idToLabel(p.id, drawnPlaceLabelById, drawnTransitionLabelById),
+                p.tokenCount(),
+            ]),
+        );
 
         const errors: string[] = [];
 
