@@ -347,15 +347,26 @@ export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
             const newLabel = window.prompt('Edit transition label', currentLabel)?.trim();
             if (!newLabel || newLabel === currentLabel) return;
 
+            const oldId = element.id;
             this.drawnElements.update((elements) =>
                 elements.map((el) => {
-                    if (el.id !== element.id) return el;
-                    const updated = this.buildTransition(el.node.id, newLabel, { innerLabel: newLabel });
+                    if (el.id !== oldId) return el;
+                    const updated = this.buildTransition(newLabel, newLabel, { innerLabel: newLabel });
                     updated.x = el.node.x;
                     updated.y = el.node.y;
-                    return { ...el, node: updated };
+                    return { id: newLabel, node: updated };
                 }),
             );
+            this.connections.update((cs) =>
+                cs.map((c) => ({
+                    ...c,
+                    aId: c.aId === oldId ? newLabel : c.aId,
+                    bId: c.bId === oldId ? newLabel : c.bId,
+                })),
+            );
+            if (this.selectedElementId() === oldId) {
+                this.selectedElementId.set(newLabel);
+            }
             this.syncSourceNetFromCanvas();
             return;
         }
@@ -365,19 +376,28 @@ export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
             const newLabel = window.prompt('Edit place label', currentLabel)?.trim();
             if (!newLabel || newLabel === currentLabel) return;
 
+            const oldId = element.id;
             this.drawnElements.update((elements) =>
                 elements.map((el) => {
-                    if (el.id !== element.id) return el;
-                    const updated = this.buildPlace(el.node.id, newLabel, el.node.tokenCount(), {
-                        // hideTokens: el.node.hideTokens,
+                    if (el.id !== oldId) return el;
+                    const updated = this.buildPlace(newLabel, newLabel, el.node.tokenCount(), {
                         labelPlacement: 'below',
-                        // isStartPlace: el.node.isStartPlace,
                     });
                     updated.x = el.node.x;
                     updated.y = el.node.y;
-                    return { ...el, node: updated };
+                    return { id: newLabel, node: updated };
                 }),
             );
+            this.connections.update((cs) =>
+                cs.map((c) => ({
+                    ...c,
+                    aId: c.aId === oldId ? newLabel : c.aId,
+                    bId: c.bId === oldId ? newLabel : c.bId,
+                })),
+            );
+            if (this.selectedElementId() === oldId) {
+                this.selectedElementId.set(newLabel);
+            }
             this.syncSourceNetFromCanvas();
         }
     }
@@ -471,19 +491,19 @@ export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
 
     private addElement(type: 'place' | 'transition', label: string, x: number, y: number) {
         let newNode: DiagramNode;
-        const uniqueId = `draw-${type}-${++this.elementIdCounter}`;
+        const newId = label;
         if (type === 'place') {
-            newNode = this.buildPlace(uniqueId, label, 0, {
+            newNode = this.buildPlace(newId, label, 0, {
                 labelPlacement: 'below',
                 innerLabel: undefined,
                 hideTokens: false,
             });
         } else {
-            newNode = this.buildTransition(uniqueId, label, { innerLabel: label });
+            newNode = this.buildTransition(newId, label, { innerLabel: label });
         }
         newNode.x = x;
         newNode.y = y;
-        this.drawnElements.update((elements) => [...elements, { id: uniqueId, node: newNode }]);
+        this.drawnElements.update((elements) => [...elements, { id: newId, node: newNode }]);
         this.syncSourceNetFromCanvas();
     }
 
@@ -540,6 +560,19 @@ export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
         const places: DiagramPlace[] = [];
         const transitions: DiagramTransition[] = [];
 
+        // Keep references to transition connection arrays so we can fill them when wiring arcs
+        const placeMap = new Map<string, DiagramPlace>();
+        const transitionMap = new Map<
+            string,
+            {
+                transition: DiagramTransition;
+                inputPlaces: DiagramPlace[];
+                outputPlaces: DiagramPlace[];
+                inputArcs: DiagramArc[];
+                outputArcs: DiagramArc[];
+            }
+        >();
+
         this.drawnElements().forEach((el) => {
             if (el.node instanceof DiagramPlace) {
                 const place = new DiagramPlace(
@@ -556,20 +589,55 @@ export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
                 place.x = el.node.x;
                 place.y = el.node.y;
                 places.push(place);
+                placeMap.set(place.id, place);
             } else if (el.node instanceof DiagramTransition) {
                 const label = el.node.displayLabel ?? el.node.id;
-                const transition = new DiagramTransition(el.node.id, label, [], [], [], [], {
-                    innerLabel: el.node.innerLabel ?? label,
-                });
+                const inputPlaces: DiagramPlace[] = [];
+                const outputPlaces: DiagramPlace[] = [];
+                const inputArcs: DiagramArc[] = [];
+                const outputArcs: DiagramArc[] = [];
+                const transition = new DiagramTransition(
+                    el.node.id,
+                    label,
+                    inputPlaces,
+                    outputPlaces,
+                    inputArcs,
+                    outputArcs,
+                    {
+                        innerLabel: el.node.innerLabel ?? label,
+                    },
+                );
                 transition.x = el.node.x;
                 transition.y = el.node.y;
                 transitions.push(transition);
+                transitionMap.set(transition.id, {
+                    transition,
+                    inputPlaces,
+                    outputPlaces,
+                    inputArcs,
+                    outputArcs,
+                });
             }
         });
 
         const arcs: DiagramArc[] = [];
         this.connections().forEach((conn, idx) => {
-            arcs.push(new DiagramArc(conn.id || `arc-${idx + 1}`, conn.aId, conn.bId, conn.weight));
+            const arc = new DiagramArc(conn.id || `arc-${idx + 1}`, conn.aId, conn.bId, conn.weight);
+            arcs.push(arc);
+
+            const placeSource = placeMap.get(conn.aId);
+            const placeTarget = placeMap.get(conn.bId);
+            const transitionSource = transitionMap.get(conn.aId);
+            const transitionTarget = transitionMap.get(conn.bId);
+
+            // Wire arcs to transitions so play/reachability tabs see correct pre/post sets
+            if (placeSource && transitionTarget) {
+                transitionTarget.inputPlaces.push(placeSource);
+                transitionTarget.inputArcs.push(arc);
+            } else if (transitionSource && placeTarget) {
+                transitionSource.outputPlaces.push(placeTarget);
+                transitionSource.outputArcs.push(arc);
+            }
         });
 
         const diagram = new Diagram(places, transitions, arcs);
