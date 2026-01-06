@@ -9,7 +9,7 @@ import { FiringEntry } from '../classes/firing-entry';
 @Injectable({ providedIn: 'root' })
 export class PlayValidationService {
     // TODO:
-    // - use notification service to provide user feedback
+    // - use notification service to provide user feedback, consider mode from mode service
     private _notificationService = inject(ToasterNotificationService);
     private _modeService = inject(ModeService);
     private _playService = inject(PlayService);
@@ -59,7 +59,6 @@ export class PlayValidationService {
                 this._playService.addFiringEntry(
                     firedTransitions.join(' '),
                     firedTransitions.length,
-                    requiredStartMarking,
                     requiredEndMarking,
                     true,
                 );
@@ -106,54 +105,37 @@ export class PlayValidationService {
      * @returns A promise that returns whether the input is valid when the validation is complete.
      */
     async validateInput(diagram: Diagram, entry: FiringEntry): Promise<void> {
-        let isValid = false;
-        entry.transitionCount = entry.labels.length;
-        const hasOnlyValidTransitions: boolean = this._hasOnlyValidTransitions(diagram, entry.labels);
+        const hasOnlyValidTransitions: boolean = this._hasOnlyValidTransitions(diagram, entry);
         // TODO: provide user feedback if invalid transitions are present
-        if (hasOnlyValidTransitions) isValid = await this._isValidFiringEntry(diagram, entry);
-        console.log(entry.firingSequence, hasOnlyValidTransitions, isValid);
-        entry.isValid = isValid;
+        if (hasOnlyValidTransitions) entry.isValid = await this._playService.playSequence(diagram, entry, 0, false);
+        else entry.isValid = hasOnlyValidTransitions;
     }
 
     /**
-     * Checks if all labels correspond to (the start of) existing transitions in the diagram.
+     * Checks if all labels correspond to existing transitions in the diagram.
      * @param diagram
      *          The diagram for which the sequence is to be checked.
-     * @param labels
-     *          The labels to be validated.
-     * @returns true if all labels correnspond to (the start of) existing transitions, false otherwise.
-     */
-    private _hasOnlyValidTransitions(diagram: Diagram, labels: string[]): boolean {
-        const possibleTransitions: string[] = diagram.getTransitionLabels();
-        if (labels.length === 0) return true;
-        if (possibleTransitions.length === 0 && labels.length > 0) return false;
-        return labels.every(
-            (label) =>
-                possibleTransitions.includes(label) ||
-                possibleTransitions.some((transition) => transition.startsWith(label)),
-        );
-    }
-
-    /**
-     * Checks whether a firing entry is valid for a given diagram.
-     * @param diagram
-     *          The diagram on which the firing entry is to be validated.
      * @param entry
      *          The firing entry to be validated.
-     * @returns A promise that returns true if the firing entry is valid, false otherwise.
+     * @returns true if all labels correnspond to existing transitions, false otherwise.
      */
-    private async _isValidFiringEntry(diagram: Diagram, entry: FiringEntry): Promise<boolean> {
-        diagram.marking = { ...entry.startMarking };
-        const givenEndMarking: Record<string, number | undefined> = { ...entry.endMarking };
-        const successfullyPlayed: boolean = await this._playService.playSequence(diagram, entry, 0, false);
-        const isValidEndMarking =
-            !this._modeService.isExamMode() || this._isEquivalentMarking(givenEndMarking, diagram.marking);
-        const isValid: boolean = successfullyPlayed && isValidEndMarking;
-        if (isValid) entry.endMarking = { ...diagram.marking };
-        return isValid;
-        // TODO: Find error cause: When new Sequence is clicked in learn mode, then exam mode is activated and a valid entry is input
-        // -> When clicking Validate Firing Table the entry is wrongly marked as invalid. isEquivalentMarking is false, so the error
-        // must have occured by setting a wrong marking in the play service's playSequence method.
+    private _hasOnlyValidTransitions(diagram: Diagram, entry: FiringEntry): boolean {
+        const possibleTransitions: string[] = diagram.getTransitionLabels();
+        const labels = entry.labels;
+        if (labels.length === 0) return true;
+        if (possibleTransitions.length === 0 && labels.length > 0) return false;
+        entry.isValid = true;
+        for (const label of labels) {
+            const exactMatch = possibleTransitions.includes(label);
+
+            if (exactMatch) {
+                continue;
+            } else {
+                entry.isValid = false;
+                break;
+            }
+        }
+        return entry.isValid;
     }
 
     /**
@@ -162,19 +144,15 @@ export class PlayValidationService {
      *          The first marking.
      * @param b
      *          The second marking.
-     * @returns true if the markings are equivalent, else false (undefined token counts are used as wildcards).
+     * @returns true if the markings are equivalent, else false.
      */
-    private _isEquivalentMarking(
-        a: Record<string, number | undefined>,
-        b: Record<string, number | undefined>,
-    ): boolean {
+    private _isEquivalentMarking(a: Record<string, number>, b: Record<string, number>): boolean {
         const aKeys = Object.keys(a);
         const bKeys = Object.keys(b);
         if (aKeys.length !== bKeys.length) return false;
         return aKeys.every((key) => {
             const valA = a[key];
             const valB = b[key];
-            if (valA === undefined || valB === undefined) return true;
             return valA === valB;
         });
     }

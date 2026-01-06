@@ -1,108 +1,78 @@
-<table class="firing-table">
-    <thead>
-        <tr>
-            <th>
-                <mat-icon>playlist_add_check</mat-icon>
-            </th>
-            <th class="firing-sequence-th">{{ 'FIRING_SEQUENCE' | translate }}</th>
-            <th class="transition-count-th">{{ 'TRANSITION_COUNT' | translate }}</th>
-            <th class="start-marking-th">{{ 'START_MARKING' | translate }}</th>
-            <th class="end-marking-th">{{ 'END_MARKING' | translate }}</th>
-            <th class="delete-button-th">
-                <button mat-icon-button color="warn" (click)="onDeleteAllEntries()" class="delete-all-entries-button">
-                    <mat-icon>delete_sweep</mat-icon>
-                </button>
-            </th>
-        </tr>
-    </thead>
-    <tbody>
-        @for (entry of firingEntries; track entry.id) {
+<div class="firing-table-container">
+    <table class="firing-table">
+        <thead>
             <tr>
-                <td class="play-sequence-td">
-                    @if (entry.isValid) {
-                        <button mat-icon-button (click)="onPlaySequence(entry)" class="play-sequence-button">
-                            <mat-icon class="play-icon">play_circle</mat-icon>
-                        </button>
-                    } @else if (entry.isValid === false) {
-                        <button mat-icon-button class="invalid-sequence-button">
-                            <mat-icon color="warn">cancel</mat-icon>
-                        </button>
-                    }
-                </td>
-                <td class="firing-sequence-td">
-                    @if (!entry.isClosed) {
-                        <input
-                            type="text"
-                            [(ngModel)]="entry.firingSequence"
-                            id="firing-sequence-input"
-                            (input)="onInputChange(entry)"
-                            (keydown.enter)="onNewEntry()" />
-                    } @else {
-                        {{ entry.firingSequence }}
-                    }
-                </td>
-                <td class="transition-count-td">{{ entry.transitionCount }}</td>
-                <td class="start-marking-td">
-                    @if (!entry.isClosed && this.modeService.isExamMode()) {
-                        <div class="marking-container">
-                            @for (item of entry.startMarking | keyvalue; track item.key) {
-                                <div class="marking-entry">
-                                    <span>{{ item.key }}:</span>
-                                    <input
-                                        matInput
-                                        type="number"
-                                        min="0"
-                                        step="1"
-                                        inputmode="numeric"
-                                        pattern="[0-9]*"
-                                        [value]="item.value"
-                                        (input)="updateMarking(item.value, $event)"
-                                        required />
-                                </div>
-                            }
-                        </div>
-                    } @else {
-                        {{ entry.formattedStartMarking }}
-                    }
-                </td>
-                <td class="end-marking-td">
-                    @if (!entry.isClosed && this.modeService.isExamMode()) {
-                        <div class="marking-container">
-                            @for (item of entry.endMarking | keyvalue; track item.key) {
-                                <div class="marking-entry">
-                                    <span>{{ item.key }}:</span>
-                                    <input
-                                        matInput
-                                        type="number"
-                                        min="0"
-                                        step="1"
-                                        inputmode="numeric"
-                                        pattern="[0-9]*"
-                                        [value]="item.value"
-                                        (input)="updateMarking(item.value, $event)" />
-                                </div>
-                            }
-                        </div>
-                    } @else {
-                        {{ entry.formattedEndMarking }}
-                    }
-                </td>
-
-                <td class="delete-button-td">
-                    @if (entry.isClosed) {
-                        <button
-                            mat-icon-button
-                            color="warn"
-                            (click)="onDeleteEntry(entry.id)"
-                            class="delete-entry-button">
-                            <mat-icon>delete</mat-icon>
-                        </button>
-                    }
-                </td>
+                <th>
+                    <mat-icon>playlist_add_check</mat-icon>
+                </th>
+                <th class="firing-sequence-th">{{ 'FIRING_SEQUENCE' | translate }}</th>
+                <th class="end-marking-th">{{ 'END_MARKING' | translate }}</th>
+                <th class="transition-count-th">{{ 'TRANSITION_COUNT' | translate }}</th>
+                <th class="delete-button-th">
+                    <button
+                        mat-icon-button
+                        color="warn"
+                        (click)="onDeleteAllEntries()"
+                        class="delete-all-entries-button">
+                        <mat-icon>delete_sweep</mat-icon>
+                    </button>
+                </th>
             </tr>
-        }
-    </tbody>
-</table>
+        </thead>
+        <tbody>
+            @for (entry of firingEntries; track entry.id) {
+                <tr>
+                    <td class="play-sequence-td">
+                        @if (entry.isValid) {
+                            <button mat-icon-button (click)="onPlaySequence(entry)" class="play-sequence-button">
+                                <mat-icon class="play-icon">play_circle</mat-icon>
+                            </button>
+                        } @else if (entry.isValid === false) {
+                            <button mat-icon-button class="invalid-sequence-button">
+                                <mat-icon color="warn">cancel</mat-icon>
+                            </button>
+                        }
+                    </td>
+                    <td class="firing-sequence-td">
+                        @if (!entry.isClosed) {
+                            <input
+                                type="text"
+                                [(ngModel)]="entry.firingSequence"
+                                id="firing-sequence-input"
+                                (input)="onInputChange(entry)"
+                                (keyup.Backspace)="onInputChange(entry)"
+                                (keyup.Delete)="onInputChange(entry)"
+                                (keydown.enter)="onNewEntry()" />
+                        } @else {
+                            {{ entry.firingSequence }}
+                        }
+                    </td>
+                    <td class="end-marking-td">
+                        @if (entry.isValid) {
+                            {{ entry.formattedEndMarking }}
+                        } @else if (entry.isValid === false) {
+                            X
+                        } @else {
+                            ?
+                        }
+                    </td>
+                    <td class="transition-count-td">{{ entry.transitionCount }}</td>
+                    <td class="delete-button-td">
+                        @if (entry.isClosed) {
+                            <button
+                                mat-icon-button
+                                color="warn"
+                                (click)="onDeleteEntry(entry.id)"
+                                class="delete-entry-button">
+                                <mat-icon>delete</mat-icon>
+                            </button>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
 <div class="tab-toolbar-container">
     <div class="tab-toolbar-row">
         <div class="main-button-container">

@@ -94,7 +94,10 @@ export class FiringTableComponent implements OnInit, OnDestroy {
      */
     async onInputChange(entry: FiringEntry): Promise<void> {
         if (!this._diagram) return;
-        if (!this.modeService.isExamMode()) {
+        entry.transitionCount = entry.labels.length;
+        this._playService.currentFiringEntry = entry;
+        if (this.modeService.isExamMode()) entry.isValid = undefined;
+        else {
             if (entry.firingSequence.trim() === this._lastFiringSequence.trim()) return;
             this._lastFiringSequence = entry.firingSequence;
             await this._playValidationService.validateInput(this._diagram, entry);
@@ -128,6 +131,7 @@ export class FiringTableComponent implements OnInit, OnDestroy {
     async onValidateSequences(): Promise<void> {
         if (!this._diagram) return;
         for (const entry of this.firingEntries) {
+            this._playService.currentFiringEntry = entry;
             await this._playValidationService.validateInput(this._diagram, entry);
         }
     }

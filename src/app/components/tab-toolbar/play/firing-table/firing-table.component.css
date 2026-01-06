@@ -1,3 +1,9 @@
+.firing-table-container,
+.firing-table {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
 .firing-table {
     table-layout: auto;
     border-collapse: collapse;
@@ -12,25 +18,24 @@
 }
 
 .firing-table th {
+    position: sticky;
     background-color: #f5f5f5;
     font-weight: bold;
+    top: 0;
     padding: 5px;
+    z-index: 100;
 }
 
 .firing-sequence-th {
-    width: 22%;
-}
-
-.transition-count-th {
-    width: 7%;
-}
-
-.start-marking-th {
-    width: 35%;
+    width: 65%;
 }
 
 .end-marking-th {
-    width: 35%;
+    width: 30%;
+}
+
+.transition-count-th {
+    width: 5%;
 }
 
 .action-column-th {

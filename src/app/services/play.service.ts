@@ -34,6 +34,10 @@ export class PlayService {
         this._currentMarking.set(marking);
     }
 
+    set currentFiringEntry(entry: FiringEntry | undefined) {
+        this._currentFiringEntry = entry;
+    }
+
     /**
      * Recovers the marking of the diagram from the last marking stored in the service.
      * @param diagram
@@ -70,9 +74,8 @@ export class PlayService {
         transitionTime: number,
         displayFiring: boolean,
     ): Promise<boolean> {
-        this._currentFiringEntry = entry;
-        let isEntryValid = true;
-        diagram.marking = { ...entry.startMarking };
+        entry.isValid = true;
+        diagram.resetMarking();
 
         for (const label of entry.labels) {
             await this.sleep(transitionTime);
@@ -87,13 +90,13 @@ export class PlayService {
                     displayFiring,
                 );
                 if (!successfullyFired) {
-                    isEntryValid = false;
-                    return isEntryValid;
+                    entry.isValid = false;
+                    return false;
                 }
                 entry.endMarking = { ...diagram.marking };
-            }
+            } else return false;
         }
-        return isEntryValid;
+        return true;
     }
 
     /**
@@ -118,16 +121,19 @@ export class PlayService {
         notify: boolean,
         displayFiring: boolean,
     ): boolean {
-        if (node.isActivated()) {
+        const entry: FiringEntry = this._currentFiringEntry || this._getEmptyFiringEntry();
+        if (node.isActivated() && entry.isValid !== false) {
             node.fire(displayFiring);
             diagram.updateMarking();
+            this._currentMarking.set(diagram.marking);
             this._lastMarking = diagram.marking;
+            entry.endMarking = { ...diagram.marking };
             if (updateSequence) {
                 this._sourceNetService.updateEditedNet(diagram);
                 const updateEndMarking = !this._modeService.isExamMode();
                 this.updateFiringEntry(node.label, updateEndMarking);
             }
-            this._setValidStatus(true);
+            entry.isValid = true;
             return true;
         } else if (notify) {
             this._notificationService.showWarning(
@@ -137,8 +143,7 @@ export class PlayService {
             );
         }
         if (updateSequence) this.updateFiringEntry(node.label, false);
-        this._setValidStatus(false);
-        this._currentFiringEntry?.maskEndMarking();
+        entry.isValid = false;
         return false;
     }
 
@@ -162,9 +167,9 @@ export class PlayService {
      *          The diagram for which the firing sequence is started.
      */
     startNewFiringSequence(diagram: Diagram): void {
-        diagram.marking = this._startMarking;
-        this._lastMarking = this._startMarking;
-        this.closeCurrentFiringEntry();
+        diagram.resetMarking();
+        this._lastMarking = { ...diagram.marking };
+        if (this._currentFiringEntry) this.closeCurrentFiringEntry();
         this._getEmptyFiringEntry();
         setTimeout(() => {
             document.getElementById('firing-sequence-input')?.focus();
@@ -186,8 +191,6 @@ export class PlayService {
      *          The firing sequence.
      * @param transitionCount
      *          The transition count.
-     * @param startMarking
-     *          The start marking.
      * @param endMarking
      *          The end marking.
      * @param isValid
@@ -196,20 +199,11 @@ export class PlayService {
     addFiringEntry(
         firingSequence: string,
         transitionCount: number,
-        startMarking: Record<string, number>,
         endMarking: Record<string, number>,
         isValid: boolean | undefined,
     ) {
-        this.closeCurrentFiringEntry();
-        const newEntry = new FiringEntry(
-            this.getNewId(),
-            firingSequence,
-            transitionCount,
-            startMarking,
-            endMarking,
-            true,
-            isValid,
-        );
+        if (this._currentFiringEntry) this.closeCurrentFiringEntry();
+        const newEntry = new FiringEntry(this.getNewId(), firingSequence, transitionCount, endMarking, true, isValid);
         this.firingEntries.update((entries) => {
             entries.push(newEntry);
             return entries;
@@ -227,19 +221,21 @@ export class PlayService {
      */
     updateFiringEntry(label: string, updateEndMarking: boolean): void {
         const entry = this._currentFiringEntry || this._getEmptyFiringEntry();
-        entry.firingSequence += ` ${label}`;
+        const delimiter = entry.firingSequence.includes('; ')
+            ? '; '
+            : entry.firingSequence.includes(', ')
+              ? ', '
+              : entry.firingSequence.includes(';')
+                ? ';'
+                : entry.firingSequence.includes(',')
+                  ? ','
+                  : ' ';
+        if (entry.firingSequence.length === 0) entry.firingSequence = label;
+        else entry.firingSequence = entry.firingSequence.replace(/[\s,;]+$/, '') + delimiter + label;
         entry.transitionCount += 1;
+        if (this._modeService.isExamMode()) entry.isValid = undefined;
         if (updateEndMarking) entry.endMarking = this._currentMarking();
         this._reachabilityGraphService.convertFiringEntryLabelToReachabilityGraphID(entry, label);
-    }
-
-    /**
-     * Sets the isValid attribute of the current firing sequence.
-     * @param isValid
-     *          Indicates whether the current firing entry is valid.
-     */
-    private _setValidStatus(isValid: boolean): void {
-        if (this._currentFiringEntry) this._currentFiringEntry.isValid = isValid;
     }
 
     /**
@@ -251,6 +247,7 @@ export class PlayService {
                 this._currentFiringEntry!.isClosed = true;
                 return entries;
             });
+        this._currentFiringEntry = undefined;
     }
 
     /**
@@ -259,16 +256,7 @@ export class PlayService {
      */
     private _getEmptyFiringEntry(): FiringEntry {
         const endMarking = { ...this._startMarking };
-        const newFiringEntry = new FiringEntry(
-            this.getNewId(),
-            '',
-            0,
-            { ...this._startMarking },
-            endMarking,
-            false,
-            undefined,
-        );
-        if (this._modeService.isExamMode()) newFiringEntry.maskEndMarking();
+        const newFiringEntry = new FiringEntry(this.getNewId(), '', 0, endMarking, false, undefined);
         this._currentFiringEntry = newFiringEntry;
         this.firingEntries.update((entries) => {
             entries.push(newFiringEntry);
