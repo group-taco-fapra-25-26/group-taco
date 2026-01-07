@@ -160,7 +160,9 @@ svg text {
 .tuple-token {
     padding: 1px 3px;
     border-radius: 3px;
-    transition: background-color 0.15s ease, color 0.15s ease;
+    transition:
+        background-color 0.15s ease,
+        color 0.15s ease;
 }
 
 .tuple-token.is-hovered {
@@ -187,13 +189,13 @@ svg text {
 }
 
 /* Change only existing visible black outlines; skip selection halos or colored strokes */
-.element-wrapper.is-hovered svg rect[stroke="black"],
-.element-wrapper.is-hovered svg circle[stroke="black"] {
+.element-wrapper.is-hovered svg rect[stroke='black'],
+.element-wrapper.is-hovered svg circle[stroke='black'] {
     stroke: #d35400;
 }
 
-:host ::ng-deep .element-wrapper.is-hovered rect[stroke="black"],
-:host ::ng-deep .element-wrapper.is-hovered circle[stroke="black"] {
+:host ::ng-deep .element-wrapper.is-hovered rect[stroke='black'],
+:host ::ng-deep .element-wrapper.is-hovered circle[stroke='black'] {
     stroke: #d35400 !important;
 }
 
