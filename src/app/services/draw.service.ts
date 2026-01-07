@@ -16,6 +16,9 @@ import { ModeService } from './mode.service';
 import { TranslateService } from '@ngx-translate/core';
 import { TOAST_POSITIONS, ToastList } from '../classes/toast';
 import { applyParallelOffsetsToArcs, DEFAULT_PARALLEL_OFFSET } from './arc-parallel-offset.util';
+import { MatDialog } from '@angular/material/dialog';
+import { LabelEditDialogComponent } from '../components/label-edit-dialog/label-edit-dialog.component';
+import { firstValueFrom } from 'rxjs';
 
 export interface DrawnElement {
     node: DiagramNode;
@@ -142,6 +145,7 @@ export class DrawService implements OnDestroy {
     private _modeService = inject(ModeService);
     private _translate = inject(TranslateService);
     private panning = inject(PanningService);
+    private _dialog = inject(MatDialog);
 
     readonly viewBox = this.panning.viewBoxAsString;
     readonly viewBoxObj = this.panning.viewBox;
@@ -406,103 +410,82 @@ export class DrawService implements OnDestroy {
         event.preventDefault();
         if (element.node instanceof DiagramTransition) {
             const currentLabel = element.node.displayLabel ?? element.node.id;
-            const newLabel = window
-                .prompt(this._translate.instant('DRAW.PROMPT_EDIT_TRANSITION_TITLE'), currentLabel)
-                ?.trim();
-            if (!newLabel || newLabel === currentLabel) return;
-            if (this.isLabelTaken(newLabel, element.id)) {
-                this.showDuplicateLabelError(newLabel);
-                return;
-            }
+            this.promptForLabel('DRAW.PROMPT_EDIT_TRANSITION_TITLE', currentLabel).then((newLabel) => {
+                if (!newLabel || newLabel === currentLabel) return;
+                if (this.isLabelTaken(newLabel, element.id)) {
+                    this.showDuplicateLabelError(newLabel);
+                    return;
+                }
 
-            const oldId = element.id;
-            this.drawnElements.update((elements) =>
-                elements.map((el) => {
-                    if (el.id !== oldId) return el;
-                    const updated = this.buildTransition(newLabel, newLabel, { innerLabel: newLabel });
-                    updated.x = el.node.x;
-                    updated.y = el.node.y;
-                    return { id: newLabel, node: updated };
-                }),
-            );
-            this.connections.update((cs) =>
-                cs.map((c) => ({
-                    ...c,
-                    aId: c.aId === oldId ? newLabel : c.aId,
-                    bId: c.bId === oldId ? newLabel : c.bId,
-                })),
-            );
-            if (this.selectedElementId() === oldId) {
-                this.selectedElementId.set(newLabel);
-            }
-            this.syncSourceNetFromCanvas();
+                const oldId = element.id;
+                this.drawnElements.update((elements) =>
+                    elements.map((el) => {
+                        if (el.id !== oldId) return el;
+                        const updated = this.buildTransition(newLabel, newLabel, { innerLabel: newLabel });
+                        updated.x = el.node.x;
+                        updated.y = el.node.y;
+                        return { id: newLabel, node: updated };
+                    }),
+                );
+                this.connections.update((cs) =>
+                    cs.map((c) => ({
+                        ...c,
+                        aId: c.aId === oldId ? newLabel : c.aId,
+                        bId: c.bId === oldId ? newLabel : c.bId,
+                    })),
+                );
+                if (this.selectedElementId() === oldId) {
+                    this.selectedElementId.set(newLabel);
+                }
+                this.syncSourceNetFromCanvas();
+            });
             return;
         }
 
         if (element.node instanceof DiagramPlace) {
             const currentLabel = element.node.label ?? element.node.displayLabel;
-            const newLabel = window
-                .prompt(this._translate.instant('DRAW.PROMPT_EDIT_PLACE_TITLE'), currentLabel)
-                ?.trim();
-            if (!newLabel || newLabel === currentLabel) return;
-            if (this.isLabelTaken(newLabel, element.id)) {
-                this.showDuplicateLabelError(newLabel);
-                return;
-            }
+            this.promptForLabel('DRAW.PROMPT_EDIT_PLACE_TITLE', currentLabel).then((newLabel) => {
+                if (!newLabel || newLabel === currentLabel) return;
+                if (this.isLabelTaken(newLabel, element.id)) {
+                    this.showDuplicateLabelError(newLabel);
+                    return;
+                }
 
-            const oldId = element.id;
-            this.drawnElements.update((elements) =>
-                elements.map((el) => {
-                    if (el.id !== oldId) return el;
-                    const updated = this.buildPlace(newLabel, newLabel, el.node.tokenCount(), {
-                        labelPlacement: 'below',
-                    });
-                    updated.x = el.node.x;
-                    updated.y = el.node.y;
-                    return { id: newLabel, node: updated };
-                }),
-            );
-            this.connections.update((cs) =>
-                cs.map((c) => ({
-                    ...c,
-                    aId: c.aId === oldId ? newLabel : c.aId,
-                    bId: c.bId === oldId ? newLabel : c.bId,
-                })),
-            );
-            if (this.selectedElementId() === oldId) {
-                this.selectedElementId.set(newLabel);
-            }
-            this.syncSourceNetFromCanvas();
+                const oldId = element.id;
+                this.drawnElements.update((elements) =>
+                    elements.map((el) => {
+                        if (el.id !== oldId) return el;
+                        const updated = this.buildPlace(newLabel, newLabel, el.node.tokenCount(), {
+                            labelPlacement: 'below',
+                        });
+                        updated.x = el.node.x;
+                        updated.y = el.node.y;
+                        return { id: newLabel, node: updated };
+                    }),
+                );
+                this.connections.update((cs) =>
+                    cs.map((c) => ({
+                        ...c,
+                        aId: c.aId === oldId ? newLabel : c.aId,
+                        bId: c.bId === oldId ? newLabel : c.bId,
+                    })),
+                );
+                if (this.selectedElementId() === oldId) {
+                    this.selectedElementId.set(newLabel);
+                }
+                this.syncSourceNetFromCanvas();
+            });
         }
     }
 
-    onElementWheel(event: WheelEvent, element: DrawnElement) {
-        event.preventDefault();
-        event.stopPropagation();
-        if (element.node instanceof DiagramPlace) {
-            const delta = Math.sign(event.deltaY) || 0;
-            if (delta === 0) return;
-            this.drawnElements.update((elements) =>
-                elements.map((el) => {
-                    if (el.id !== element.id || !(el.node instanceof DiagramPlace)) return el;
-                    const currentTokens = el.node.tokenCount() ?? 0;
-                    const newTokens = Math.max(0, currentTokens - delta);
-                    const updated = this.buildPlace(el.node.id, el.node.label ?? el.node.displayLabel, newTokens, {
-                        hideTokens: el.node.hideTokens,
-                        labelPlacement: el.node.labelPlacement,
-                        isStartPlace: el.node.isStartPlace,
-                    });
-                    updated.x = el.node.x;
-                    updated.y = el.node.y;
-                    return { ...el, node: updated };
-                }),
-            );
-            this.syncSourceNetFromCanvas();
-        }
-    }
+    private async promptForLabel(titleKey: string, current: string | undefined | null): Promise<string | undefined> {
+        const dialogRef = this._dialog.open(LabelEditDialogComponent, {
+            width: '360px',
+            data: { title: titleKey, label: current ?? '' },
+        });
 
-    setTupleString(value: string) {
-        this.tupleString.set(value);
+        const result = await firstValueFrom(dialogRef.afterClosed());
+        return typeof result === 'string' ? result.trim() : undefined;
     }
 
     private createExamTupleEffect() {
@@ -1067,5 +1050,34 @@ export class DrawService implements OnDestroy {
         const x2 = shiftedBx - ux * bOffset;
         const y2 = shiftedBy - uy * bOffset;
         return { x1, y1, x2, y2 };
+    }
+
+    onElementWheel(event: WheelEvent, element: DrawnElement) {
+        event.preventDefault();
+        event.stopPropagation();
+        if (element.node instanceof DiagramPlace) {
+            const delta = Math.sign(event.deltaY) || 0;
+            if (delta === 0) return;
+            this.drawnElements.update((elements) =>
+                elements.map((el) => {
+                    if (el.id !== element.id || !(el.node instanceof DiagramPlace)) return el;
+                    const currentTokens = el.node.tokenCount() ?? 0;
+                    const newTokens = Math.max(0, currentTokens - delta);
+                    const updated = this.buildPlace(el.node.id, el.node.label ?? el.node.displayLabel, newTokens, {
+                        hideTokens: el.node.hideTokens,
+                        labelPlacement: el.node.labelPlacement,
+                        isStartPlace: el.node.isStartPlace,
+                    });
+                    updated.x = el.node.x;
+                    updated.y = el.node.y;
+                    return { ...el, node: updated };
+                }),
+            );
+            this.syncSourceNetFromCanvas();
+        }
+    }
+
+    setTupleString(value: string) {
+        this.tupleString.set(value);
     }
 }

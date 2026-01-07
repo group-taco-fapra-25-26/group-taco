@@ -5,11 +5,12 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { DrawService, DrawnElement } from '../../../services/draw.service';
+import { MatDialogModule } from '@angular/material/dialog';
 
 @Component({
     selector: 'app-draw',
     standalone: true,
-    imports: [CommonModule, FormsModule, TranslateModule, SvgNodeComponent],
+    imports: [CommonModule, FormsModule, TranslateModule, SvgNodeComponent, MatDialogModule],
     templateUrl: './draw.component.html',
     styleUrl: './draw.component.css',
     providers: [PanningService, DrawService],

@@ -62,6 +62,7 @@
     "DRAW": {
         "PROMPT_EDIT_PLACE_TITLE": "Edit place label",
         "PROMPT_EDIT_TRANSITION_TITLE": "Edit transition label",
+        "EDIT_LABEL": "Label",
         "TOAST_DUPLICATE_LABEL_HEADER": "Duplicate label",
         "TOAST_DUPLICATE_LABEL_BODY": "The label '{{label}}' is already used. Please choose a unique label."
     },
