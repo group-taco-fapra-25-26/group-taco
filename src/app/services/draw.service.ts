@@ -136,6 +136,7 @@ export class DrawService implements OnDestroy {
     }
 
     showTuplePreviewIfAvailable() {
+        if (this.isExamMode()) return;
         const preview = this.tuplePreview();
         if (preview) {
             this.showTuplePreviewOnly.set(true);
@@ -178,6 +179,11 @@ export class DrawService implements OnDestroy {
     readonly isExamMode = this._modeService.isExamMode;
 
     private readonly _examTupleEffect = this.createExamTupleEffect();
+    private readonly _examModePreviewEffect = effect(() => {
+        if (this.isExamMode()) {
+            this.showTupleInline();
+        }
+    });
 
     init(): void {
         if (this.sourceNetSub || this.sourceTextSub) return;
@@ -223,6 +229,7 @@ export class DrawService implements OnDestroy {
         this.sourceNetSub?.unsubscribe();
         this.sourceTextSub?.unsubscribe();
         this._examTupleEffect?.destroy?.();
+        this._examModePreviewEffect?.destroy?.();
     }
 
     startPaletteDrag(event: DragEvent, type: 'place' | 'transition') {
@@ -1186,6 +1193,11 @@ export class DrawService implements OnDestroy {
     }
 
     setHoveredElementId(id: string | null) {
+        if (this.isExamMode()) {
+            this.hoveredElementId.set(null);
+            this.hoveredConnectionId.set(null);
+            return;
+        }
         this.hoveredElementId.set(id);
         if (id !== null) {
             this.hoveredConnectionId.set(null);
@@ -1196,6 +1208,11 @@ export class DrawService implements OnDestroy {
     }
 
     setHoveredConnectionId(id: string | null) {
+        if (this.isExamMode()) {
+            this.hoveredElementId.set(null);
+            this.hoveredConnectionId.set(null);
+            return;
+        }
         this.hoveredConnectionId.set(id);
         if (id !== null) {
             this.hoveredElementId.set(null);
