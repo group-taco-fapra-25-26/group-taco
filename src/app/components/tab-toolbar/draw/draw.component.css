@@ -186,17 +186,17 @@ svg text {
     fill: #d35400;
 }
 
-.element-wrapper.is-hovered svg rect,
-.element-wrapper.is-hovered svg circle {
+/* Change only existing visible black outlines; skip selection halos or colored strokes */
+.element-wrapper.is-hovered svg rect[stroke="black"],
+.element-wrapper.is-hovered svg circle[stroke="black"] {
     stroke: #d35400;
 }
 
-:host ::ng-deep .element-wrapper.is-hovered rect,
-:host ::ng-deep .element-wrapper.is-hovered circle {
+:host ::ng-deep .element-wrapper.is-hovered rect[stroke="black"],
+:host ::ng-deep .element-wrapper.is-hovered circle[stroke="black"] {
     stroke: #d35400 !important;
 }
 
-:host ::ng-deep .element-wrapper.is-hovered text,
 :host ::ng-deep .element-wrapper.is-hovered .node-label,
 :host ::ng-deep .element-wrapper.is-hovered .transition-label,
 :host ::ng-deep .element-wrapper.is-hovered .transition-label-below,
