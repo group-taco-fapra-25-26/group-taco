@@ -9,7 +9,7 @@
 .transition-label {
     font-family: Arial, sans-serif;
     font-size: 14px;
-    fill: white;
+    fill: black;
     font-weight: bold;
     pointer-events: none;
 }
@@ -41,7 +41,7 @@
 .transition-label-inside {
     font-family: Arial, sans-serif;
     font-size: 14px;
-    fill: white;
+    fill: black;
     font-weight: bold;
     pointer-events: none;
 }
@@ -49,7 +49,7 @@
 .transition-inner-label {
     font-family: Arial, sans-serif;
     font-size: 14px;
-    fill: white;
+    fill: black;
     font-weight: bold;
     pointer-events: none;
 }

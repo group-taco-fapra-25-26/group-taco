@@ -35,6 +35,14 @@ export class DiagramTransition extends DiagramNode {
         this._innerLabel = options?.innerLabel;
     }
 
+    public getInputFlow(): { place: DiagramPlace; weight: number }[] {
+        return this._inputArcs.map((arc, index) => ({ place: this._inputPlaces[index], weight: arc.weight }));
+    }
+
+    public getOutputFlow(): { place: DiagramPlace; weight: number }[] {
+        return this._outputArcs.map((arc, index) => ({ place: this._outputPlaces[index], weight: arc.weight }));
+    }
+
     get label(): string {
         return this._label;
     }

@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { MatTabChangeEvent, MatTabsModule } from '@angular/material/tabs';
 import { MatIconModule } from '@angular/material/icon';
 import { DrawComponent } from '../tab-toolbar/draw/draw.component';
@@ -44,7 +44,7 @@ import { TupleInputButtonComponent } from '../tab-toolbar/tuple-input-button/tup
     templateUrl: './main-tab.component.html',
     styleUrl: './main-tab.component.css',
 })
-export class MainTabComponent {
+export class MainTabComponent implements OnInit {
     private _tabStateService: TabStateService = inject(TabStateService);
     private _sourcePetriNetService: SourcePetriNetService = inject(SourcePetriNetService);
     private _displayService: DisplayService = inject(DisplayService);
@@ -52,6 +52,10 @@ export class MainTabComponent {
     private readonly _tabs: Tab[] = [Tab.DRAW, Tab.PLAY, Tab.REACHABILITY_GRAPH, Tab.PROCESS_NET];
 
     selectedIndex = Tab.DRAW; // Select which tab to show by default
+
+    ngOnInit(): void {
+        this._tabStateService.switchTo(this._tabs[this.selectedIndex]);
+    }
 
     onTabChange(event: MatTabChangeEvent) {
         this._tabStateService.switchTo(this._tabs[event.index]);
@@ -67,6 +71,6 @@ export class MainTabComponent {
         )
             this._playService.recoverLastMarking(diagram);
 
-        this._sourcePetriNetService.updateEditedNet(diagram);
+        this._sourcePetriNetService.updateEditedNet(diagram, { triggeredByFiring: false });
     }
 }

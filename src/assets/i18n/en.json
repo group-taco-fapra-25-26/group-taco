@@ -67,11 +67,6 @@
         "TOAST_DUPLICATE_LABEL_BODY": "The label '{{label}}' is already used. Please choose a unique label."
     },
     "HEADER_SUBTITLE": "Fachpraktikum Programmiersysteme WiSe25/26 by Marie G., Florian M., Ben L. and Alexander K.",
-    "TACO_COUNT": "Number of tacos: {{count}}!",
-    "FILE_CONTENT": "File content",
-    "EXAMPLE_BUTTON_TITLE": "Button",
-    "EXAMPLE_FILE_TITLE": "File",
-    "EXAMPLE_FILE_DESC": "An example .json Petri net",
     "TOASTER": {
         "HEADER": {
             "SAVE_IMPOSSIBLE": "Save impossible",

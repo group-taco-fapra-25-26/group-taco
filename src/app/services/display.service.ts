@@ -8,6 +8,7 @@ import { DisplayableGraph } from '../classes/displayable-graph.interface';
 export class DisplayService implements OnDestroy {
     private _diagram$: BehaviorSubject<DisplayableGraph | undefined>;
     private _downloadRequest$ = new Subject<'png' | 'jpeg'>();
+    private _triggeredByFiring = false;
 
     constructor() {
         this._diagram$ = new BehaviorSubject<DisplayableGraph | undefined>(undefined);
@@ -30,13 +31,20 @@ export class DisplayService implements OnDestroy {
         return this._diagram$.getValue();
     }
 
+    public consumeTriggeredByFiring(): boolean {
+        const wasFiring = this._triggeredByFiring;
+        this._triggeredByFiring = false;
+        return wasFiring;
+    }
+
     /**
      * Displays the given graph in the display area.
      *
      * @param graph
      *          the graph to be displayed
      */
-    public display(graph: DisplayableGraph) {
+    public display(graph: DisplayableGraph, options?: { triggeredByFiring?: boolean }) {
+        this._triggeredByFiring = !!options?.triggeredByFiring;
         this._diagram$.next(graph);
     }
 
@@ -44,6 +52,7 @@ export class DisplayService implements OnDestroy {
      * Clears the currently displayed diagram.
      */
     public clear() {
+        this._triggeredByFiring = false;
         this._diagram$.next(undefined);
     }
 

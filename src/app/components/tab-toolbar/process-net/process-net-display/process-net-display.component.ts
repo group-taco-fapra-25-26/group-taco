@@ -1,9 +1,15 @@
-import { Component, ElementRef, ViewChild } from '@angular/core';
+import { Component, ElementRef, ViewChild, inject } from '@angular/core';
 import { DisplayComponent } from '../../../display/display.component';
 import { SvgNodeComponent } from '../../../display/svg-node/svg-node.component';
 import { SvgArcComponent } from '../../../display/svg-arc/svg-arc.component';
 import { SHAPE } from '../../../../classes/diagram/diagram-node';
 import { DisplayableNode } from '../../../../classes/displayable-graph.interface';
+import { Diagram } from '../../../../classes/diagram/diagram';
+import { DiagramTransition } from '../../../../classes/diagram/diagram-transition';
+import { ToasterNotificationService } from '../../../../services/toaster-notification.service';
+import { Tab } from '../../../../classes/tabs';
+import { DisplayService } from '../../../../services/display.service';
+import { ProcessNetFiringService } from '../../../../services/process-net-firing.service';
 
 // Added strongly typed drag data interfaces and Window augmentation
 interface BasicDragData {
@@ -36,6 +42,11 @@ export class ProcessNetDisplayComponent extends DisplayComponent {
     private isDragging = false;
     private dragStartPos = { x: 0, y: 0 };
     private currentDragData: BasicDragData | null = null;
+    private displayService = inject(DisplayService);
+    private toaster = inject(ToasterNotificationService);
+    private firingService = inject(ProcessNetFiringService);
+
+    readonly isProcessNetTab = this._tabStateService.currentTab;
 
     override processDropEvent(e: DragEvent) {
         super.processDropEvent(e);
@@ -149,5 +160,52 @@ export class ProcessNetDisplayComponent extends DisplayComponent {
         delete window.__dragData;
     }
 
-    // Add any additional functionality specific to process-net-display here
+    override processNodeClick(node: DisplayableNode) {
+        const diagram = this.diagram();
+        if (
+            diagram instanceof Diagram &&
+            node instanceof DiagramTransition &&
+            this.isProcessNetTab() === Tab.PROCESS_NET
+        ) {
+            if (node.isActivated()) {
+                const timestamp = new Date().toISOString();
+                const firedTransition = node.label ?? node.id;
+                const inputs = node.getInputFlow().map(({ place, weight }) => ({
+                    placeId: place.id,
+                    placeLabel: place.displayLabel,
+                    weight,
+                }));
+                const outputs = node.getOutputFlow().map(({ place, weight }) => ({
+                    placeId: place.id,
+                    placeLabel: place.displayLabel,
+                    weight,
+                }));
+                node.fire(true);
+                diagram.updateMarking();
+                this.firingService.emit({
+                    transitionId: node.id,
+                    transitionLabel: firedTransition,
+                    timestamp,
+                    inputs,
+                    outputs,
+                });
+                this.displayService.display(diagram, { triggeredByFiring: true });
+            } else {
+                this.toaster.showWarning(
+                    'TOASTER.HEADER.TRANSITION_NOT_ACTIVATED',
+                    'TOASTER.BODY.TRANSITION_NOT_ACTIVATED',
+                    {
+                        messageParams: { label: node.label },
+                    },
+                );
+            }
+            return;
+        }
+        super.processNodeClick(node);
+    }
+
+    private describeFlow(flow: { placeLabel: string; weight: number }[]): string {
+        const expanded = flow.flatMap(({ placeLabel, weight }) => Array.from({ length: weight }, () => placeLabel));
+        return `{${expanded.join(', ')}}`;
+    }
 }

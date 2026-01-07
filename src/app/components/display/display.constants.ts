@@ -11,3 +11,6 @@ export const viewBoxValues: ViewBox = {
     width: 900,
     height: 450,
 };
+
+export const PLACE_RADIUS = 25;
+export const TRANSITION_SIZE = 60;

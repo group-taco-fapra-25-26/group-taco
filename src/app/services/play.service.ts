@@ -129,7 +129,7 @@ export class PlayService {
             this._lastMarking = diagram.marking;
             entry.endMarking = { ...diagram.marking };
             if (updateSequence) {
-                this._sourceNetService.updateEditedNet(diagram);
+                this._sourceNetService.updateEditedNet(diagram, { triggeredByFiring: true });
                 const updateEndMarking = !this._modeService.isExamMode();
                 this.updateFiringEntry(node.label, updateEndMarking);
             }
@@ -156,7 +156,8 @@ export class PlayService {
     canBeFired(node: DiagramTransition): boolean {
         return (
             (this._tabStateService.currentTab() === Tab.PLAY ||
-                this._tabStateService.currentTab() === Tab.REACHABILITY_GRAPH) &&
+                this._tabStateService.currentTab() === Tab.REACHABILITY_GRAPH ||
+                this._tabStateService.currentTab() === Tab.PROCESS_NET) &&
             node.isActivated()
         );
     }

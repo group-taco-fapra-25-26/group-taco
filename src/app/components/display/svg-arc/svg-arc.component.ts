@@ -2,6 +2,7 @@ import { Component, computed, input } from '@angular/core';
 import { SHAPE } from '../../../classes/diagram/diagram-node';
 import { Coords } from '../../../classes/json-petri-net';
 import { DisplayableEdge, DisplayableNode } from '../../../classes/displayable-graph.interface';
+import { PLACE_RADIUS, TRANSITION_SIZE } from '../display.constants';
 
 @Component({
     selector: 'g[appSvgArc]',
@@ -10,9 +11,9 @@ import { DisplayableEdge, DisplayableNode } from '../../../classes/displayable-g
     styleUrl: './svg-arc.component.css',
 })
 export class SvgArcComponent {
-    readonly RADIUS = 25;
-    readonly RECT_WIDTH = 50;
-    readonly RECT_HEIGHT = 30;
+    readonly RADIUS = PLACE_RADIUS;
+    readonly RECT_WIDTH = TRANSITION_SIZE;
+    readonly RECT_HEIGHT = TRANSITION_SIZE;
 
     readonly diagramArc = input<DisplayableEdge>();
     readonly nodes = input<DisplayableNode[]>([]);

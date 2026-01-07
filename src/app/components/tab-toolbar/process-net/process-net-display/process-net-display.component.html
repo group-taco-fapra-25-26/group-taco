@@ -24,6 +24,7 @@
         <g
             appSvgNode
             [diagramNode]="node"
+            (clickNode)="processNodeClick(node)"
             (mousedown)="onNodeMouseDown($event, node)"
             style="cursor: grab"
             [showInnerLabel]="true"

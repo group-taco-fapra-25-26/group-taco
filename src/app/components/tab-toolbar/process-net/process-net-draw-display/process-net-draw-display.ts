@@ -3,6 +3,7 @@ import {
     ChangeDetectorRef,
     Component,
     computed,
+    effect,
     ElementRef,
     inject,
     OnDestroy,
@@ -10,21 +11,31 @@ import {
     signal,
     ViewChild,
 } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { SvgNodeComponent } from '../../../display/svg-node/svg-node.component';
 import { DiagramNode, SHAPE } from '../../../../classes/diagram/diagram-node';
 import { DiagramPlace, DiagramPlaceLabelPlacement } from '../../../../classes/diagram/diagram-place';
 import { DiagramTransition, DiagramTransitionOptions } from '../../../../classes/diagram/diagram-transition';
+import { Diagram } from '../../../../classes/diagram/diagram';
 import { DisplayService } from '../../../../services/display.service';
 import {
     type PetriNet,
     type ProcessConnection,
     type ProcessElement,
     validateProcessNet,
-} from '../../../../services/validation.service';
+} from '../../../../services/process-net-validation.service';
 import { ToasterNotificationService } from '../../../../services/toaster-notification.service';
 import { PanningService } from '../../../../services/panning.service';
 import { TOAST_POSITIONS, ToastList } from '../../../../classes/toast';
 import { TranslateModule } from '@ngx-translate/core';
+import { PLACE_RADIUS, TRANSITION_SIZE } from '../../../display/display.constants';
+import { ModeService } from '../../../../services/mode.service';
+import { AppMode } from '../../../../classes/app-mode';
+import { TabStateService } from '../../../../services/tab-state.service';
+import { Tab } from '../../../../classes/tabs';
+import { SourcePetriNetService } from '../../../../services/source-petri-net.service';
+import { ProcessNetFiringService, ProcessNetFiringEvent } from '../../../../services/process-net-firing.service';
+import { Subscription } from 'rxjs';
 
 interface DrawnElement {
     node: DiagramNode;
@@ -100,13 +111,39 @@ export class ProcessNetDrawDisplayComponent implements OnInit, OnDestroy, AfterV
     private displayService = inject(DisplayService);
     private toaster = inject(ToasterNotificationService);
     private panningService = inject(PanningService);
+    private modeService = inject(ModeService);
+    private sourcePetriNetService = inject(SourcePetriNetService);
+    private diagramSignal = toSignal(this.displayService.diagram$, { initialValue: undefined });
+    private tabStateService = inject(TabStateService);
+    private firingService = inject(ProcessNetFiringService);
+    private firingSub?: ReturnType<typeof this.firingService.events$.subscribe>;
+    private autoFiringCount = 0;
+    private firingChangeVersion = signal(0);
+    private lastProcessedFiringVersion = 0;
+    private displaySub?: Subscription;
+    private sourceSub?: Subscription;
+
     readonly viewBox = this.panningService.viewBoxAsString;
     readonly viewBoxObj = this.panningService.viewBox;
+    private modeChange = effect(() => {
+        if (this.tabStateService.currentTab() !== Tab.PROCESS_NET) {
+            return;
+        }
+        const diagram = this.diagramSignal();
+        if (!diagram) return;
+        const firingVersion = this.firingChangeVersion();
+        const isNewFiringChange = firingVersion > this.lastProcessedFiringVersion;
+        this.lastProcessedFiringVersion = firingVersion;
+        if (isNewFiringChange && this.modeService.currentMode() === AppMode.LEARN) {
+            return;
+        }
+        this.clearDrawing();
+    });
 
     // Dimensions consistent with SvgNodeComponent
-    private readonly PLACE_RADIUS = 25;
-    private readonly TRANSITION_HALF_W = 25; // RECT_WIDTH/2
-    private readonly TRANSITION_HALF_H = 15; // RECT_HEIGHT/2
+    private readonly PLACE_RADIUS = PLACE_RADIUS;
+    private readonly TRANSITION_HALF_W = TRANSITION_SIZE / 2;
+    private readonly TRANSITION_HALF_H = TRANSITION_SIZE / 2;
 
     ngOnInit() {
         // Listen for custom drop events
@@ -120,6 +157,19 @@ export class ProcessNetDrawDisplayComponent implements OnInit, OnDestroy, AfterV
             // Add mousedown listener with capture phase to intercept before child elements
             canvas.addEventListener('mousedown', this.handleCanvasMouseDown, true);
         }
+        this.firingSub = this.firingService.events$.subscribe((event) => this.addFiringToDrawing(event));
+        this.displaySub = this.displayService.diagram$.subscribe(() => {
+            const triggeredByFiring = this.displayService.consumeTriggeredByFiring();
+            if (triggeredByFiring) {
+                this.firingChangeVersion.update((v) => v + 1);
+            }
+        });
+        this.sourceSub = this.sourcePetriNetService.sourceNet$.subscribe(() => {
+            const triggeredByFiring = this.sourcePetriNetService.consumeChangeTriggeredByFiring();
+            if (triggeredByFiring) {
+                this.firingChangeVersion.update((v) => v + 1);
+            }
+        });
     }
 
     ngAfterViewInit() {
@@ -133,6 +183,9 @@ export class ProcessNetDrawDisplayComponent implements OnInit, OnDestroy, AfterV
             canvas.removeEventListener('customDrop', this.customDropListener);
             canvas.removeEventListener('mousedown', this.handleCanvasMouseDown, true);
         }
+        this.firingSub?.unsubscribe();
+        this.displaySub?.unsubscribe();
+        this.sourceSub?.unsubscribe();
     }
 
     private handleCanvasMouseDown = (event: MouseEvent) => {
@@ -538,6 +591,19 @@ export class ProcessNetDrawDisplayComponent implements OnInit, OnDestroy, AfterV
         this.connectionIdCounter = 0;
         this.bLabelCounter = 0;
         this.eLabelCounter = 0;
+        this.lastProcessedFiringVersion = this.firingChangeVersion();
+
+        const diagram = this.displayService.diagram;
+        if (diagram instanceof Diagram) {
+            diagram.resetMarking();
+        }
+
+        if (this.modeService.currentMode() === AppMode.LEARN) {
+            this.onCreateStartPosition();
+        }
+
+        // reset the auto firing count
+        this.autoFiringCount = 0;
     }
 
     deleteElement(element: DrawnElement) {
@@ -562,7 +628,7 @@ export class ProcessNetDrawDisplayComponent implements OnInit, OnDestroy, AfterV
 
     // Trigger validation of the drawn process net against the loaded Petri net
     onValidate() {
-        const base = this.displayService.diagram;
+        const base = this.sourcePetriNetService.getCurrentSourceNet();
         if (!base) {
             this.toaster.showError('TOASTER.HEADER.VALIDATION', 'TOASTER.BODY.VALIDATION_ERROR', {
                 duration: 0,
@@ -573,6 +639,7 @@ export class ProcessNetDrawDisplayComponent implements OnInit, OnDestroy, AfterV
         }
         const nodes = base.getNodes();
         const edges = base.getEdges();
+        const startMarkingEntries = Object.entries(base.startMarking || {}).filter(([, tokens]) => (tokens ?? 0) > 0);
         const petri: PetriNet = {
             places: nodes.filter((n) => n.shape === 'circle').map((n) => n.id),
             transitions: nodes.filter((n) => n.shape === 'rect').map((n) => n.id),
@@ -583,15 +650,7 @@ export class ProcessNetDrawDisplayComponent implements OnInit, OnDestroy, AfterV
                 ]),
             ),
             labels: Object.fromEntries(nodes.filter((n) => n.shape === 'rect').map((n) => [n.id, n.displayLabel])),
-            marking: Object.fromEntries(
-                nodes
-                    .filter((n) => n.shape === 'circle')
-                    .map((place) => {
-                        const tokens = place.tokenCount();
-                        return [place.id, tokens] as [string, number];
-                    })
-                    .filter(([, tokens]) => tokens > 0),
-            ),
+            marking: Object.fromEntries(startMarkingEntries),
         };
         const elements: ProcessElement[] = this.drawnElements().map((el) => {
             const isPlace = el.node instanceof DiagramPlace;
@@ -676,7 +735,6 @@ export class ProcessNetDrawDisplayComponent implements OnInit, OnDestroy, AfterV
             return;
         }
 
-        this.clearDrawing();
         this.panningService.resetViewBox(this.drawingArea);
 
         const viewBox = this.panningService.INITIAL_VIEWBOX;
@@ -773,5 +831,132 @@ export class ProcessNetDrawDisplayComponent implements OnInit, OnDestroy, AfterV
             return false;
         }
         return this.getCurrentStartPlaceCount(placeId) < this.getRequiredStartPlaceCount(placeId);
+    }
+
+    private addFiringToDrawing(event: ProcessNetFiringEvent) {
+        if (this.tabStateService.currentTab() !== Tab.PROCESS_NET) {
+            return;
+        }
+        const viewBox = this.viewBoxObj();
+        const verticalSpacing = 180;
+        const rowIndex = this.autoFiringCount;
+        const baseY = viewBox.minY + 120 + rowIndex * verticalSpacing;
+        const baseX = viewBox.minX + viewBox.width * 0.6;
+        const transition = this.buildTransition(this.generateElementId('fire-transition'), event.transitionLabel);
+        transition.x = baseX;
+        transition.y = baseY;
+        const transitionElement: DrawnElement = { node: transition, id: transition.id };
+
+        const laneSpacing = 60;
+        const inputBaseY = baseY - ((event.inputs.length - 1) * laneSpacing) / 2;
+        const totalOutputNodes = event.outputs.reduce((sum, flow) => sum + flow.weight, 0) || 1;
+        const outputBaseY = baseY - ((totalOutputNodes - 1) * laneSpacing) / 2;
+        let outputOffset = 0;
+
+        const newElements: DrawnElement[] = [];
+        const usedPlaces = new Set<string>();
+        this.connections().forEach((connection) => usedPlaces.add(connection.aId));
+
+        const inputElements = event.inputs.map((flow, idx) =>
+            this.resolvePlaceForFlow(
+                flow.placeLabel,
+                baseX - 160,
+                inputBaseY + idx * laneSpacing,
+                newElements,
+                flow.weight,
+                usedPlaces,
+            ),
+        );
+
+        const outputElements = event.outputs.flatMap((flow) => {
+            const created: { id: string; weight: number }[] = [];
+            for (let i = 0; i < flow.weight; i++) {
+                const place = this.buildPlace(this.generateElementId('fire-place'), flow.placeLabel, 0, {
+                    hideTokens: true,
+                    innerLabel: this.getNextInnerLabel(),
+                });
+                place.x = baseX + 160;
+                place.y = outputBaseY + outputOffset * laneSpacing;
+                outputOffset++;
+                const element: DrawnElement = { node: place, id: place.id };
+                newElements.push(element);
+                created.push({ id: element.id, weight: 1 });
+            }
+            return created;
+        });
+
+        newElements.push(transitionElement);
+        if (newElements.length) {
+            this.drawnElements.update((elements) => [...elements, ...newElements]);
+        }
+
+        const newConnections: Connection[] = [];
+        inputElements.forEach((input) => {
+            newConnections.push({
+                id: this.generateConnectionId('fire-in'),
+                aId: input.id,
+                bId: transitionElement.id,
+                weight: input.weight,
+            });
+        });
+        outputElements.forEach((output) => {
+            newConnections.push({
+                id: this.generateConnectionId('fire-out'),
+                aId: transitionElement.id,
+                bId: output.id,
+                weight: 1,
+            });
+        });
+        if (newConnections.length) {
+            this.connections.update((connections) => [...connections, ...newConnections]);
+        }
+        this.autoFiringCount++;
+        this.lastProcessedFiringVersion = this.firingChangeVersion();
+    }
+
+    private resolvePlaceForFlow(
+        label: string,
+        defaultX: number,
+        defaultY: number,
+        createdElements: DrawnElement[],
+        weight: number,
+        usedPlaces: Set<string>,
+    ): { id: string; weight: number } {
+        const existing = this.drawnElements().find((el) => {
+            if (!(el.node instanceof DiagramPlace)) return false;
+            if (usedPlaces.has(el.id)) return false;
+            const nodeLabel = el.node.label ?? el.node.displayLabel;
+            return nodeLabel === label;
+        });
+        if (existing) {
+            usedPlaces.add(existing.id);
+            return { id: existing.id, weight };
+        }
+        const place = this.buildPlace(this.generateElementId('fire-place'), label, 0, {
+            hideTokens: true,
+            innerLabel: this.getNextInnerLabel(),
+        });
+        place.x = defaultX;
+        place.y = defaultY;
+        const element: DrawnElement = { node: place, id: place.id };
+        createdElements.push(element);
+        usedPlaces.add(element.id);
+        return { id: element.id, weight };
+    }
+
+    private findPlaceByLabel(label: string): DrawnElement | undefined {
+        return this.drawnElements().find((el) => {
+            if (!(el.node instanceof DiagramPlace)) return false;
+            const nodeLabel = el.node.label ?? el.node.displayLabel;
+            return nodeLabel === label;
+        });
+    }
+
+    private generateElementId(prefix: string): string {
+        return `${prefix}-${++this.elementIdCounter}`;
+    }
+
+    private generateConnectionId(prefix: string): string {
+        return `${prefix}-${++this.connectionIdCounter}`;
     }
 }

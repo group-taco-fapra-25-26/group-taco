@@ -37,6 +37,7 @@ export class SourcePetriNetService {
     public readonly isDirty$: Observable<boolean> = this._isDirty$.asObservable();
 
     private readonly _isOptimalLayoutCalculated$ = new BehaviorSubject<boolean>(false);
+    private _lastChangeTriggeredByFiring = false;
 
     /**
      * Observable that emits whether the optimal layout has been calculated for the current source Petri net.
@@ -63,6 +64,7 @@ export class SourcePetriNetService {
         this._sourceText$.next(rawText);
         this._isDirty$.next(false);
         this._isOptimalLayoutCalculated$.next(false);
+        this._lastChangeTriggeredByFiring = false;
     }
 
     /**
@@ -71,10 +73,19 @@ export class SourcePetriNetService {
      * Should be called whenever the user makes changes to the petri net.
      * @param modifiedNet
      *          the modified petri net diagram
+     * @param options
+     *         optional parameters
      */
-    public updateEditedNet(modifiedNet: Diagram): void {
+    public updateEditedNet(modifiedNet: Diagram, options?: { triggeredByFiring?: boolean }): void {
+        this._lastChangeTriggeredByFiring = !!options?.triggeredByFiring;
         this._sourceNet$.next(modifiedNet);
         this._isDirty$.next(true);
+    }
+
+    public consumeChangeTriggeredByFiring(): boolean {
+        const wasFiring = this._lastChangeTriggeredByFiring;
+        this._lastChangeTriggeredByFiring = false;
+        return wasFiring;
     }
 
     /**
@@ -124,6 +135,7 @@ export class SourcePetriNetService {
         this._sourceText$.next('');
         this._isDirty$.next(false);
         this._isOptimalLayoutCalculated$.next(false);
+        this._lastChangeTriggeredByFiring = false;
     }
 
     public setSourceText(rawText: string): void {

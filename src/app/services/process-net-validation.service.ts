@@ -101,6 +101,7 @@ export function validateProcessNet(
 
     const originalNetShape = buildOriginalNetShape(net);
 
+    // It enforces exact equality between each drawn transition’s preset/postset (including arc weights) and the corresponding transition in the original Petri net.
     const errorsFromStructure = validateTransitionsForStructure(
         net,
         elements,
@@ -110,18 +111,23 @@ export function validateProcessNet(
     );
     errors.push(...errorsFromStructure);
 
+    // It ensures every non-start place actually has an incoming producer; otherwise isolated conditions could appear even though the start-marking logic says they should not.
     const errorsFromPlaces = validatePlaceInputs(net, elements, connectionsByTarget);
     errors.push(...errorsFromPlaces);
 
+    // Checks if each place has at most one producing transition, which is essential for causal semantics of process nets.
     const errorsFromProducerLimit = validateProducerUniqueness(elements, connections, elementMap);
     errors.push(...errorsFromProducerLimit);
 
+    // It is the sole check that every place with tokens in the initial marking is actually drawn and explicitly marked as a start place.
     const errorsFromStartPlaces = validateStartPlacesPresence(net, elements);
     errors.push(...errorsFromStartPlaces);
 
+    // It verifies that the drawn net is acyclic, as process nets should not contain cycles.
     const errorsFromCycles = validateAcyclicity(elements, connections);
     errors.push(...errorsFromCycles);
 
+    // It checks whether the drawn net is maximal, i.e., no further transitions from the original net can be fired given the terminal places in the drawn net.
     const errorsFromMaximality = validateMaximality(net, elements, connectionsBySource, originalNetShape);
     infos.push(...errorsFromMaximality);
 

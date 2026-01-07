@@ -7,6 +7,7 @@ import { PlayService } from '../../../services/play.service';
 import { DiagramTransition } from '../../../classes/diagram/diagram-transition';
 import { DiagramPlace } from '../../../classes/diagram/diagram-place';
 import { StateNode } from '../../../classes/reachability-graph.model';
+import { PLACE_RADIUS, TRANSITION_SIZE } from '../display.constants';
 
 @Component({
     selector: 'g[appSvgNode]',
@@ -15,17 +16,12 @@ import { StateNode } from '../../../classes/reachability-graph.model';
     styleUrl: './svg-node.component.css',
 })
 export class SvgNodeComponent {
-    readonly RADIUS = 25;
-    readonly RECT_HEIGHT = 30;
-    readonly CHAR_WIDTH = 8;
+    readonly RADIUS = PLACE_RADIUS;
+    readonly TRANSITION_SIZE = TRANSITION_SIZE;
     readonly MAX_CHARS = 15;
 
     readonly rectWidth = computed(() => {
-        const label = this.displayLabel();
-        if (!label) {
-            return 50;
-        }
-        return Math.max(50, label.length * this.CHAR_WIDTH + 10);
+        return this.TRANSITION_SIZE;
     });
 
     readonly diagramNode = input<DisplayableNode>();
@@ -64,15 +60,12 @@ export class SvgNodeComponent {
         if (this.isFiring()) {
             return 'lime';
         }
-        if (this.isTransitionAndActive()) {
-            return 'dimgray';
-        }
-        return this.fillColor() === 'lightgray' ? 'gray' : 'black';
+        return this.fillColor();
     });
 
     readonly transitionStrokeColor = computed(() => {
         if (this.isFiring() || this.isTransitionAndActive()) {
-            return 'darkgreen';
+            return 'green';
         }
         return 'black';
     });
@@ -177,7 +170,7 @@ export class SvgNodeComponent {
 
     readonly rectY = computed(() => {
         const node = this.diagramNode();
-        return node ? node.y - this.RECT_HEIGHT / 2 : 0;
+        return node ? node.y - this.TRANSITION_SIZE / 2 : 0;
     });
 
     readonly textX = computed(() => {
@@ -190,7 +183,7 @@ export class SvgNodeComponent {
         if (!node) return 0;
 
         if (this.isTransition()) {
-            return this.transitionLabelPlacement() === 'below' ? node.y + this.RECT_HEIGHT / 2 + 15 : node.y;
+            return this.transitionLabelPlacement() === 'below' ? node.y + this.TRANSITION_SIZE / 2 + 15 : node.y;
         }
 
         if (node instanceof DiagramPlace && this.labelPlacement() === 'inside') {
@@ -239,23 +232,13 @@ export class SvgNodeComponent {
     readonly isSelected = computed(() => !!this.selected());
     readonly selectionStrokeColor = computed(() => (this.isSelected() ? 'orange' : 'transparent'));
 
-    public mouseDown(e: MouseEvent) {
-        this.fillColor.set('lightgray');
-    }
-
-    public mouseUp(e: MouseEvent) {
-        this.fillColor.set('white');
-    }
-
     public click() {
         const node = this.diagramNode();
         if (node) this.clickNode.emit(node);
-        console.log('click');
     }
 
     public circleClick() {
         const node = this.diagramNode();
         if (node) this.stateNodeClick.emit(node as StateNode);
-        console.log('CircleClick');
     }
 }

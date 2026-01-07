@@ -30,7 +30,7 @@ export class DisplayComponent implements OnInit, OnDestroy {
     private _sub?: Subscription;
     private _displayService = inject(DisplayService);
     private _panningService = inject(PanningService);
-    private _tabStateService = inject(TabStateService);
+    protected _tabStateService = inject(TabStateService);
     private _imageExportService = inject(ImageExportService);
     private _loaderService = inject(PetriNetLoaderService);
     private _modeService = inject(ModeService);
@@ -45,7 +45,8 @@ export class DisplayComponent implements OnInit, OnDestroy {
     readonly isPlayingEnabled = computed(
         () =>
             this._tabStateService.currentTab() === Tab.PLAY ||
-            this._tabStateService.currentTab() === Tab.REACHABILITY_GRAPH,
+            this._tabStateService.currentTab() === Tab.REACHABILITY_GRAPH ||
+            this._tabStateService.currentTab() === Tab.PROCESS_NET,
     );
     readonly isReachabilityGraphEnabled = computed(() => this._tabStateService.currentTab() === Tab.REACHABILITY_GRAPH);
     readonly isProcessNetEnabled = computed(() => this._tabStateService.currentTab() === Tab.PROCESS_NET);
