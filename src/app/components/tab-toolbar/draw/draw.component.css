@@ -162,6 +162,7 @@ svg text {
     cursor: pointer;
     z-index: 2;
     overflow: auto;
+    max-width: 100%;
 }
 
 .tuple-preview-textarea {
@@ -191,10 +192,13 @@ svg text {
     position: absolute;
     inset: 8px 10px;
     pointer-events: auto;
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: anywhere;
 }
 
 .tuple-line {
-    white-space: nowrap;
+    white-space: normal;
 }
 
 .tuple-token {
