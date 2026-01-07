@@ -202,6 +202,12 @@ export class DrawService implements OnDestroy {
                 this.showTuplePreviewIfAvailable();
             } else {
                 this.clearCanvas(true);
+                if (this.isExamMode()) {
+                    const text = this._sourceNetService.getSourceText();
+                    if (text) {
+                        this.tupleString.set(text);
+                    }
+                }
             }
         });
 

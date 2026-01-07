@@ -89,7 +89,7 @@ export class PetriNetLoaderService {
                 if (this._modeService.isExamMode() && inDrawTab) {
                     const tuple = this._serializationService.serializeTuple(parsedNet) ?? content;
                     this._sourcePetriNetService.setSourceText(tuple);
-                    this._toasterService.showInfo('TOASTER.HEADER.MODE_SWITCHED', 'TOASTER.BODY.MODE_SWITCHED_EXAM');
+                    this._toasterService.showSuccess('TOASTER.HEADER.SUCCESS', 'TOASTER.BODY.NET_LOADED_SUCCESSFULLY');
                     return;
                 }
                 this._sourcePetriNetService.loadNewNet(parsedNet, content);
