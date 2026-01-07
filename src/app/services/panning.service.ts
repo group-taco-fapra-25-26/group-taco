@@ -94,6 +94,16 @@ export class PanningService {
         }
     }
 
+    public nudgeViewBox(deltaX: number, deltaY: number): void {
+        this._viewBoxValues.update(
+            (v: ViewBox): ViewBox => ({
+                ...v,
+                minX: v.minX + deltaX,
+                minY: v.minY + deltaY,
+            }),
+        );
+    }
+
     /**
      * Handles zooming in and out based on mouse wheel events.
      * @param event
@@ -132,5 +142,16 @@ export class PanningService {
                 height: newHeight,
             };
         });
+    }
+
+    public expandViewBox(factor: number): void {
+        if (factor <= 0) return;
+        this._viewBoxValues.update(
+            (v: ViewBox): ViewBox => ({
+                ...v,
+                width: v.width * factor,
+                height: v.height * factor,
+            }),
+        );
     }
 }

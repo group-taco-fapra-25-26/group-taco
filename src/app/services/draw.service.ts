@@ -564,6 +564,10 @@ export class DrawService implements OnDestroy {
     private resetViewIfReady() {
         if (this.drawingArea) {
             this.panning.resetViewBox(this.drawingArea);
+            // Nudge view down so top overlays (tuple input/preview) don't cover the net
+            this.panning.nudgeViewBox(0, -70);
+            // Slightly zoom out to keep bottom content visible after the nudge
+            this.panning.expandViewBox(1.1);
         }
     }
 
