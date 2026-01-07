@@ -129,32 +129,25 @@ export class SvgArcComponent {
         const normalizedX = dx / distance;
         const normalizedY = dy / distance;
 
-        let radius: number;
-
         // Determine if this is a place (circle) or transition (rectangle)
         if (node.shape === SHAPE.CIRCLE) {
-            // Place - circle
-            radius = this.RADIUS;
+            const radius = this.RADIUS;
             return {
                 x: node.x + normalizedX * radius,
                 y: node.y + normalizedY * radius,
             };
-        } else {
-            // Transition - rectangle
-            // Calculate intersection with rectangle edge
-            const halfWidth = this.RECT_WIDTH / 2;
-            const halfHeight = this.RECT_HEIGHT / 2;
-
-            // Check which edge the line intersects
-            const xIntercept = Math.abs(normalizedX) > 0 ? halfWidth / Math.abs(normalizedX) : Infinity;
-            const yIntercept = Math.abs(normalizedY) > 0 ? halfHeight / Math.abs(normalizedY) : Infinity;
-
-            const intercept = Math.min(xIntercept, yIntercept);
-
-            return {
-                x: node.x + normalizedX * intercept,
-                y: node.y + normalizedY * intercept,
-            };
         }
+
+        const halfWidth = this.RECT_WIDTH / 2;
+        const halfHeight = this.RECT_HEIGHT / 2;
+
+        const xIntercept = Math.abs(normalizedX) > 0 ? halfWidth / Math.abs(normalizedX) : Infinity;
+        const yIntercept = Math.abs(normalizedY) > 0 ? halfHeight / Math.abs(normalizedY) : Infinity;
+        const intercept = Math.min(xIntercept, yIntercept);
+
+        return {
+            x: node.x + normalizedX * intercept,
+            y: node.y + normalizedY * intercept,
+        };
     }
 }

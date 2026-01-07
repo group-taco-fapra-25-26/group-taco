@@ -19,6 +19,7 @@ import { applyParallelOffsetsToArcs, DEFAULT_PARALLEL_OFFSET } from './arc-paral
 import { MatDialog } from '@angular/material/dialog';
 import { LabelEditDialogComponent } from '../components/label-edit-dialog/label-edit-dialog.component';
 import { firstValueFrom } from 'rxjs';
+import { PLACE_RADIUS as DISPLAY_PLACE_RADIUS, TRANSITION_SIZE } from '../components/display/display.constants';
 
 export interface DrawnElement {
     node: DiagramNode;
@@ -158,9 +159,9 @@ export class DrawService implements OnDestroy {
     private svgElement: SVGSVGElement | null = null;
     private isDraggingElement = false;
 
-    private readonly PLACE_RADIUS = 25;
-    private readonly TRANSITION_HALF_W = 25;
-    private readonly TRANSITION_HALF_H = 15;
+    private readonly PLACE_RADIUS = DISPLAY_PLACE_RADIUS;
+    private readonly TRANSITION_HALF_W = TRANSITION_SIZE / 2;
+    private readonly TRANSITION_HALF_H = TRANSITION_SIZE / 2;
     private readonly CONNECTION_PARALLEL_OFFSET = DEFAULT_PARALLEL_OFFSET;
 
     private _parserService = inject(ParserService);
@@ -192,6 +193,10 @@ export class DrawService implements OnDestroy {
                 this.suppressNextSourceLoad = false;
                 return;
             }
+            if (this.isExamMode()) {
+                this.handleExamModeSourceUpdate(diagram);
+                return;
+            }
             if (diagram) {
                 this.loadDiagramIntoCanvas(diagram);
                 this.resetViewIfReady();
@@ -202,18 +207,13 @@ export class DrawService implements OnDestroy {
                 this.showTuplePreviewIfAvailable();
             } else {
                 this.clearCanvas(true);
-                if (this.isExamMode()) {
-                    const text = this._sourceNetService.getSourceText();
-                    if (text) {
-                        this.tupleString.set(text);
-                    }
-                }
             }
         });
 
         this.sourceTextSub = this._sourceNetService.sourceText$.subscribe((text: string | null) => {
             if (this.isExamMode() && text) {
                 this.tupleString.set(text);
+                this.showTupleInline();
             }
         });
     }
@@ -565,6 +565,29 @@ export class DrawService implements OnDestroy {
                 this.tupleString.set(sourceText);
             }
         });
+    }
+
+    private handleExamModeSourceUpdate(diagram: Diagram | null) {
+        if (diagram) {
+            this.clearCanvas(true);
+            const tuple = this._serializationService.serializeTuple(diagram);
+            if (tuple) {
+                this.tupleString.set(tuple);
+            } else {
+                const text = this._sourceNetService.getSourceText();
+                if (text) this.tupleString.set(text);
+            }
+            this.showTupleInline();
+            return;
+        }
+
+        const text = this._sourceNetService.getSourceText();
+        if (text) {
+            this.tupleString.set(text);
+            this.showTupleInline();
+        } else {
+            this.clearCanvas(true);
+        }
     }
 
     private resetViewIfReady() {
