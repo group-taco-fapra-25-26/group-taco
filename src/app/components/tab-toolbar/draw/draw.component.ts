@@ -125,19 +125,12 @@ export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
         this.draw.setHoveredConnectionId(null);
     }
 
-    onTupleEditorInput(event: Event) {
-        const target = event.target as HTMLElement | null;
-        if (!target) return;
-        const text = target.innerText ?? '';
-        this.tupleString = text;
-    }
-
-    onTupleEditorBlur(event: Event) {
-        const target = event.target as HTMLElement | null;
-        if (!target) return;
-        // Ensure editor reflects normalized tuple string (e.g., after parsing/generation)
-        if (target.innerText !== this.tupleString) {
-            target.innerText = this.tupleString;
+    onTupleTextareaPaste(event: ClipboardEvent) {
+        // Ensure pasted text goes directly into tupleString
+        const text = event.clipboardData?.getData('text');
+        if (text !== undefined && text !== null) {
+            event.preventDefault();
+            this.tupleString = text;
         }
     }
 

@@ -12,77 +12,72 @@
 
     <div class="canvas-container">
         <div class="inline-tuple-input">
-            <div
-                #tupleEditor
-                class="tuple-editor"
-                contenteditable="true"
-                role="textbox"
-                aria-multiline="true"
-                [attr.data-placeholder]="'TUPLE_INPUT.LABEL' | translate"
-                (input)="onTupleEditorInput($event)"
-                (blur)="onTupleEditorBlur($event)"
-                (mouseleave)="clearTupleHover()">
-                <ng-container *ngIf="tuplePreview() as preview; else rawTuple">
-                    <span class="tuple-brace">(</span>
-                    <span class="tuple-set" aria-label="places">
-                        <span class="tuple-brace">&#123;</span>
-                        <ng-container *ngFor="let p of preview.places; let last = last">
-                            <span
-                                class="tuple-token"
-                                [class.is-hovered]="hoveredElementId() === draw.getElementIdByLabel(p)"
-                                (mouseenter)="draw.setHoveredElementByLabel(p)"
-                                (mouseleave)="draw.setHoveredElementByLabel(null)">
-                                {{ p }} </span
-                            ><span *ngIf="!last">, </span>
-                        </ng-container>
-                        <span class="tuple-brace">&#125;</span> </span
-                    >,
-                    <span class="tuple-set" aria-label="transitions">
-                        <span class="tuple-brace">&#123;</span>
-                        <ng-container *ngFor="let t of preview.transitions; let last = last">
-                            <span
-                                class="tuple-token"
-                                [class.is-hovered]="hoveredElementId() === draw.getElementIdByLabel(t)"
-                                (mouseenter)="draw.setHoveredElementByLabel(t)"
-                                (mouseleave)="draw.setHoveredElementByLabel(null)">
-                                {{ t }} </span
-                            ><span *ngIf="!last">, </span>
-                        </ng-container>
-                        <span class="tuple-brace">&#125;</span> </span
-                    >,
-                    <span class="tuple-arcs">
-                        <ng-container *ngFor="let arc of preview.arcs; let last = last">
-                            <span
-                                class="tuple-token"
-                                [class.is-hovered]="
-                                    hoveredConnectionId() === draw.getConnectionIdByLabels(arc.source, arc.target)
-                                "
-                                (mouseenter)="draw.setHoveredConnectionByLabels(arc.source, arc.target)">
-                                {{ arc.raw }} </span
-                            ><span *ngIf="!last"> + </span>
-                        </ng-container> </span
-                    >,
-                    <span class="tuple-marking">
-                        <ng-container *ngFor="let m of preview.marking; let last = last">
-                            <span
-                                class="tuple-token"
-                                [class.is-hovered]="hoveredElementId() === draw.getElementIdByLabel(m.label)"
-                                (mouseenter)="draw.setHoveredElementByLabel(m.label)"
-                                (mouseleave)="draw.setHoveredElementByLabel(null)">
-                                {{ m.raw }} </span
-                            ><span *ngIf="!last"> + </span>
-                        </ng-container>
-                    </span>
-                    <span class="tuple-brace">)</span>
-                </ng-container>
-                <ng-template #rawTuple>{{ tupleString }}</ng-template>
-            </div>
+            <textarea
+                [(ngModel)]="tupleString"
+                [placeholder]="'TUPLE_INPUT.LABEL' | translate"
+                rows="3"
+                (keyup.enter)="onTupleButtonClick()"
+                (paste)="onTupleTextareaPaste($event)"></textarea>
             <button
                 (click)="onTupleButtonClick()"
                 [disabled]="!tupleString.trim().length"
                 [title]="(isExamMode() ? 'TUPLE_INPUT.VALIDATE' : 'TUPLE_INPUT.GENERATE') | translate">
                 {{ (isExamMode() ? 'TUPLE_INPUT.VALIDATE' : 'TUPLE_INPUT.GENERATE') | translate }}
             </button>
+        </div>
+
+        <div class="tuple-preview" *ngIf="tuplePreview() as preview">
+            <div class="tuple-line">
+                <span class="tuple-brace">(</span>
+                <span class="tuple-set" aria-label="places">
+                    <span class="tuple-brace">&#123;</span>
+                    <ng-container *ngFor="let p of preview.places; let last = last">
+                        <span
+                            class="tuple-token"
+                            [class.is-hovered]="hoveredElementId() === draw.getElementIdByLabel(p)"
+                            (mouseenter)="draw.setHoveredElementByLabel(p)"
+                            (mouseleave)="draw.setHoveredElementByLabel(null)">
+                            {{ p }}
+                        </span><span *ngIf="!last">, </span>
+                    </ng-container>
+                    <span class="tuple-brace">&#125;</span>
+                </span>,
+                <span class="tuple-set" aria-label="transitions">
+                    <span class="tuple-brace">&#123;</span>
+                    <ng-container *ngFor="let t of preview.transitions; let last = last">
+                        <span
+                            class="tuple-token"
+                            [class.is-hovered]="hoveredElementId() === draw.getElementIdByLabel(t)"
+                            (mouseenter)="draw.setHoveredElementByLabel(t)"
+                            (mouseleave)="draw.setHoveredElementByLabel(null)">
+                            {{ t }}
+                        </span><span *ngIf="!last">, </span>
+                    </ng-container>
+                    <span class="tuple-brace">&#125;</span>
+                </span>,
+                <span class="tuple-arcs">
+                    <ng-container *ngFor="let arc of preview.arcs; let last = last">
+                        <span
+                            class="tuple-token"
+                            [class.is-hovered]="hoveredConnectionId() === draw.getConnectionIdByLabels(arc.source, arc.target)"
+                            (mouseenter)="draw.setHoveredConnectionByLabels(arc.source, arc.target)">
+                            {{ arc.raw }}
+                        </span><span *ngIf="!last"> + </span>
+                    </ng-container>
+                </span>,
+                <span class="tuple-marking">
+                    <ng-container *ngFor="let m of preview.marking; let last = last">
+                        <span
+                            class="tuple-token"
+                            [class.is-hovered]="hoveredElementId() === draw.getElementIdByLabel(m.label)"
+                            (mouseenter)="draw.setHoveredElementByLabel(m.label)"
+                            (mouseleave)="draw.setHoveredElementByLabel(null)">
+                            {{ m.raw }}
+                        </span><span *ngIf="!last"> + </span>
+                    </ng-container>
+                </span>
+                <span class="tuple-brace">)</span>
+            </div>
         </div>
 
         <svg

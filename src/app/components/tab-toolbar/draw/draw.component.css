@@ -213,29 +213,6 @@ svg text {
     stroke: white;
 }
 
-.tuple-editor {
-    flex: 1;
-    min-height: 60px;
-    max-height: 200px;
-    padding: 6px 8px;
-    border: 1px solid #bdbdbd;
-    border-radius: 4px;
-    background: white;
-    overflow-y: auto;
-    font-family: Consolas, 'Courier New', monospace;
-    white-space: pre-wrap;
-}
-
-.tuple-editor:empty:before {
-    content: attr(data-placeholder);
-    color: #777;
-}
-
-.tuple-editor:focus {
-    outline: 2px solid #1976d2;
-    outline-offset: 1px;
-}
-
 .inline-tuple-input {
     gap: 8px;
 }
