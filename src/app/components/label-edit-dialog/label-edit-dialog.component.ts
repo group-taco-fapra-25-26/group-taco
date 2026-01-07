@@ -28,13 +28,10 @@ interface LabelEditDialogData {
     styleUrls: ['./label-edit-dialog.component.css'],
 })
 export class LabelEditDialogComponent {
-    label: string;
+    data = inject<LabelEditDialogData>(MAT_DIALOG_DATA);
+    label: string = this.data.label ?? '';
 
     private _dialogRef = inject(MatDialogRef<LabelEditDialogComponent>);
-
-    constructor(@Inject(MAT_DIALOG_DATA) public data: LabelEditDialogData) {
-        this.label = data.label ?? '';
-    }
 
     save() {
         const trimmed = this.label?.trim();
