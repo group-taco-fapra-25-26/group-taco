@@ -41,6 +41,13 @@ interface GlobalDragData {
     clientY: number;
 }
 
+export interface TuplePreview {
+    places: string[];
+    transitions: string[];
+    arcs: { raw: string; source: string; target: string }[];
+    marking: { raw: string; label: string }[];
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare const window: any;
 
@@ -50,6 +57,8 @@ export class DrawService implements OnDestroy {
     connections = signal<Connection[]>([]);
     isDragOver = signal(false);
     selectedElementId = signal<string | null>(null);
+    hoveredElementId = signal<string | null>(null);
+    hoveredConnectionId = signal<string | null>(null);
 
     readonly connectionLines = computed(() => {
         const nodeMap = new Map<string, DrawnElement>();
@@ -115,6 +124,11 @@ export class DrawService implements OnDestroy {
     });
 
     tupleString = signal('');
+    readonly tuplePreview = computed(() => this.parseTuplePreview(this.tupleString()));
+
+    setTupleString(value: string) {
+        this.tupleString.set(value);
+    }
 
     private sourceNetSub?: Subscription;
     private sourceTextSub?: Subscription;
@@ -402,6 +416,17 @@ export class DrawService implements OnDestroy {
                 return { ...c, weight: newWeight };
             }),
         );
+        this.syncSourceNetFromCanvas();
+    }
+
+    onElementWheel(event: WheelEvent, element: DrawnElement) {
+        event.preventDefault();
+        event.stopPropagation();
+        if (!(element.node instanceof DiagramPlace)) return;
+        const delta = Math.sign(event.deltaY) || 0;
+        if (delta === 0) return;
+        const current = element.node.tokenCount();
+        element.node.tokens = Math.max(0, current - delta);
         this.syncSourceNetFromCanvas();
     }
 
@@ -994,6 +1019,12 @@ export class DrawService implements OnDestroy {
         return candidate;
     }
 
+    private getNodeLabel(node: DiagramNode): string {
+        if (node instanceof DiagramPlace) return node.displayLabel;
+        if (node instanceof DiagramTransition) return node.displayLabel;
+        return node.displayLabel ?? node.id;
+    }
+
     private getSvgCoordinates(event: MouseEvent | DragEvent): { x: number; y: number } | null {
         return this.getSvgCoordinatesFromClient(event.clientX, event.clientY);
     }
@@ -1026,8 +1057,6 @@ export class DrawService implements OnDestroy {
         const dx = bx - ax;
         const dy = by - ay;
         const len = Math.hypot(dx, dy) || 1;
-        const ux = dx / len;
-        const uy = dy / len;
         const perpX = basePerpX ?? -dy / len;
         const perpY = basePerpY ?? dx / len;
 
@@ -1036,48 +1065,154 @@ export class DrawService implements OnDestroy {
         const shiftedBx = bx + perpX * offset;
         const shiftedBy = by + perpY * offset;
 
-        const aOffset =
-            a.node instanceof DiagramPlace
-                ? this.PLACE_RADIUS
-                : Math.min(this.TRANSITION_HALF_W, this.TRANSITION_HALF_H);
-        const bOffset =
-            b.node instanceof DiagramPlace
-                ? this.PLACE_RADIUS
-                : Math.min(this.TRANSITION_HALF_W, this.TRANSITION_HALF_H);
+        const start = this.trimEndpoint(a.node, shiftedAx, shiftedAy, shiftedBx, shiftedBy);
+        const end = this.trimEndpoint(b.node, shiftedBx, shiftedBy, shiftedAx, shiftedAy);
 
-        const x1 = shiftedAx + ux * aOffset;
-        const y1 = shiftedAy + uy * aOffset;
-        const x2 = shiftedBx - ux * bOffset;
-        const y2 = shiftedBy - uy * bOffset;
-        return { x1, y1, x2, y2 };
+        return { x1: start.x, y1: start.y, x2: end.x, y2: end.y };
     }
 
-    onElementWheel(event: WheelEvent, element: DrawnElement) {
-        event.preventDefault();
-        event.stopPropagation();
-        if (element.node instanceof DiagramPlace) {
-            const delta = Math.sign(event.deltaY) || 0;
-            if (delta === 0) return;
-            this.drawnElements.update((elements) =>
-                elements.map((el) => {
-                    if (el.id !== element.id || !(el.node instanceof DiagramPlace)) return el;
-                    const currentTokens = el.node.tokenCount() ?? 0;
-                    const newTokens = Math.max(0, currentTokens - delta);
-                    const updated = this.buildPlace(el.node.id, el.node.label ?? el.node.displayLabel, newTokens, {
-                        hideTokens: el.node.hideTokens,
-                        labelPlacement: el.node.labelPlacement,
-                        isStartPlace: el.node.isStartPlace,
-                    });
-                    updated.x = el.node.x;
-                    updated.y = el.node.y;
-                    return { ...el, node: updated };
-                }),
-            );
-            this.syncSourceNetFromCanvas();
+    private trimEndpoint(
+        node: DiagramNode,
+        originX: number,
+        originY: number,
+        targetX: number,
+        targetY: number,
+    ): { x: number; y: number } {
+        const dx = targetX - originX;
+        const dy = targetY - originY;
+        const dist = Math.hypot(dx, dy) || 1;
+        const ux = dx / dist;
+        const uy = dy / dist;
+
+        if (node instanceof DiagramPlace) {
+            return { x: originX + ux * this.PLACE_RADIUS, y: originY + uy * this.PLACE_RADIUS };
+        }
+        if (node instanceof DiagramTransition) {
+            const halfW = this.TRANSITION_HALF_W;
+            const halfH = this.TRANSITION_HALF_H;
+            const xIntercept = Math.abs(ux) > 0 ? halfW / Math.abs(ux) : Number.POSITIVE_INFINITY;
+            const yIntercept = Math.abs(uy) > 0 ? halfH / Math.abs(uy) : Number.POSITIVE_INFINITY;
+            const intercept = Math.min(xIntercept, yIntercept);
+            return { x: originX + ux * intercept, y: originY + uy * intercept };
+        }
+        return { x: originX, y: originY };
+    }
+
+    private parseTuplePreview(text: string): TuplePreview | null {
+        const cleaned = text.trim();
+        if (!cleaned.startsWith('(') || !cleaned.endsWith(')')) return null;
+        const inner = cleaned.slice(1, -1);
+        const parts = this.splitTopLevel(inner, ',');
+        if (parts.length < 4) return null;
+
+        const placePart = parts[0].trim();
+        const transitionPart = parts[1].trim();
+        const arcsPart = parts[2].trim();
+        const markingPart = parts.slice(3).join(',').trim();
+
+        const places = this.parseSet(placePart);
+        const transitions = this.parseSet(transitionPart);
+        const arcs = this.parseArcs(arcsPart);
+        const marking = this.parseMarking(markingPart);
+
+        return { places, transitions, arcs, marking };
+    }
+
+    private parseSet(part: string): string[] {
+        const match = part.match(/^\{(.+)\}$/);
+        if (!match) return [];
+        return match[1]
+            .split(',')
+            .map((s) => s.trim())
+            .filter((s) => s.length > 0);
+    }
+
+    private parseArcs(part: string): { raw: string; source: string; target: string }[] {
+        const arcs: { raw: string; source: string; target: string }[] = [];
+        const regex = /(\d+\s*\*\s*)?\(\s*([^,\s]+)\s*,\s*([^,\s)]+)\s*\)/g;
+        let match: RegExpExecArray | null;
+        while ((match = regex.exec(part))) {
+            arcs.push({ raw: match[0], source: match[2], target: match[3] });
+        }
+        return arcs;
+    }
+
+    private parseMarking(part: string): { raw: string; label: string }[] {
+        if (!part) return [];
+        return part
+            .split('+')
+            .map((s) => s.trim())
+            .filter((s) => s.length > 0)
+            .map((raw) => {
+                const match = raw.match(/\d+\s*\*\s*([^\s]+)/) || raw.match(/([^\s]+)/);
+                const label = match ? match[1] : raw;
+                return { raw, label };
+            });
+    }
+
+    private splitTopLevel(text: string, separator: string): string[] {
+        const result: string[] = [];
+        let depthParens = 0;
+        let depthBraces = 0;
+        let start = 0;
+        for (let i = 0; i < text.length; i++) {
+            const ch = text[i];
+            if (ch === '(') depthParens++;
+            else if (ch === ')') depthParens = Math.max(0, depthParens - 1);
+            else if (ch === '{') depthBraces++;
+            else if (ch === '}') depthBraces = Math.max(0, depthBraces - 1);
+            else if (ch === separator && depthParens === 0 && depthBraces === 0) {
+                result.push(text.slice(start, i));
+                start = i + 1;
+            }
+        }
+        result.push(text.slice(start));
+        return result;
+    }
+
+    setHoveredElementId(id: string | null) {
+        this.hoveredElementId.set(id);
+        if (id !== null) {
+            this.hoveredConnectionId.set(null);
         }
     }
 
-    setTupleString(value: string) {
-        this.tupleString.set(value);
+    setHoveredConnectionId(id: string | null) {
+        this.hoveredConnectionId.set(id);
+        if (id !== null) {
+            this.hoveredElementId.set(null);
+        }
+    }
+
+    setHoveredElementByLabel(label: string | null) {
+        if (!label) {
+            this.setHoveredElementId(null);
+            return;
+        }
+        const id = this.getElementIdByLabel(label);
+        this.setHoveredElementId(id);
+    }
+
+    setHoveredConnectionByLabels(sourceLabel: string | null, targetLabel: string | null) {
+        if (!sourceLabel || !targetLabel) {
+            this.setHoveredConnectionId(null);
+            return;
+        }
+        const id = this.getConnectionIdByLabels(sourceLabel, targetLabel);
+        this.setHoveredConnectionId(id);
+    }
+
+    getElementIdByLabel(label: string): string | null {
+        const normalized = label.trim();
+        const match = this.drawnElements().find((el) => this.getNodeLabel(el.node) === normalized);
+        return match?.id ?? null;
+    }
+
+    getConnectionIdByLabels(sourceLabel: string, targetLabel: string): string | null {
+        const srcId = this.getElementIdByLabel(sourceLabel);
+        const tgtId = this.getElementIdByLabel(targetLabel);
+        if (!srcId || !tgtId) return null;
+        const conn = this.connections().find((c) => c.aId === srcId && c.bId === tgtId);
+        return conn?.id ?? null;
     }
 }

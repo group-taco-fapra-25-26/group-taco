@@ -23,7 +23,10 @@ export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
     readonly drawnElements = this.draw.drawnElements;
     readonly isDragOver = this.draw.isDragOver;
     readonly selectedElementId = this.draw.selectedElementId;
+    readonly hoveredElementId = this.draw.hoveredElementId;
+    readonly hoveredConnectionId = this.draw.hoveredConnectionId;
     readonly connectionLines = this.draw.connectionLines;
+    readonly tuplePreview = this.draw.tuplePreview;
 
     get tupleString() {
         return this.draw.tupleString();
@@ -116,4 +119,28 @@ export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
     onElementWheel(event: WheelEvent, element: DrawnElement) {
         this.draw.onElementWheel(event, element);
     }
+
+    clearTupleHover() {
+        this.draw.setHoveredElementId(null);
+        this.draw.setHoveredConnectionId(null);
+    }
+
+    onTupleEditorInput(event: Event) {
+        const target = event.target as HTMLElement | null;
+        if (!target) return;
+        const text = target.innerText ?? '';
+        this.tupleString = text;
+    }
+
+    onTupleEditorBlur(event: Event) {
+        const target = event.target as HTMLElement | null;
+        if (!target) return;
+        // Ensure editor reflects normalized tuple string (e.g., after parsing/generation)
+        if (target.innerText !== this.tupleString) {
+            target.innerText = this.tupleString;
+        }
+    }
+
+    trackLineById = (_: number, line: { id: string }) => line.id;
+    trackElementById = (_: number, element: DrawnElement) => element.id;
 }

@@ -66,6 +66,7 @@
     border-radius: 6px;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
     z-index: 2;
+    align-items: center;
 }
 
 .inline-tuple-input textarea {
@@ -87,6 +88,7 @@
     color: #fff;
     border-radius: 4px;
     cursor: pointer;
+    height: fit-content;
 }
 
 .inline-tuple-input button:disabled {
@@ -140,4 +142,106 @@
 svg text {
     user-select: none;
     pointer-events: none;
+}
+
+.tuple-preview {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    overflow: auto;
+    font-family: Consolas, 'Courier New', monospace;
+    font-size: 13px;
+}
+
+.tuple-line {
+    white-space: nowrap;
+}
+
+.tuple-token {
+    padding: 1px 3px;
+    border-radius: 3px;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.tuple-token.is-hovered {
+    background: #fff4e5;
+    color: #d35400;
+}
+
+.tuple-brace {
+    color: #555;
+}
+
+.connection-group.is-hovered .connection-line {
+    stroke: #d35400;
+    stroke-width: 3;
+}
+
+.element-wrapper.is-hovered g[appSvgNode] .node-label,
+.element-wrapper.is-hovered g[appSvgNode] .transition-label,
+.element-wrapper.is-hovered g[appSvgNode] .transition-label-below,
+.element-wrapper.is-hovered g[appSvgNode] .place-label-inside,
+.element-wrapper.is-hovered g[appSvgNode] .transition-label-inside,
+.element-wrapper.is-hovered g[appSvgNode] .transition-inner-label {
+    fill: #d35400;
+}
+
+.element-wrapper.is-hovered svg rect,
+.element-wrapper.is-hovered svg circle {
+    stroke: #d35400;
+}
+
+:host ::ng-deep .element-wrapper.is-hovered rect,
+:host ::ng-deep .element-wrapper.is-hovered circle {
+    stroke: #d35400 !important;
+}
+
+:host ::ng-deep .element-wrapper.is-hovered text,
+:host ::ng-deep .element-wrapper.is-hovered .node-label,
+:host ::ng-deep .element-wrapper.is-hovered .transition-label,
+:host ::ng-deep .element-wrapper.is-hovered .transition-label-below,
+:host ::ng-deep .element-wrapper.is-hovered .place-label-inside,
+:host ::ng-deep .element-wrapper.is-hovered .transition-label-inside,
+:host ::ng-deep .element-wrapper.is-hovered .transition-inner-label {
+    fill: #d35400 !important;
+}
+
+.connection-group.is-hovered .connection-weight-label {
+    fill: #d35400;
+    stroke: white;
+}
+
+.tuple-editor {
+    flex: 1;
+    min-height: 60px;
+    max-height: 200px;
+    padding: 6px 8px;
+    border: 1px solid #bdbdbd;
+    border-radius: 4px;
+    background: white;
+    overflow-y: auto;
+    font-family: Consolas, 'Courier New', monospace;
+    white-space: pre-wrap;
+}
+
+.tuple-editor:empty:before {
+    content: attr(data-placeholder);
+    color: #777;
+}
+
+.tuple-editor:focus {
+    outline: 2px solid #1976d2;
+    outline-offset: 1px;
+}
+
+.inline-tuple-input {
+    gap: 8px;
+}
+
+.inline-tuple-input button {
+    height: fit-content;
+}
+
+.tuple-preview {
+    margin-top: 6px;
 }
