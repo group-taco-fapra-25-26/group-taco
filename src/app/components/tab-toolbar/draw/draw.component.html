@@ -11,7 +11,7 @@
     </div>
 
     <div class="canvas-container">
-        <div class="inline-tuple-input">
+        <div class="inline-tuple-input" *ngIf="!showTuplePreviewOnly()">
             <textarea
                 [(ngModel)]="tupleString"
                 [placeholder]="'TUPLE_INPUT.LABEL' | translate"
@@ -26,8 +26,9 @@
             </button>
         </div>
 
-        <div class="tuple-preview" *ngIf="tuplePreview() as preview">
-            <div class="tuple-line">
+        <div class="tuple-preview" *ngIf="showTuplePreviewOnly() && tuplePreview() as preview" (click)="onTuplePreviewClick()">
+            <textarea class="tuple-preview-textarea" [value]="tupleString" readonly aria-label="Tuple preview"></textarea>
+            <div class="tuple-line tuple-preview-overlay">
                 <span class="tuple-brace">(</span>
                 <span class="tuple-set" aria-label="places">
                     <span class="tuple-brace">&#123;</span>

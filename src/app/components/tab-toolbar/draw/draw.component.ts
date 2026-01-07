@@ -27,6 +27,7 @@ export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
     readonly hoveredConnectionId = this.draw.hoveredConnectionId;
     readonly connectionLines = this.draw.connectionLines;
     readonly tuplePreview = this.draw.tuplePreview;
+    readonly showTuplePreviewOnly = this.draw.showTuplePreviewOnly;
 
     get tupleString() {
         return this.draw.tupleString();
@@ -94,6 +95,11 @@ export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
 
     onTupleButtonClick(): void {
         this.draw.onTupleButtonClick();
+        this.draw.showTuplePreviewIfAvailable();
+    }
+
+    onTuplePreviewClick(): void {
+        this.draw.showTupleInline();
     }
 
     onElementMouseDown(event: MouseEvent, element: DrawnElement) {

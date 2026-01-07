@@ -59,6 +59,7 @@ export class DrawService implements OnDestroy {
     selectedElementId = signal<string | null>(null);
     hoveredElementId = signal<string | null>(null);
     hoveredConnectionId = signal<string | null>(null);
+    showTuplePreviewOnly = signal(false);
 
     readonly connectionLines = computed(() => {
         const nodeMap = new Map<string, DrawnElement>();
@@ -130,6 +131,17 @@ export class DrawService implements OnDestroy {
         this.tupleString.set(value);
     }
 
+    showTupleInline() {
+        this.showTuplePreviewOnly.set(false);
+    }
+
+    showTuplePreviewIfAvailable() {
+        const preview = this.tuplePreview();
+        if (preview) {
+            this.showTuplePreviewOnly.set(true);
+        }
+    }
+
     private sourceNetSub?: Subscription;
     private sourceTextSub?: Subscription;
     private suppressNextSourceLoad = false;
@@ -181,6 +193,7 @@ export class DrawService implements OnDestroy {
                 if (tuple && !this.isExamMode()) {
                     this.tupleString.set(tuple);
                 }
+                this.showTuplePreviewIfAvailable();
             } else {
                 this.clearCanvas(true);
             }
@@ -295,6 +308,7 @@ export class DrawService implements OnDestroy {
         this.drawnElements.set([]);
         this.connections.set([]);
         this.selectedElementId.set(null);
+        this.showTupleInline();
         this.elementIdCounter = 0;
         this.connectionIdCounter = 0;
         this.placeLabelCounter = 0;
@@ -320,6 +334,7 @@ export class DrawService implements OnDestroy {
             this.loadDiagramIntoCanvas(diagram);
             this._springEmbedderService.calculateLayout().catch((error) => console.error(error));
             this._toaster.showSuccess('TUPLE_INPUT.TOAST_SUCCESS_HEADER', 'TUPLE_INPUT.TOAST_SUCCESS_BODY');
+            this.showTuplePreviewIfAvailable();
         } else {
             this._toaster.showError('TUPLE_INPUT.TOAST_ERROR_HEADER', 'TUPLE_INPUT.TOAST_ERROR_BODY');
         }
@@ -1174,6 +1189,9 @@ export class DrawService implements OnDestroy {
         this.hoveredElementId.set(id);
         if (id !== null) {
             this.hoveredConnectionId.set(null);
+            if (!this.showTuplePreviewOnly()) {
+                this.showTuplePreviewIfAvailable();
+            }
         }
     }
 
@@ -1181,6 +1199,9 @@ export class DrawService implements OnDestroy {
         this.hoveredConnectionId.set(id);
         if (id !== null) {
             this.hoveredElementId.set(null);
+            if (!this.showTuplePreviewOnly()) {
+                this.showTuplePreviewIfAvailable();
+            }
         }
     }
 

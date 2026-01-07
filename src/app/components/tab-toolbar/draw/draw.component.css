@@ -145,12 +145,52 @@ svg text {
 }
 
 .tuple-preview {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    right: 10px;
     display: flex;
-    align-items: center;
-    flex: 1;
-    overflow: auto;
+    align-items: stretch;
+    gap: 8px;
+    padding: 8px 10px;
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid #d0d0d0;
+    border-radius: 6px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
     font-family: Consolas, 'Courier New', monospace;
     font-size: 13px;
+    cursor: pointer;
+    z-index: 2;
+    overflow: auto;
+}
+
+.tuple-preview-textarea {
+    flex: 1;
+    width: 100%;
+    min-width: 0;
+    min-height: 60px;
+    max-height: 200px;
+    padding: 6px 8px;
+    border: 1px solid #bdbdbd;
+    border-radius: 4px;
+    resize: vertical;
+    background: transparent;
+    font-family: inherit;
+    font-size: inherit;
+    line-height: 1.4;
+    color: transparent;
+    caret-color: transparent;
+    pointer-events: none;
+}
+
+.tuple-preview-textarea:focus {
+    outline: none;
+}
+
+.tuple-preview-overlay {
+    position: absolute;
+    inset: 8px 10px;
+    pointer-events: auto;
 }
 
 .tuple-line {
@@ -219,8 +259,4 @@ svg text {
 
 .inline-tuple-input button {
     height: fit-content;
-}
-
-.tuple-preview {
-    margin-top: 6px;
 }
