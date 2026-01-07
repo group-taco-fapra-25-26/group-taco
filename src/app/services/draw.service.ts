@@ -545,22 +545,14 @@ export class DrawService implements OnDestroy {
         return effect(() => {
             if (!this.isExamMode()) return;
             const sourceDiagram = this._sourceNetService.getCurrentSourceNet();
-            const tupleFromSource = sourceDiagram
-                ? this._serializationService.serializeTuple(sourceDiagram)
-                : undefined;
-            if (tupleFromSource) {
-                this.tupleString.set(tupleFromSource);
-                return;
-            }
-
-            const diagramFromCanvas = this.buildDiagramFromCanvas();
-            const tupleFromCanvas = this._serializationService.serializeTuple(diagramFromCanvas);
-            if (tupleFromCanvas) {
-                this.tupleString.set(tupleFromCanvas);
-                return;
-            }
-
             const sourceText = this._sourceNetService.getSourceText();
+            if (sourceDiagram) {
+                const tupleFromSource = this._serializationService.serializeTuple(sourceDiagram);
+                if (tupleFromSource) {
+                    this.tupleString.set(tupleFromSource);
+                }
+                return;
+            }
             if (sourceText) {
                 this.tupleString.set(sourceText);
             }
@@ -927,6 +919,9 @@ export class DrawService implements OnDestroy {
     }
 
     private syncSourceNetFromCanvas() {
+        if (this.isExamMode()) {
+            return;
+        }
         const diagram = this.buildDiagramFromCanvas();
 
         this.suppressNextSourceLoad = true;

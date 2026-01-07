@@ -20,7 +20,14 @@ export class ClearNetButtonComponent {
     private _playService = inject(PlayService);
     private _displayService = inject(DisplayService);
     private _diagramSignal = toSignal(this._displayService.diagram$);
-    public isDisabled = computed(() => this._diagramSignal() === undefined);
+    private _sourceNetSignal = toSignal(this._sourcePetriNetService.sourceNet$);
+    private _sourceTextSignal = toSignal(this._sourcePetriNetService.sourceText$);
+    public isDisabled = computed(() => {
+        const hasDiagram = !!this._diagramSignal();
+        const hasSourceNet = !!this._sourceNetSignal();
+        const hasSourceText = !!this._sourceTextSignal()?.trim();
+        return !hasDiagram && !hasSourceNet && !hasSourceText;
+    });
 
     public clearNet(): void {
         this._sourcePetriNetService.clear();
