@@ -26,8 +26,19 @@
             </button>
         </div>
 
-        <div class="tuple-preview" *ngIf="showTuplePreviewOnly() && tuplePreview() as preview" (click)="onTuplePreviewClick()">
-            <textarea class="tuple-preview-textarea" [value]="tupleString" readonly aria-label="Tuple preview"></textarea>
+        <div
+            class="tuple-preview"
+            *ngIf="showTuplePreviewOnly() && tuplePreview() as preview"
+            (click)="onTuplePreviewClick()"
+            role="button"
+            tabindex="0"
+            (keydown.enter)="onTuplePreviewClick()"
+            (keydown.space)="onTuplePreviewClick(); $event.preventDefault()">
+            <textarea
+                class="tuple-preview-textarea"
+                [value]="tupleString"
+                readonly
+                aria-label="Tuple preview"></textarea>
             <div class="tuple-line tuple-preview-overlay">
                 <span class="tuple-brace">(</span>
                 <span class="tuple-set" aria-label="places">
@@ -38,11 +49,11 @@
                             [class.is-hovered]="hoveredElementId() === draw.getElementIdByLabel(p)"
                             (mouseenter)="draw.setHoveredElementByLabel(p)"
                             (mouseleave)="draw.setHoveredElementByLabel(null)">
-                            {{ p }}
-                        </span><span *ngIf="!last">, </span>
+                            {{ p }} </span
+                        ><span *ngIf="!last">, </span>
                     </ng-container>
-                    <span class="tuple-brace">&#125;</span>
-                </span>,
+                    <span class="tuple-brace">&#125;</span> </span
+                >,
                 <span class="tuple-set" aria-label="transitions">
                     <span class="tuple-brace">&#123;</span>
                     <ng-container *ngFor="let t of preview.transitions; let last = last">
@@ -51,21 +62,23 @@
                             [class.is-hovered]="hoveredElementId() === draw.getElementIdByLabel(t)"
                             (mouseenter)="draw.setHoveredElementByLabel(t)"
                             (mouseleave)="draw.setHoveredElementByLabel(null)">
-                            {{ t }}
-                        </span><span *ngIf="!last">, </span>
+                            {{ t }} </span
+                        ><span *ngIf="!last">, </span>
                     </ng-container>
-                    <span class="tuple-brace">&#125;</span>
-                </span>,
+                    <span class="tuple-brace">&#125;</span> </span
+                >,
                 <span class="tuple-arcs">
                     <ng-container *ngFor="let arc of preview.arcs; let last = last">
                         <span
                             class="tuple-token"
-                            [class.is-hovered]="hoveredConnectionId() === draw.getConnectionIdByLabels(arc.source, arc.target)"
+                            [class.is-hovered]="
+                                hoveredConnectionId() === draw.getConnectionIdByLabels(arc.source, arc.target)
+                            "
                             (mouseenter)="draw.setHoveredConnectionByLabels(arc.source, arc.target)">
-                            {{ arc.raw }}
-                        </span><span *ngIf="!last"> + </span>
-                    </ng-container>
-                </span>,
+                            {{ arc.raw }} </span
+                        ><span *ngIf="!last"> + </span>
+                    </ng-container> </span
+                >,
                 <span class="tuple-marking">
                     <ng-container *ngFor="let m of preview.marking; let last = last">
                         <span
@@ -73,8 +86,8 @@
                             [class.is-hovered]="hoveredElementId() === draw.getElementIdByLabel(m.label)"
                             (mouseenter)="draw.setHoveredElementByLabel(m.label)"
                             (mouseleave)="draw.setHoveredElementByLabel(null)">
-                            {{ m.raw }}
-                        </span><span *ngIf="!last"> + </span>
+                            {{ m.raw }} </span
+                        ><span *ngIf="!last"> + </span>
                     </ng-container>
                 </span>
                 <span class="tuple-brace">)</span>
