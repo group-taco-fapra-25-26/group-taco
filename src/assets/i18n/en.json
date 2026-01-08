@@ -19,7 +19,7 @@
     "NEW_SEQUENCE": "New Sequence",
     "VALIDATE_SEQUENCES": "Validate Sequences",
     "FIND_SEQUENCES": "Find Sequences...",
-    "START": "Start",
+    "RENAME": "Rename",
     "CANCEL": "Cancel",
     "SAVE_AS": "Save as...",
     "SAVE_AS_JSON": "Save as JSON",
@@ -34,10 +34,37 @@
         "LABEL": "Tuple String",
         "BUTTON_TOOLTIP": "Input Tuple",
         "GENERATE": "Generate",
+        "VALIDATE": "Validate",
+        "PLACE": "+ Place",
+        "TRANSITION": "+ Transition",
+        "CONTROLS": "Drag and drop to create new places and transitions. Right click a transition and a place to create a connection between them. Scroll up or down on a connection to change its weight or on a place to change its marking. Middle click removes a place, transition or connection. Double click a transition or place to rename it.",
         "TOAST_SUCCESS_BODY": "Tuple processed successfully",
         "TOAST_SUCCESS_HEADER": "Net loaded",
+        "TOAST_VALIDATION_HEADER": "Correct Drawing",
+        "TOAST_VALIDATION_BODY": "Tuple and drawing match",
         "TOAST_ERROR_HEADER": "Invalid Tuple",
-        "TOAST_ERROR_BODY": "Could not parse the provided tuple."
+        "TOAST_ERROR_BODY": "Could not parse the provided tuple.",
+        "TOAST_INVALIDATION_HEADER": "Drawing does not match",
+        "TOAST_INVALIDATION_BODY": "Tuple and drawing do not match",
+        "VALIDATION": {
+            "MISSING_PLACES": "Missing places: {{items}}",
+            "EXTRA_PLACES": "Extra places: {{items}}",
+            "MISSING_TRANSITIONS": "Missing transitions: {{items}}",
+            "EXTRA_TRANSITIONS": "Extra transitions: {{items}}",
+            "MISSING_ARC": "Missing arc: {{arc}}",
+            "EXTRA_ARC": "Extra arc: {{arc}}",
+            "ARC_WEIGHT_MISMATCH": "Arc weight mismatch at {{arc}}: expected {{expected}}, found {{found}}",
+            "TOKENS_MISSING": "{{count}} token(s) missing at {{place}} (expected {{expected}}, found {{found}})",
+            "TOKENS_EXTRA": "{{count}} extra token(s) at {{place}} (expected {{expected}}, found {{found}})",
+            "TOKENS_UNEXPECTED": "Unexpected tokens at {{place}}: found {{found}}"
+        }
+    },
+    "DRAW": {
+        "PROMPT_EDIT_PLACE_TITLE": "Edit place label",
+        "PROMPT_EDIT_TRANSITION_TITLE": "Edit transition label",
+        "EDIT_LABEL": "Label",
+        "TOAST_DUPLICATE_LABEL_HEADER": "Duplicate label",
+        "TOAST_DUPLICATE_LABEL_BODY": "The label '{{label}}' is already used. Please choose a unique label."
     },
     "HEADER_SUBTITLE": "Fachpraktikum Programmiersysteme WiSe25/26 by Marie G., Florian M., Ben L. and Alexander K.",
     "TOASTER": {

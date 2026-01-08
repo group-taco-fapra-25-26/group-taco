@@ -4,6 +4,7 @@ import { SourcePetriNetService } from './source-petri-net.service';
 import { DiagramArc } from '../classes/diagram/diagram-arc';
 import { Coords } from '../classes/json-petri-net';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { applyParallelOffsetsToArcs, DEFAULT_PARALLEL_OFFSET } from './arc-parallel-offset.util';
 
 @Injectable({
     providedIn: 'root',
@@ -15,6 +16,7 @@ export class SpringEmbedderService {
     private readonly LENGTH_CONSTANT = 150;
     private readonly STIFFNESS_CONSTANT = 0.2;
     private readonly REPULSION_CONSTANT = 15000;
+    private readonly PARALLEL_OFFSET = DEFAULT_PARALLEL_OFFSET;
 
     private readonly MAX_ITERATIONS = 100000;
     private readonly MIN_MOVEMENT = 0.1;
@@ -51,6 +53,7 @@ export class SpringEmbedderService {
             }
             await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
         }
+        this._separateParallelArcs(arcs, nodes);
         this._sourceNetService.updateEditedNet(diagram);
     }
 
@@ -144,5 +147,9 @@ export class SpringEmbedderService {
             x: repulsionMagnitude * directionX,
             y: repulsionMagnitude * directionY,
         };
+    }
+
+    private _separateParallelArcs(arcs: DiagramArc[], nodes: DiagramNode[]): void {
+        applyParallelOffsetsToArcs(arcs, nodes, this.PARALLEL_OFFSET);
     }
 }

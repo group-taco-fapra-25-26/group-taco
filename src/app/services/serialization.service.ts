@@ -9,6 +9,8 @@ import { PnmlArc, PnmlPlace, PnmlPosition, PnmlTransition } from '../classes/pnm
 
 export type SUPPORTED_FORMAT = 'pnml' | 'json';
 
+const formatTupleSet = (items: string[]) => `{${items.join(', ')}}`;
+
 @Injectable({
     providedIn: 'root',
 })
@@ -22,6 +24,35 @@ export class SerializationService {
             default:
                 throw new Error(`Unsupported format: ${format}`);
         }
+    }
+
+    public serializeTuple(diagram: Diagram): string {
+        const placeLabelMap = new Map(diagram.places.map((p) => [p.id, p.label ?? p.displayLabel ?? p.id]));
+        const transitionLabelMap = new Map(diagram.transitions.map((t) => [t.id, t.label ?? t.displayLabel ?? t.id]));
+
+        const placeLabels = formatTupleSet(Array.from(placeLabelMap.values()));
+        const transitionLabels = formatTupleSet(Array.from(transitionLabelMap.values()));
+
+        const arcs = diagram.arcs
+            .map((arc) => {
+                const src = placeLabelMap.get(arc.source) ?? transitionLabelMap.get(arc.source) ?? arc.source;
+                const tgt = placeLabelMap.get(arc.target) ?? transitionLabelMap.get(arc.target) ?? arc.target;
+                const weightPart = arc.weight !== 1 ? `${arc.weight}*` : '';
+                return `${weightPart}(${src}, ${tgt})`;
+            })
+            .join(' + ');
+
+        const markingParts = diagram.places
+            .map((p) => {
+                const label = placeLabelMap.get(p.id) ?? p.id;
+                const tokens = p.tokenCount();
+                if (!tokens) return '';
+                return tokens === 1 ? label : `${tokens}*${label}`;
+            })
+            .filter((m) => m.length > 0);
+        const marking = markingParts.join(' + ');
+
+        return `(${placeLabels}, ${transitionLabels}, ${arcs}, ${marking})`;
     }
 
     /**

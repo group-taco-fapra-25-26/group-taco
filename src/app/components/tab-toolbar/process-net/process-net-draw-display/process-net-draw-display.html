@@ -25,10 +25,10 @@
         </pattern>
         <rect
             #gridRect
-            [attr.x]="viewBoxObj().minX"
-            [attr.y]="viewBoxObj().minY"
-            [attr.width]="viewBoxObj().width"
-            [attr.height]="viewBoxObj().height"
+            [attr.x]="viewBoxObj().minX - viewBoxObj().width"
+            [attr.y]="viewBoxObj().minY - viewBoxObj().height"
+            [attr.width]="viewBoxObj().width * 3"
+            [attr.height]="viewBoxObj().height * 3"
             fill="url(#grid)" />
         <!-- Render connection lines behind nodes -->
         @for (line of connectionLines(); track line.id) {

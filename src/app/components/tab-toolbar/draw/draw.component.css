@@ -1,0 +1,266 @@
+.draw-layout {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 12px;
+    align-items: start;
+}
+
+.palette {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px;
+    border: 1px solid #d0d0d0;
+    border-radius: 6px;
+    background: #fafafa;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.palette h3 {
+    margin: 0 0 4px;
+    font-size: 16px;
+    color: #333;
+}
+
+.palette button {
+    padding: 8px 10px;
+    border: 1px solid #bdbdbd;
+    border-radius: 4px;
+    background: white;
+    cursor: grab;
+    text-align: left;
+}
+
+.palette button:active {
+    cursor: grabbing;
+}
+
+.palette button.clear-btn {
+    background: #f44336;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+.hint {
+    margin: 4px 0 0;
+    font-size: 12px;
+    color: #555;
+}
+
+.canvas-container {
+    width: 100%;
+    position: relative;
+}
+
+.inline-tuple-input {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    display: flex;
+    gap: 8px;
+    padding: 8px 10px;
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid #d0d0d0;
+    border-radius: 6px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+    z-index: 2;
+    align-items: center;
+}
+
+.inline-tuple-input textarea {
+    flex: 1;
+    width: 100%;
+    min-width: 0;
+    min-height: 60px;
+    max-height: 200px;
+    padding: 6px 8px;
+    border: 1px solid #bdbdbd;
+    border-radius: 4px;
+    resize: vertical;
+}
+
+.inline-tuple-input button {
+    padding: 6px 12px;
+    border: 1px solid #1976d2;
+    background: #1976d2;
+    color: #fff;
+    border-radius: 4px;
+    cursor: pointer;
+    height: fit-content;
+}
+
+.inline-tuple-input button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.drawing-canvas {
+    width: 100%;
+    height: 600px;
+    border: 1px dashed #bdbdbd;
+    background-color: white;
+    border-radius: 6px;
+    box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.05);
+    transition: all 0.2s ease;
+}
+
+.drawing-canvas:hover {
+    border-color: #1976d2;
+}
+
+.drawing-canvas.drag-over {
+    border-color: #4caf50;
+    border-width: 3px;
+    background-color: #e8f5e9;
+    box-shadow: inset 0 0 20px rgba(76, 175, 80, 0.2);
+}
+
+.connection-line {
+    stroke: #000;
+    stroke-width: 2;
+    pointer-events: none;
+}
+
+.connection-hit-target {
+    stroke: rgba(0, 0, 0, 0);
+    stroke-width: 14;
+    cursor: pointer;
+}
+
+.connection-weight-label {
+    font-size: 1.2em;
+    fill: #222;
+    stroke: white;
+    stroke-width: 1px;
+    paint-order: stroke fill;
+    stroke-linejoin: round;
+    pointer-events: none;
+}
+
+svg text {
+    user-select: none;
+    pointer-events: none;
+}
+
+.tuple-preview {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    display: flex;
+    align-items: stretch;
+    gap: 8px;
+    padding: 8px 10px;
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid #d0d0d0;
+    border-radius: 6px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+    font-family: Consolas, 'Courier New', monospace;
+    font-size: 13px;
+    cursor: pointer;
+    z-index: 2;
+    overflow: auto;
+    max-width: 100%;
+}
+
+.tuple-preview-textarea {
+    flex: 1;
+    width: 100%;
+    min-width: 0;
+    min-height: 60px;
+    max-height: 200px;
+    padding: 6px 8px;
+    border: 1px solid #bdbdbd;
+    border-radius: 4px;
+    resize: vertical;
+    background: transparent;
+    font-family: inherit;
+    font-size: inherit;
+    line-height: 1.4;
+    color: transparent;
+    caret-color: transparent;
+    pointer-events: none;
+}
+
+.tuple-preview-textarea:focus {
+    outline: none;
+}
+
+.tuple-preview-overlay {
+    position: absolute;
+    inset: 8px 10px;
+    pointer-events: auto;
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+}
+
+.tuple-line {
+    white-space: normal;
+}
+
+.tuple-token {
+    padding: 1px 3px;
+    border-radius: 3px;
+    transition:
+        background-color 0.15s ease,
+        color 0.15s ease;
+}
+
+.tuple-token.is-hovered {
+    background: #fff4e5;
+    color: #d35400;
+}
+
+.tuple-brace {
+    color: #555;
+}
+
+.connection-group.is-hovered .connection-line {
+    stroke: #d35400;
+    stroke-width: 3;
+}
+
+.element-wrapper.is-hovered g[appSvgNode] .node-label,
+.element-wrapper.is-hovered g[appSvgNode] .transition-label,
+.element-wrapper.is-hovered g[appSvgNode] .transition-label-below,
+.element-wrapper.is-hovered g[appSvgNode] .place-label-inside,
+.element-wrapper.is-hovered g[appSvgNode] .transition-label-inside,
+.element-wrapper.is-hovered g[appSvgNode] .transition-inner-label {
+    fill: #d35400;
+}
+
+/* Change only existing visible black outlines; skip selection halos or colored strokes */
+.element-wrapper.is-hovered svg rect[stroke='black'],
+.element-wrapper.is-hovered svg circle[stroke='black'] {
+    stroke: #d35400;
+}
+
+:host ::ng-deep .element-wrapper.is-hovered rect[stroke='black'],
+:host ::ng-deep .element-wrapper.is-hovered circle[stroke='black'] {
+    stroke: #d35400 !important;
+}
+
+:host ::ng-deep .element-wrapper.is-hovered .node-label,
+:host ::ng-deep .element-wrapper.is-hovered .transition-label,
+:host ::ng-deep .element-wrapper.is-hovered .transition-label-below,
+:host ::ng-deep .element-wrapper.is-hovered .place-label-inside,
+:host ::ng-deep .element-wrapper.is-hovered .transition-label-inside,
+:host ::ng-deep .element-wrapper.is-hovered .transition-inner-label {
+    fill: #d35400 !important;
+}
+
+.connection-group.is-hovered .connection-weight-label {
+    fill: #d35400;
+    stroke: white;
+}
+
+.inline-tuple-input {
+    gap: 8px;
+}
+
+.inline-tuple-input button {
+    height: fit-content;
+}

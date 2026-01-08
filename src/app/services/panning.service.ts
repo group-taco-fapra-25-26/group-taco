@@ -32,7 +32,7 @@ export class PanningService {
         diagram: DisplayableGraph | undefined,
         drawingArea: ElementRef<SVGGraphicsElement>,
     ): void {
-        if (event.button !== 0 || !diagram) return;
+        if (event.button !== 0) return;
         this._isPanning = true;
         this._panStartPoint = { x: event.clientX, y: event.clientY };
         drawingArea.nativeElement.style.cursor = 'grabbing';
@@ -94,6 +94,16 @@ export class PanningService {
         }
     }
 
+    public nudgeViewBox(deltaX: number, deltaY: number): void {
+        this._viewBoxValues.update(
+            (v: ViewBox): ViewBox => ({
+                ...v,
+                minX: v.minX + deltaX,
+                minY: v.minY + deltaY,
+            }),
+        );
+    }
+
     /**
      * Handles zooming in and out based on mouse wheel events.
      * @param event
@@ -108,7 +118,6 @@ export class PanningService {
         drawingArea: ElementRef<SVGGraphicsElement>,
         diagram: DisplayableGraph | undefined,
     ): void {
-        if (!diagram) return;
         event.preventDefault();
 
         const svg = drawingArea.nativeElement;
@@ -133,5 +142,16 @@ export class PanningService {
                 height: newHeight,
             };
         });
+    }
+
+    public expandViewBox(factor: number): void {
+        if (factor <= 0) return;
+        this._viewBoxValues.update(
+            (v: ViewBox): ViewBox => ({
+                ...v,
+                width: v.width * factor,
+                height: v.height * factor,
+            }),
+        );
     }
 }

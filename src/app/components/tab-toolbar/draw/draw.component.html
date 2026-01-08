@@ -1,2 +1,192 @@
-<div class="tab-toolbar-container"></div>
-<app-display></app-display>
+<div class="draw-layout">
+    <div class="palette">
+        <h3>Palette</h3>
+        <button draggable="true" (dragstart)="startPaletteDrag($event, 'place')" (dragend)="endPaletteDrag()">
+            {{ 'TUPLE_INPUT.PLACE' | translate }}
+        </button>
+        <button draggable="true" (dragstart)="startPaletteDrag($event, 'transition')" (dragend)="endPaletteDrag()">
+            {{ 'TUPLE_INPUT.TRANSITION' | translate }}
+        </button>
+        <p class="hint">{{ 'TUPLE_INPUT.CONTROLS' | translate }}</p>
+    </div>
+
+    <div class="canvas-container">
+        <div class="inline-tuple-input" *ngIf="!showTuplePreviewOnly()">
+            <textarea
+                [(ngModel)]="tupleString"
+                [placeholder]="'TUPLE_INPUT.LABEL' | translate"
+                rows="3"
+                (keyup.enter)="onTupleButtonClick()"
+                (paste)="onTupleTextareaPaste($event)"></textarea>
+            <button
+                (click)="onTupleButtonClick()"
+                [disabled]="!tupleString.trim().length"
+                [title]="(isExamMode() ? 'TUPLE_INPUT.VALIDATE' : 'TUPLE_INPUT.GENERATE') | translate">
+                {{ (isExamMode() ? 'TUPLE_INPUT.VALIDATE' : 'TUPLE_INPUT.GENERATE') | translate }}
+            </button>
+        </div>
+
+        <div
+            class="tuple-preview"
+            *ngIf="showTuplePreviewOnly() && tuplePreview() as preview"
+            (click)="onTuplePreviewClick()"
+            role="button"
+            tabindex="0"
+            (keydown.enter)="onTuplePreviewClick()"
+            (keydown.space)="onTuplePreviewClick(); $event.preventDefault()">
+            <textarea
+                class="tuple-preview-textarea"
+                [value]="tupleString"
+                readonly
+                aria-label="Tuple preview"></textarea>
+            <div class="tuple-line tuple-preview-overlay">
+                <span class="tuple-brace">(</span>
+                <span class="tuple-set" aria-label="places">
+                    <span class="tuple-brace">&#123;</span>
+                    <ng-container *ngFor="let p of preview.places; let last = last">
+                        <span
+                            class="tuple-token"
+                            [class.is-hovered]="hoveredElementId() === draw.getElementIdByLabel(p)"
+                            (mouseenter)="draw.setHoveredElementByLabel(p)"
+                            (mouseleave)="draw.setHoveredElementByLabel(null)">
+                            {{ p }} </span
+                        ><span *ngIf="!last">, </span>
+                    </ng-container>
+                    <span class="tuple-brace">&#125;</span> </span
+                >,
+                <span class="tuple-set" aria-label="transitions">
+                    <span class="tuple-brace">&#123;</span>
+                    <ng-container *ngFor="let t of preview.transitions; let last = last">
+                        <span
+                            class="tuple-token"
+                            [class.is-hovered]="hoveredElementId() === draw.getElementIdByLabel(t)"
+                            (mouseenter)="draw.setHoveredElementByLabel(t)"
+                            (mouseleave)="draw.setHoveredElementByLabel(null)">
+                            {{ t }} </span
+                        ><span *ngIf="!last">, </span>
+                    </ng-container>
+                    <span class="tuple-brace">&#125;</span> </span
+                >,
+                <span class="tuple-arcs">
+                    <ng-container *ngFor="let arc of preview.arcs; let last = last">
+                        <span
+                            class="tuple-token"
+                            [class.is-hovered]="
+                                hoveredConnectionId() === draw.getConnectionIdByLabels(arc.source, arc.target)
+                            "
+                            (mouseenter)="draw.setHoveredConnectionByLabels(arc.source, arc.target)">
+                            {{ arc.raw }} </span
+                        ><span *ngIf="!last"> + </span>
+                    </ng-container> </span
+                >,
+                <span class="tuple-marking">
+                    <ng-container *ngFor="let m of preview.marking; let last = last">
+                        <span
+                            class="tuple-token"
+                            [class.is-hovered]="hoveredElementId() === draw.getElementIdByLabel(m.label)"
+                            (mouseenter)="draw.setHoveredElementByLabel(m.label)"
+                            (mouseleave)="draw.setHoveredElementByLabel(null)">
+                            {{ m.raw }} </span
+                        ><span *ngIf="!last"> + </span>
+                    </ng-container>
+                </span>
+                <span class="tuple-brace">)</span>
+            </div>
+        </div>
+
+        <svg
+            #drawingArea
+            class="drawing-canvas"
+            [class.drag-over]="isDragOver()"
+            [attr.viewBox]="viewBox()"
+            preserveAspectRatio="xMidYMid meet"
+            (drop)="onDrop($event)"
+            (dragover)="onDragOver($event)"
+            (dragleave)="onDragLeave()"
+            (contextmenu)="preventContext($event)"
+            (mousedown)="onCanvasPanStart($event)"
+            (mousemove)="onCanvasPan($event)"
+            (mouseup)="onCanvasPanEnd()"
+            (mouseleave)="onCanvasPanEnd()"
+            (wheel)="onCanvasWheel($event)">
+            <defs>
+                <marker id="arrowhead-draw" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                    <polygon points="0 0, 10 3.5, 0 7" fill="black" />
+                </marker>
+            </defs>
+            <pattern id="grid" width="50" height="50" patternUnits="userSpaceOnUse">
+                <path d="M 50 0 L 0 0 0 50" fill="none" stroke="lightgray" stroke-width="0.5" />
+            </pattern>
+            <rect
+                [attr.x]="viewBoxObj().minX - viewBoxObj().width"
+                [attr.y]="viewBoxObj().minY - viewBoxObj().height"
+                [attr.width]="viewBoxObj().width * 3"
+                [attr.height]="viewBoxObj().height * 3"
+                fill="url(#grid)" />
+
+            <ng-container *ngFor="let line of connectionLines(); trackBy: trackLineById">
+                <g
+                    class="connection-group"
+                    [attr.data-connection-id]="line.id"
+                    [class.is-hovered]="hoveredConnectionId() === line.id"
+                    (mouseenter)="draw.setHoveredConnectionId(line.id)"
+                    (mouseleave)="draw.setHoveredConnectionId(null)">
+                    <line
+                        class="connection-hit-target"
+                        [attr.x1]="line.x1"
+                        [attr.y1]="line.y1"
+                        [attr.x2]="line.x2"
+                        [attr.y2]="line.y2"
+                        (mousedown)="onConnectionMouseDown($event, line.id)"
+                        (wheel)="onConnectionWheel($event, line.id)" />
+                    <line
+                        class="connection-line"
+                        [attr.x1]="line.x1"
+                        [attr.y1]="line.y1"
+                        [attr.x2]="line.x2"
+                        [attr.y2]="line.y2"
+                        marker-end="url(#arrowhead-draw)" />
+                    <text
+                        *ngIf="line.weight > 1"
+                        [attr.x]="(line.x1 + line.x2) / 2"
+                        [attr.y]="(line.y1 + line.y2) / 2 - 10"
+                        text-anchor="middle"
+                        dominant-baseline="central"
+                        class="connection-weight-label">
+                        {{ line.weight }}
+                    </text>
+                </g>
+            </ng-container>
+
+            <ng-container *ngFor="let element of drawnElements(); trackBy: trackElementById">
+                <g
+                    class="element-wrapper"
+                    [attr.data-element-id]="element.id"
+                    [class.is-hovered]="hoveredElementId() === element.id"
+                    (mouseenter)="draw.setHoveredElementId(element.id)"
+                    (mouseleave)="draw.setHoveredElementId(null)">
+                    <g
+                        appSvgNode
+                        [diagramNode]="element.node"
+                        [selected]="selectedElementId() === element.id"
+                        [showInnerLabel]="false"
+                        [transitionLabelPlacement]="'inside'" />
+                    <rect
+                        class="drag-overlay"
+                        [attr.x]="element.node.x - 40"
+                        [attr.y]="element.node.y - 40"
+                        width="80"
+                        height="80"
+                        fill="none"
+                        stroke="none"
+                        pointer-events="all"
+                        style="cursor: move"
+                        (mousedown)="onElementMouseDown($event, element)"
+                        (contextmenu)="onElementRightClick($event, element)"
+                        (dblclick)="onElementDoubleClick($event, element)"
+                        (wheel)="onElementWheel($event, element)" />
+                </g>
+            </ng-container>
+        </svg>
+    </div>
+</div>

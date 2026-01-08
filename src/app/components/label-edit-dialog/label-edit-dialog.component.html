@@ -1,0 +1,13 @@
+<h2 mat-dialog-title>{{ data.title | translate }}</h2>
+<mat-dialog-content>
+    <mat-form-field appearance="outline" floatLabel="always" class="full-width">
+        <mat-label>{{ 'DRAW.EDIT_LABEL' | translate }}</mat-label>
+        <input matInput [(ngModel)]="label" (keyup.enter)="save()" />
+    </mat-form-field>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+    <button mat-button (click)="cancel()">{{ 'CANCEL' | translate }}</button>
+    <button mat-raised-button color="primary" (click)="save()" [disabled]="!label.trim()">
+        {{ 'RENAME' | translate }}
+    </button>
+</mat-dialog-actions>

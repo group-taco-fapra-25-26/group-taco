@@ -19,7 +19,7 @@
     "NEW_SEQUENCE": "Neue Sequenz",
     "VALIDATE_SEQUENCES": "Sequenzen validieren",
     "FIND_SEQUENCES": "Sequenzen finden...",
-    "START": "Start",
+    "RENAME": "Umbenennen",
     "CANCEL": "Abbrechen",
     "SAVE_AS": "Speichern unter...",
     "SAVE_AS_JSON": "Speichern als JSON",
@@ -34,10 +34,37 @@
         "LABEL": "Tupel String",
         "BUTTON_TOOLTIP": "Tupel eingeben",
         "GENERATE": "Generieren",
+        "VALIDATE": "Validieren",
+        "PLACE": "+ Stelle",
+        "TRANSITION": "+ Transition",
+        "CONTROLS": "Ziehen Sie Elemente, um neue Stellen und Transitionen zu erstellen. Rechtsklicken Sie eine Transition und eine Stelle, um eine Verbindung zwischen ihnen zu erstellen. Scrollen Sie auf einer Verbindung nach oben oder unten, um ihr Gewicht zu ändern, oder auf einer Stelle, um ihre Markierung zu ändern. Mittelklick entfernt eine Stelle, Transition oder Verbindung. Doppelklicken Sie eine Transition oder Stelle, um sie umzubenennen.",
         "TOAST_SUCCESS_BODY": "Tupel erfolgreich verarbeitet",
         "TOAST_SUCCESS_HEADER": "Netz geladen",
+        "TOAST_VALIDATION_HEADER": "Richtige Zeichnung",
+        "TOAST_VALIDATION_BODY": "Tupel und Zeichnung stimmen überein",
         "TOAST_ERROR_HEADER": "Ungültiges Tupel",
-        "TOAST_ERROR_BODY": "Das angegebene Tupel konnte nicht geparst werden."
+        "TOAST_ERROR_BODY": "Das angegebene Tupel konnte nicht geparst werden.",
+        "TOAST_INVALIDATION_HEADER": "Zeichnung stimmt nicht überein",
+        "TOAST_INVALIDATION_BODY": "Tupel und Zeichnung stimmen nicht überein",
+        "VALIDATION": {
+            "MISSING_PLACES": "Fehlende Stellen: {{items}}",
+            "EXTRA_PLACES": "Zusätzliche Stellen: {{items}}",
+            "MISSING_TRANSITIONS": "Fehlende Transitionen: {{items}}",
+            "EXTRA_TRANSITIONS": "Zusätzliche Transitionen: {{items}}",
+            "MISSING_ARC": "Fehlender Bogen: {{arc}}",
+            "EXTRA_ARC": "Zusätzlicher Bogen: {{arc}}",
+            "ARC_WEIGHT_MISMATCH": "Bogengewicht stimmt nicht bei {{arc}}: erwartet {{expected}}, gefunden {{found}}",
+            "TOKENS_MISSING": "{{count}} Marke(n) fehlen bei {{place}} (erwartet {{expected}}, gefunden {{found}})",
+            "TOKENS_EXTRA": "{{count}} Marke(n) zu viel bei {{place}} (erwartet {{expected}}, gefunden {{found}})",
+            "TOKENS_UNEXPECTED": "Unerwartete Marken bei {{place}}: gefunden {{found}}"
+        }
+    },
+    "DRAW": {
+        "PROMPT_EDIT_PLACE_TITLE": "Stellenbeschriftung bearbeiten",
+        "PROMPT_EDIT_TRANSITION_TITLE": "Transitionsbeschriftung bearbeiten",
+        "EDIT_LABEL": "Beschriftung",
+        "TOAST_DUPLICATE_LABEL_HEADER": "Doppelte Beschriftung",
+        "TOAST_DUPLICATE_LABEL_BODY": "Die Beschriftung '{{label}}' wird bereits verwendet. Bitte wähle eine eindeutige Beschriftung."
     },
     "HEADER_SUBTITLE": "Fachpraktikum Programmiersysteme WiSe25/26 von Marie G., Florian M., Ben L. und Alexander K.",
     "TOASTER": {
