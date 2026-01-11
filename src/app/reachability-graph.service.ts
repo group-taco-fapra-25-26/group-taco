@@ -117,31 +117,36 @@ export class ReachabilityGraphService {
 
             if (existingNodeLabel === currentReachabilityLabel) {
                 markingExists = true;
-                currentRgId=graph.nodes[i].id;
-                
+                currentRgId = graph.nodes[i].id;
+
+
                 // Vorhandensein der Verbindung prüfen, wenn Markierung bereits existiert;
                 // so wird sichergestellt, dass eine Markierung, die von einer anderen Transiion
                 // erzeugt wurde, ebenfalls verbunden bzw. eingefügt wird
                 //displayLabel, source und target der Verbindungen vergleichen, um Gleichheit eindeutig zu prüfen
                 for (let j = 0; j < graph.edges.length; j++) {
                     const existingArcDisplayLabel: string = graph.edges[j].displayLabel;
-                    const existingArcSource:string=graph.edges[j].source;
-                    const existingArcTarget:string=graph.edges[j].target;
-                    
-                    if(existingArcDisplayLabel===label && existingArcSource===this.currentSourceRgId && existingArcTarget===currentReachabilityLabel){
-                        connectionExists=true;                        
+                    const existingArcSource: string = graph.edges[j].source;
+                    const existingArcTarget: string = graph.edges[j].target;
+
+                    if (
+                        existingArcDisplayLabel === label &&
+                        existingArcSource === this.currentSourceRgId &&
+                        existingArcTarget === currentRgId
+                    ) {
+                        connectionExists = true;
                     }
                 }
             }
         }
 
-            //TO-DO Nächste 4 Zeilen Löschen nach Testung
-            //Zustand nach Schalten / Target für Arcs
-            // const currentReachabilityLabel: string = Object.entries(firingEntry.endMarking)
-            //     .map(([, value]) => `${value}`)
-            //     .join(' ');
-            
-            if (!markingExists && !connectionExists) {
+        //TO-DO Nächste 4 Zeilen Löschen nach Testung
+        //Zustand nach Schalten / Target für Arcs
+        // const currentReachabilityLabel: string = Object.entries(firingEntry.endMarking)
+        //     .map(([, value]) => `${value}`)
+        //     .join(' ');
+
+        if (!markingExists && !connectionExists) {
             // neuer Knoten und neue Kante
 
             //TODO: Nächste 3 Zeilen Löschen nach Testung
@@ -181,11 +186,10 @@ export class ReachabilityGraphService {
                 newGraph.edges = [...graph.edges, currentFiringEdge];
                 return newGraph;
             });
-
         }
-        
+
         if (markingExists && !connectionExists) {
-        // neue Kante zu vorhandenem Markierungsknoten 
+            // neue Kante zu vorhandenem Markierungsknoten
             const currentFiringEdge = new FiringEdge(
                 currentRgEdgeId,
                 this.currentSourceRgId,
@@ -200,27 +204,24 @@ export class ReachabilityGraphService {
                 newGraph.edges = [...graph.edges, currentFiringEdge];
                 return newGraph;
             });
-        
+            this._notificationService.showInfo('TOASTER.HEADER.STATENODE_EXISTING', 'TOASTER.BODY.STATENODE_EXISTING');
+        }
+
+        if (markingExists && connectionExists) {
+            // State wechseln, damit Hinzufügen beim ächsten aufruf der Methode an der richtigen Stelle passiert
+            //wird nach Durchlaufen aller if-Schleifen getriggert
+            this._notificationService.showInfo(
+                'TOASTER.HEADER.STATENODE_ARC_EXISTING',
+                'TOASTER.BODY.STATENODE_ARC_EXISTING',
+            );
+        }
+
+        //change target to new source for arcs
+        this.currentSourceRgId = currentRgId;
+
+        console.log(currentReachabilityLabel);
+        //nur 3 Fälle, !markingExists && connectionExists kann nicht auftreten
     }
-    
-    
-    
-    if (markingExists && connectionExists) {
-        // State wechseln, damit Hinzufügen beim ächsten aufruf der Methode an der richtigen Stelle passiert
-        //wird nach Durchlaufen aller if-Schleifen getriggert
-    }
-    
-    //change target to new source for arcs
-    this.currentSourceRgId = currentRgId;
-
-    console.log(currentReachabilityLabel);
-    //nur 3 Fälle, !markingExists && connectionExists kann nicht auftreten
-    }
-
-
-
-
-
 
     /**
      * Changes state of the PetriNet to the State of a ReachabilityGraph StateNode, meaning the marking is adjusted.
@@ -249,6 +250,8 @@ export class ReachabilityGraphService {
                 'Old PN nodes:  ' + oldPetriNet.allNodes + '      ' + 'marking  ' + oldPetriNet.currentMarking$,
             );
             oldPetriNet.marking = node.rGMarking;
+            //change state of net
+            this.currentSourceRgId = node.id;
 
             oldPetriNet.updateMarking();
             this._sourceNetService.updateEditedNet(oldPetriNet, { triggeredByFiring: false });

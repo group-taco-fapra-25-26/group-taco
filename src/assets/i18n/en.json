@@ -79,7 +79,8 @@
             "PARSER_ERROR": "Parser error",
             "PROCESSING_ERROR": "Processing error",
             "START_POSITION": "Start position",
-            "VALIDATION": "Validation"
+            "VALIDATION": "Validation",
+            "STATENODE_ARC_EXISTING": "StateNode and arc exist"
         },
         "BODY": {
             "NO_NET_TO_SAVE": "There is no Petri net to save.",
@@ -99,7 +100,8 @@
             "VALIDATION_VALID_MAXIMAL": "The process net is valid and maximal.",
             "VALIDATION_VALID_WITH_INFOS": "The process net is valid.",
             "VALIDATION_INVALID": "The process net is invalid.",
-            "SWITCHED_STATE_SUCCESSFULLY": "Petri Net marking was successfully switched to corresponding state."
+            "SWITCHED_STATE_SUCCESSFULLY": "Petri Net marking was successfully switched to corresponding state.",
+            "STATENODE_ARC_EXISTING": "StateNode and arc already exist, state of RG was updated."
         },
         "VALIDATION_MESSAGES": {
             "TRANSITION_NO_MATCH": "❌ Transition {{label}} has no matching label in the Petri net.",
