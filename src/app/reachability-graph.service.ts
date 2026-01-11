@@ -119,20 +119,6 @@ export class ReachabilityGraphService {
                 // erzeugt wurde, ebenfalls verbunden bzw. eingefügt wird
                 // direkt anhand EGVerbindung prüfen, da ID uneindeutig
                 //displayLabel, source und target der Verbindung vergleichen, um Gleichheit zu prüfen
-
-                //Prüfung auf Vorhandensein der Verbindung:
-                // public void erzeugeEgVerbindungsHauptID() {
-                // 	String tempIDErzeugungsID = (egVerbindungsTransitionsID + markierungsSourceID + markierungsTargetID);
-                // 	setEgVerbindungsHauptID(tempIDErzeugungsID);
-                // }
-
-                // for (int k = 0; k < egNachfolgerEGVerbindungsListe.size(); k++) {
-                // 							String pruefTransitionsID = egNachfolgerEGVerbindungsListe.get(k).getEgVerbindungsHauptID();
-
-                // 							if (pruefTransitionsID == hinzugefuegteMarkierung.getMarkierungsEGVerbindung()
-                // 									.getEgVerbindungsHauptID()) {
-                // 								// identische Verbindung ist bereits vorhanden
-                // 								verbindungVorhanden = true;
             }
         }
 
@@ -141,57 +127,53 @@ export class ReachabilityGraphService {
         // Position auf Listenende setzen
         //schon vorhandene Methode
 
-
-
         //Zustand nach Schalten / Target für Arcs
-        
+
         // const currentReachabilityLabel: string = Object.entries(firingEntry.endMarking)
         //     .map(([, value]) => `${value}`)
         //     .join(' ');
 
-
-        if(!markingExists && !connectionExists){
-
+        if (!markingExists && !connectionExists) {
             // const graph = this._reachabilityGraph();
             const nextNodeIndex = graph.nodes.length + 1;
             const currentRgId = 'RG' + nextNodeIndex;
-            
+
             //x und y Startwert konstant festlegen
-        const currentX: number = 300 + graph.nodes.length * 100;
-        const currentY: number = 50 + graph.nodes.length * 100;
-        
-        //neuen StateNode erzeugen
-        const currentStateNode = new StateNode(
-            currentRgId,
-            currentX,
-            currentY,
-            currentReachabilityLabel,
-            firingEntry.endMarking as Record<string, number>,
-        );
-        
-        const nextEdgeIndex = graph.edges.length + 1;
-        const currentRgEdgeId = 'Edge' + nextEdgeIndex;
+            const currentX: number = 300 + graph.nodes.length * 100;
+            const currentY: number = 50 + graph.nodes.length * 100;
 
-        const currentFiringEdge = new FiringEdge(
-            currentRgEdgeId,
-            this.currentSourceRgId,
-            currentRgId,
-            label,
-            firingEntry.firingSequence,
-        );
-        
-        this._reachabilityGraph.update((graph) => {
-            const newGraph = new ReachabilityGraph();
-            newGraph.nodes = [...graph.nodes, currentStateNode];
-            newGraph.edges = [...graph.edges, currentFiringEdge];
-            return newGraph;
-        });
+            //neuen StateNode erzeugen
+            const currentStateNode = new StateNode(
+                currentRgId,
+                currentX,
+                currentY,
+                currentReachabilityLabel,
+                firingEntry.endMarking as Record<string, number>,
+            );
 
-        //change target to new source for arcs
-        this.currentSourceRgId = currentRgId;
-        
-        console.log(currentReachabilityLabel);
-    }
+            const nextEdgeIndex = graph.edges.length + 1;
+            const currentRgEdgeId = 'Edge' + nextEdgeIndex;
+
+            const currentFiringEdge = new FiringEdge(
+                currentRgEdgeId,
+                this.currentSourceRgId,
+                currentRgId,
+                label,
+                firingEntry.firingSequence,
+            );
+
+            this._reachabilityGraph.update((graph) => {
+                const newGraph = new ReachabilityGraph();
+                newGraph.nodes = [...graph.nodes, currentStateNode];
+                newGraph.edges = [...graph.edges, currentFiringEdge];
+                return newGraph;
+            });
+
+            //change target to new source for arcs
+            this.currentSourceRgId = currentRgId;
+
+            console.log(currentReachabilityLabel);
+        }
 
         // if (markierungVorhanden == true && verbindungVorhanden == false) {
         // neue Kante zu vorhandenem Markierungsknoten -- Position in ArrayList
