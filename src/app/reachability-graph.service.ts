@@ -113,27 +113,31 @@ export class ReachabilityGraphService {
 
             if (existingNodeLabel === currentReachabilityLabel) {
                 markingExists = true;
-
+                
                 // Vorhandensein der Verbindung prüfen, wenn Markierung bereits existiert;
                 // so wird sichergestellt, dass eine Markierung, die von einer anderen Transiion
                 // erzeugt wurde, ebenfalls verbunden bzw. eingefügt wird
-                // direkt anhand EGVerbindung prüfen, da ID uneindeutig
-                //displayLabel, source und target der Verbindung vergleichen, um Gleichheit zu prüfen
+                //displayLabel, source und target der Verbindung vergleichen, um Gleichheit eindeutig zu prüfen
+                for (let j = 0; j < graph.edges.length; j++) {
+                    const existingArcDisplayLabel: string = graph.edges[j].displayLabel;
+                    const existingArcSource:string=graph.edges[j].source;
+                    const existingArcTarget:string=graph.edges[j].target;
+                    
+                    if(existingArcDisplayLabel===label && existingArcSource===this.currentSourceRgId && existingArcTarget===currentReachabilityLabel){
+                        connectionExists=true;                        
+                    }
+                }
             }
         }
 
-        // if (markierungVorhanden == false && verbindungVorhanden == false) {
-        // neuer Knoten und neue Kante
-        // Position auf Listenende setzen
-        //schon vorhandene Methode
-
-        //Zustand nach Schalten / Target für Arcs
-
-        // const currentReachabilityLabel: string = Object.entries(firingEntry.endMarking)
-        //     .map(([, value]) => `${value}`)
-        //     .join(' ');
-
-        if (!markingExists && !connectionExists) {
+            //TO-DO Nächste 4 Zeilen Löschen nach Testung
+            //Zustand nach Schalten / Target für Arcs
+            // const currentReachabilityLabel: string = Object.entries(firingEntry.endMarking)
+            //     .map(([, value]) => `${value}`)
+            //     .join(' ');
+            
+            if (!markingExists && !connectionExists) {
+            // neuer Knoten und neue Kante
             // const graph = this._reachabilityGraph();
             const nextNodeIndex = graph.nodes.length + 1;
             const currentRgId = 'RG' + nextNodeIndex;
@@ -175,17 +179,24 @@ export class ReachabilityGraphService {
             console.log(currentReachabilityLabel);
         }
 
-        // if (markierungVorhanden == true && verbindungVorhanden == false) {
-        // neue Kante zu vorhandenem Markierungsknoten -- Position in ArrayList
-        // entspricht markierungsListenPosition
+        if (markingExists && !connectionExists) {
+        // neue Kante zu vorhandenem Markierungsknoten 
+        }
 
-        // dann Verbindungen ziehen
 
-        // if (markierungVorhanden == true && verbindungVorhanden == true) {
+
+        if (markingExists && connectionExists) {
         // nichts tun
         // aber anzahlKnoten und Kanten zur Sicherheit aktualisieren
-        // Knotenzahl setzen
+        }
+
+    //only 3 cases, since !markingExists && connectionExists cannot occur
     }
+
+
+
+
+
 
     /**
      * Changes state of the PetriNet to the State of a ReachabilityGraph StateNode, meaning the marking is adjusted.
