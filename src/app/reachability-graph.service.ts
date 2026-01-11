@@ -98,8 +98,8 @@ export class ReachabilityGraphService {
      * @param label The label of the fired transition.
      */
     convertFiringEntryLabelToReachabilityGraphID(firingEntry: FiringEntry, label: string) {
-        let markingExists: boolean = false;
-        let connectionExists: boolean = false;
+        let markingExists = false;
+        let connectionExists = false;
 
         const currentReachabilityLabel: string = Object.entries(firingEntry.endMarking)
             .map(([, value]) => `${value}`)
@@ -118,7 +118,6 @@ export class ReachabilityGraphService {
             if (existingNodeLabel === currentReachabilityLabel) {
                 markingExists = true;
                 currentRgId = graph.nodes[i].id;
-
 
                 // Vorhandensein der Verbindung prüfen, wenn Markierung bereits existiert;
                 // so wird sichergestellt, dass eine Markierung, die von einer anderen Transiion
@@ -255,7 +254,7 @@ export class ReachabilityGraphService {
 
             oldPetriNet.updateMarking();
             this._sourceNetService.updateEditedNet(oldPetriNet, { triggeredByFiring: false });
-            console.log('Changed PN:' + oldPetriNet.currentMarking$);
+            // console.log('Changed PN:' + oldPetriNet.currentMarking$);
             this._notificationService.showSuccess('TOASTER.HEADER.SUCCESS', 'TOASTER.BODY.SWITCHED_STATE_SUCCESSFULLY');
         }
     }
