@@ -79,7 +79,6 @@ export class ReachabilityGraphService {
             //TO-DO Startmarkierung hervorheben, eingehender Arc aus dem Ursprung
             // const initialEdge = new FiringEdge('Initial', 'Initial', initialId, 'Initial','Initial');
 
-
             const newGraph = new ReachabilityGraph();
             newGraph.nodes = [initialStateNode];
             newGraph.edges = [];
@@ -99,23 +98,68 @@ export class ReachabilityGraphService {
      * @param label The label of the fired transition.
      */
     convertFiringEntryLabelToReachabilityGraphID(firingEntry: FiringEntry, label: string) {
+        let markingExists: boolean = false;
+        let connectionExists: boolean = false;
 
-	// boolean markierungVorhanden = false;
-	// 	boolean verbindungVorhanden = false;
-
-        //Zustand nach Schalten / Target für Arcs
         const currentReachabilityLabel: string = Object.entries(firingEntry.endMarking)
             .map(([, value]) => `${value}`)
             .join(' ');
 
         const graph = this._reachabilityGraph();
-        const nextNodeIndex = graph.nodes.length + 1;
-        const currentRgId = 'RG' + nextNodeIndex;
 
-        //x und y Startwert konstant festlegen
+        //prüfen, ob aktuelle Markierung bereits vorhanden
+        for (let i = 0; i < graph.nodes.length; i++) {
+            const existingNodeLabel: string = graph.nodes[i].label;
+
+            if (existingNodeLabel === currentReachabilityLabel) {
+                markingExists = true;
+
+                // Vorhandensein der Verbindung prüfen, wenn Markierung bereits existiert;
+                // so wird sichergestellt, dass eine Markierung, die von einer anderen Transiion
+                // erzeugt wurde, ebenfalls verbunden bzw. eingefügt wird
+                // direkt anhand EGVerbindung prüfen, da ID uneindeutig
+                //displayLabel, source und target der Verbindung vergleichen, um Gleichheit zu prüfen
+
+                //Prüfung auf Vorhandensein der Verbindung:
+                // public void erzeugeEgVerbindungsHauptID() {
+                // 	String tempIDErzeugungsID = (egVerbindungsTransitionsID + markierungsSourceID + markierungsTargetID);
+                // 	setEgVerbindungsHauptID(tempIDErzeugungsID);
+                // }
+
+                // for (int k = 0; k < egNachfolgerEGVerbindungsListe.size(); k++) {
+                // 							String pruefTransitionsID = egNachfolgerEGVerbindungsListe.get(k).getEgVerbindungsHauptID();
+
+                // 							if (pruefTransitionsID == hinzugefuegteMarkierung.getMarkierungsEGVerbindung()
+                // 									.getEgVerbindungsHauptID()) {
+                // 								// identische Verbindung ist bereits vorhanden
+                // 								verbindungVorhanden = true;
+            }
+        }
+
+        // if (markierungVorhanden == false && verbindungVorhanden == false) {
+        // neuer Knoten und neue Kante
+        // Position auf Listenende setzen
+        //schon vorhandene Methode
+
+
+
+        //Zustand nach Schalten / Target für Arcs
+        
+        // const currentReachabilityLabel: string = Object.entries(firingEntry.endMarking)
+        //     .map(([, value]) => `${value}`)
+        //     .join(' ');
+
+
+        if(!markingExists && !connectionExists){
+
+            // const graph = this._reachabilityGraph();
+            const nextNodeIndex = graph.nodes.length + 1;
+            const currentRgId = 'RG' + nextNodeIndex;
+            
+            //x und y Startwert konstant festlegen
         const currentX: number = 300 + graph.nodes.length * 100;
         const currentY: number = 50 + graph.nodes.length * 100;
-
+        
         //neuen StateNode erzeugen
         const currentStateNode = new StateNode(
             currentRgId,
@@ -124,33 +168,9 @@ export class ReachabilityGraphService {
             currentReachabilityLabel,
             firingEntry.endMarking as Record<string, number>,
         );
-
+        
         const nextEdgeIndex = graph.edges.length + 1;
         const currentRgEdgeId = 'Edge' + nextEdgeIndex;
-
-
-// Vorhandensein der Verbindung prüfen, wenn Markierung bereits existiert;
-						// so wird sichergestellt, dass eine Markierung, die von einer anderen Transiion
-						// erzeugt wurde, ebenfalls verbunden bzw. eingefügt wird
-						// direkt anhand EGVerbindung prüfen, da ID uneindeutig
-						// es wird die EG-VerbindungsHauotID der geschalteten Transition
-						// überprüft, um alle Fälle abzudecken (Verbindung da, aber anderes t,
-						// Verbindung nicht da)
-
-
-        //Prüfung auf Vorhandensein der Verbindung:
-        	// public void erzeugeEgVerbindungsHauptID() {
-	// 	String tempIDErzeugungsID = (egVerbindungsTransitionsID + markierungsSourceID + markierungsTargetID);
-	// 	setEgVerbindungsHauptID(tempIDErzeugungsID);
-	// }
-
-// for (int k = 0; k < egNachfolgerEGVerbindungsListe.size(); k++) {
-// 							String pruefTransitionsID = egNachfolgerEGVerbindungsListe.get(k).getEgVerbindungsHauptID();
-
-// 							if (pruefTransitionsID == hinzugefuegteMarkierung.getMarkierungsEGVerbindung()
-// 									.getEgVerbindungsHauptID()) {
-// 								// identische Verbindung ist bereits vorhanden
-// 								verbindungVorhanden = true;
 
         const currentFiringEdge = new FiringEdge(
             currentRgEdgeId,
@@ -159,7 +179,7 @@ export class ReachabilityGraphService {
             label,
             firingEntry.firingSequence,
         );
-
+        
         this._reachabilityGraph.update((graph) => {
             const newGraph = new ReachabilityGraph();
             newGraph.nodes = [...graph.nodes, currentStateNode];
@@ -169,8 +189,20 @@ export class ReachabilityGraphService {
 
         //change target to new source for arcs
         this.currentSourceRgId = currentRgId;
-
+        
         console.log(currentReachabilityLabel);
+    }
+
+        // if (markierungVorhanden == true && verbindungVorhanden == false) {
+        // neue Kante zu vorhandenem Markierungsknoten -- Position in ArrayList
+        // entspricht markierungsListenPosition
+
+        // dann Verbindungen ziehen
+
+        // if (markierungVorhanden == true && verbindungVorhanden == true) {
+        // nichts tun
+        // aber anzahlKnoten und Kanten zur Sicherheit aktualisieren
+        // Knotenzahl setzen
     }
 
     /**
