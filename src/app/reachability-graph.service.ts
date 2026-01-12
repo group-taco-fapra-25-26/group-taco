@@ -212,7 +212,7 @@ export class ReachabilityGraphService {
         }
 
         if (markingExists && connectionExists) {
-            // State wechseln, damit Hinzufügen beim ächsten aufruf der Methode an der richtigen Stelle passiert
+            // State wechseln, damit Hinzufügen beim nächsten Aufruf der Methode an der richtigen Stelle passiert
             //wird nach Durchlaufen aller if-Schleifen getriggert
             this._notificationService.showInfo(
                 'TOASTER.HEADER.STATENODE_ARC_EXISTING',
@@ -225,6 +225,9 @@ export class ReachabilityGraphService {
 
         console.log(currentReachabilityLabel);
         //nur 3 Fälle, !markingExists && connectionExists kann nicht auftreten
+
+        //check for infinity after addition of each StateNode
+        this.checkForInfinity();
     }
 
     /**
@@ -262,5 +265,34 @@ export class ReachabilityGraphService {
             // console.log('Changed PN:' + oldPetriNet.currentMarking$);
             this._notificationService.showSuccess('TOASTER.HEADER.SUCCESS', 'TOASTER.BODY.SWITCHED_STATE_SUCCESSFULLY');
         }
+    }
+
+    /**
+     * Method to check for infinity of Reachability Graph.
+     * Triggered after each firing of a transition in the Petri Net.
+     */
+    checkForInfinity() {}
+
+    /**
+     * Compares Marking of StateNode with Marking of previous StateNode to check for "real growth".
+     * Returns "true" when current marking "bigger" than previous marking on same path.
+     * Needed for InfinityCheck.
+     * @param currentlyVisitedMarking
+     * @param previouslyVisitedMarking
+     */
+    compareTwoMarkings(
+        currentlyVisitedMarking: Record<string, number>,
+        previouslyVisitedMarking: Record<string, number>,
+    ): boolean {
+        let currentMarkingHigher = true;
+
+        const currentPlaceMarking = Object.values(currentlyVisitedMarking);
+        const previousPlaceMarking = Object.values(previouslyVisitedMarking);
+
+        for (let i = 0; i < currentPlaceMarking.length; i++) {
+            if (previousPlaceMarking[i] > currentPlaceMarking[i]) currentMarkingHigher = false;
+        }
+
+        return currentMarkingHigher;
     }
 }

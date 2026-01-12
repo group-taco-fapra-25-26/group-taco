@@ -2,6 +2,7 @@ import { DisplayableEdge, DisplayableGraph, DisplayableNode } from './displayabl
 import { SHAPE } from './diagram/diagram-node';
 import { Coords } from './json-petri-net';
 import { signal, Signal, WritableSignal } from '@angular/core';
+import { Visited } from './visited';
 
 /**
  * A node representing a state in the reachability graph.
@@ -12,7 +13,7 @@ export class StateNode implements DisplayableNode {
     _y: WritableSignal<number>;
     label: string;
     rGMarking: Record<string, number>;
-
+    NodeVisitedState: Visited = Visited.WHITE;
     //To-Do: is StartNode :true -- kann aber trotzdem Vorgänger haben
 
     get shape(): SHAPE {
@@ -77,6 +78,7 @@ export class FiringEdge implements DisplayableEdge {
 export class ReachabilityGraph implements DisplayableGraph {
     nodes: StateNode[] = [];
     edges: FiringEdge[] = [];
+    isUnlimited = false;
 
     getNodes(): DisplayableNode[] {
         return this.nodes;
