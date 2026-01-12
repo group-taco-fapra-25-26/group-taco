@@ -74,7 +74,7 @@ export class ReachabilityGraphService {
                 initialReachabilityLabel,
                 this._startMarkingRG,
             );
-            initialStateNode.isStartingState=true;
+            initialStateNode.isStartingState = true;
 
             //TO-DO Startmarkierung hervorheben, eingehender Arc aus dem Ursprung
             // const initialEdge = new FiringEdge('Initial', 'Initial', initialId, 'Initial','Initial');
@@ -110,8 +110,8 @@ export class ReachabilityGraphService {
         let currentRgId = 'RG' + nextNodeIndex;
         const nextEdgeIndex = graph.edges.length + 1;
         const currentRgEdgeId = 'Edge' + nextEdgeIndex;
-        let compareSourceStateNode:StateNode;
-        let compareTargetStateNode:StateNode;
+        let compareSourceStateNode: StateNode;
+        let compareTargetStateNode: StateNode;
 
         //prüfen, ob aktuelle Zielmarkierung bereits vorhanden
         for (let i = 0; i < graph.nodes.length; i++) {
@@ -120,7 +120,7 @@ export class ReachabilityGraphService {
             if (existingNodeLabel === currentReachabilityLabel) {
                 markingExists = true;
                 currentRgId = graph.nodes[i].id;
-                compareTargetStateNode=graph.nodes[i];
+                compareTargetStateNode = graph.nodes[i];
 
                 // Vorhandensein der Verbindung prüfen, wenn Markierung bereits existiert;
                 // so wird sichergestellt, dass eine Markierung, die von einer anderen Transiion
@@ -188,10 +188,6 @@ export class ReachabilityGraphService {
                 firingEntry.firingSequence,
             );
 
-            
-            
-            
-            
             this._reachabilityGraph.update((graph) => {
                 const newGraph = new ReachabilityGraph();
                 newGraph.nodes = [...graph.nodes, currentStateNode];
@@ -199,18 +195,15 @@ export class ReachabilityGraphService {
                 return newGraph;
             });
 
-
             //add predecessors and successors to StateNodes
             for (let l = 0; l < graph.nodes.length; l++) {
-                compareSourceStateNode=graph.nodes[l];
-                
-                if(compareSourceStateNode.id=== this.currentSourceRgId){
-                currentStateNode.predecessors.push(compareSourceStateNode);
-                compareSourceStateNode.successors.push(currentStateNode);               
+                compareSourceStateNode = graph.nodes[l];
+
+                if (compareSourceStateNode.id === this.currentSourceRgId) {
+                    currentStateNode.predecessors.push(compareSourceStateNode);
+                    compareSourceStateNode.successors.push(currentStateNode);
                 }
-                
             }
-            
         }
 
         if (markingExists && !connectionExists) {
@@ -232,21 +225,17 @@ export class ReachabilityGraphService {
 
             //add predecessors and successors to StateNodes
             for (let m = 0; m < graph.nodes.length; m++) {
-                compareSourceStateNode=graph.nodes[m];
-                
+                compareSourceStateNode = graph.nodes[m];
 
                 //TO-DO check for better way than ! or check that value can never be unassigned
-                if(compareSourceStateNode.id=== this.currentSourceRgId){
+                if (compareSourceStateNode.id === this.currentSourceRgId) {
                     compareTargetStateNode!.predecessors.push(compareSourceStateNode);
-                    compareSourceStateNode.successors.push(compareTargetStateNode!);               
-                    }
+                    compareSourceStateNode.successors.push(compareTargetStateNode!);
                 }
-                
-                this._notificationService.showInfo('TOASTER.HEADER.STATENODE_EXISTING', 'TOASTER.BODY.STATENODE_EXISTING');
             }
 
-
-        
+            this._notificationService.showInfo('TOASTER.HEADER.STATENODE_EXISTING', 'TOASTER.BODY.STATENODE_EXISTING');
+        }
 
         if (markingExists && connectionExists) {
             // State wechseln, damit Hinzufügen beim nächsten Aufruf der Methode an der richtigen Stelle passiert
@@ -309,40 +298,24 @@ export class ReachabilityGraphService {
      * Triggered after each firing of a transition in the Petri Net.
      */
     checkForInfinity() {
-// Abbruch, wenn unbeschränkt oder alles Möglichkeiten geschaltet, also
-		// beschränkter EG vollständig 
-// Marken jeder Stelle einzeln vergleichen, um Kriterium zu
-		// erfüllen, sonst ungültig!
-		// Dann Kombination aus "alle StellenMarken >= und zusätzlich Summe höher bildet
-		// dannd as vollstaendige Unbeschraenktheitskriterium.
-
-
-		// wenn kleinere Markierung gefunden --> unbeschränkt true -->teil von
-		// mundmStrich =true für hinzugefuegte und gefundene Markierung
-		// --> vorabgeschaltete Transition als Teil des Pfades markieren (für alle
-		// Markierungen außer die letzte, da dort null)
-
-		// wenn nichts gefunden --> immer wieder vergleichen, bis kleinere Markierung
-		// gefunden (dann wie oben markieren) oder bis keine weiteren Vorgänger
-
-		// besucht-Status für jede Markierung, damit man beim Prüfen nicht
-		// rückwärts in Kreise läuft
-		// zunächst alle Markierungen auf unbesucht
-
-
-// if (egUnbeschraenktheitsPruefMarkierung.getMarkierungsMarkenSumme() > direkterVorgaengerMarkierungsSumme
-// 						&& einzelStellenMarkenDerPruefMarkierungGroesserGleichVorgaenger && !egUnbeschraenkt) {
-// 					System.out.println("Unbeschränkt 
-
-
-
-
-
-
-
-
-
-
+        // Abbruch, wenn unbeschränkt oder alles Möglichkeiten geschaltet, also
+        // beschränkter EG vollständig
+        // Marken jeder Stelle einzeln vergleichen, um Kriterium zu
+        // erfüllen, sonst ungültig!
+        // Dann Kombination aus "alle StellenMarken >= und zusätzlich Summe höher bildet
+        // dannd as vollstaendige Unbeschraenktheitskriterium.
+        // wenn kleinere Markierung gefunden --> unbeschränkt true -->teil von
+        // mundmStrich =true für hinzugefuegte und gefundene Markierung
+        // --> vorabgeschaltete Transition als Teil des Pfades markieren (für alle
+        // Markierungen außer die letzte, da dort null)
+        // wenn nichts gefunden --> immer wieder vergleichen, bis kleinere Markierung
+        // gefunden (dann wie oben markieren) oder bis keine weiteren Vorgänger
+        // besucht-Status für jede Markierung, damit man beim Prüfen nicht
+        // rückwärts in Kreise läuft
+        // zunächst alle Markierungen auf unbesucht
+        // if (egUnbeschraenktheitsPruefMarkierung.getMarkierungsMarkenSumme() > direkterVorgaengerMarkierungsSumme
+        // 						&& einzelStellenMarkenDerPruefMarkierungGroesserGleichVorgaenger && !egUnbeschraenkt) {
+        // 					System.out.println("Unbeschränkt
     }
 
     /**

@@ -14,9 +14,9 @@ export class StateNode implements DisplayableNode {
     label: string;
     rGMarking: Record<string, number>;
     NodeVisitedState: Visited = Visited.WHITE;
-    isStartingState =false;
-    predecessors: StateNode[]= [];
-    successors: StateNode[]= [];
+    isStartingState = false;
+    predecessors: StateNode[] = [];
+    successors: StateNode[] = [];
 
     get shape(): SHAPE {
         return SHAPE.CIRCLE;
