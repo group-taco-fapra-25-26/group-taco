@@ -271,7 +271,27 @@ export class ReachabilityGraphService {
      * Method to check for infinity of Reachability Graph.
      * Triggered after each firing of a transition in the Petri Net.
      */
-    checkForInfinity() {}
+    checkForInfinity() {
+// Abbruch, wenn unbeschränkt oder alles Möglichkeiten geschaltet, also
+		// beschränkter EG vollständig 
+// Marken jeder Stelle einzeln vergleichen, um Kriterium zu
+		// erfüllen, sonst ungültig!
+		// Dann Kombination aus "alle StellenMarken >= und zusätzlich Summe höher bildet
+		// dannd as vollstaendige Unbeschraenktheitskriterium.
+
+
+		// wenn kleinere Markierung gefunden --> unbeschränkt true -->teil von
+		// mundmStrich =true für hinzugefuegte und gefundene Markierung
+		// --> vorabgeschaltete Transition als Teil des Pfades markieren (für alle
+		// Markierungen außer die letzte, da dort null)
+
+		// wenn nichts gefunden --> immer wieder vergleichen, bis kleinere Markierung
+		// gefunden (dann wie oben markieren) oder bis keine weiteren Vorgänger
+
+		// besucht-Status für jede Markierung, damit man beim Prüfen nicht
+		// rückwärts in Kreise läuft
+		// zunächst alle Markierungen auf unbesucht
+    }
 
     /**
      * Compares Marking of StateNode with Marking of previous StateNode to check for "real growth".
