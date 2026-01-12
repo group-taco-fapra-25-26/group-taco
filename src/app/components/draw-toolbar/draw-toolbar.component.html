@@ -1,0 +1,27 @@
+<div class="pn-toolbar">
+    <mat-expansion-panel class="pn-help-panel">
+        <mat-expansion-panel-header class="pn-help-header">
+            <div class="pn-help-header-title">
+                <mat-icon [matTooltip]="helpTooltip() | translate" color="primary">help_outline</mat-icon>
+                <mat-panel-title>{{ headerTitle() | translate }}</mat-panel-title>
+            </div>
+            @for (action of actions(); track action.tooltip) {
+                <button
+                    matIconButton
+                    [color]="action.color ?? 'primary'"
+                    [matTooltip]="action.tooltip | translate"
+                    (click)="action.action(); $event.stopPropagation()">
+                    <mat-icon>{{ action.icon }}</mat-icon>
+                </button>
+            }
+        </mat-expansion-panel-header>
+        <div class="pn-help-content">
+            @for (instruction of instructions(); track instruction.label) {
+                <div class="pn-help-item">
+                    <span class="pn-help-label">{{ instruction.label | translate }}:</span>
+                    <span class="pn-help-text">{{ instruction.text | translate }}</span>
+                </div>
+            }
+        </div>
+    </mat-expansion-panel>
+</div>

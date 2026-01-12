@@ -4,6 +4,7 @@
     <svg
         #drawingArea
         class="drawing-canvas"
+        data-export-id="reachability-graph-draw"
         [attr.viewBox]="viewBox()"
         preserveAspectRatio="xMidYMid meet"
         (mousedown)="($event.target === drawingArea || $event.target === gridRect) && startPan($event)"
@@ -36,12 +37,9 @@
             <g appSvgNode [diagramNode]="node" (stateNodeClick)="stateNodeClicked(node)" />
         }
     </svg>
-    <div class="toolbar">
-        <h3>Drawing Area</h3>
-    </div>
-    <div class="instructions">
-        <p>REACHABILITY GRAPH</p>
-        <p>Learn Mode</p>
-        <p>Test Mode</p>
-    </div>
+    <app-draw-toolbar
+        [headerTitle]="'PROCESS_NET.DRAWING_AREA_HEADER'"
+        [helpTooltip]="'PROCESS_NET.HELP_TOOLTIP'"
+        [actions]="toolbarActions()"
+        [instructions]="toolbarInstructions()" />
 </div>

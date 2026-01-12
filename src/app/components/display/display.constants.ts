@@ -14,3 +14,15 @@ export const viewBoxValues: ViewBox = {
 
 export const PLACE_RADIUS = 25;
 export const TRANSITION_SIZE = 60;
+
+export const GRAPH_IDS = {
+    PETRI_NET: 'petri-net',
+    REACHABILITY: 'reachability-graph',
+    PROCESS_NET: 'process-net',
+} as const;
+
+export const GRAPH_FILENAMES = {
+    [GRAPH_IDS.PETRI_NET]: 'petri-netz',
+    [GRAPH_IDS.REACHABILITY]: 'erreichbarkeitsgraph',
+    [GRAPH_IDS.PROCESS_NET]: 'prozessnetz',
+} as const;

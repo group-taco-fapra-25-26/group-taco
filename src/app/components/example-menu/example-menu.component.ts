@@ -16,6 +16,8 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 export class ExampleMenuComponent {
     private _petriNetLoaderService = inject(PetriNetLoaderService);
 
+    activeMenu: string | null = null;
+
     loadExampleFromCategory(category: string, filename: string) {
         const url = `assets/examples/${category}/${filename}`;
         this._petriNetLoaderService.loadFileFromUrl(url);
@@ -24,5 +26,13 @@ export class ExampleMenuComponent {
     loadExample(filename: string) {
         const url = `assets/examples/${filename}`;
         this._petriNetLoaderService.loadFileFromUrl(url);
+    }
+
+    setActiveMenu(menu: string | null) {
+        this.activeMenu = menu;
+    }
+
+    getFolderIcon(menuName: string): string {
+        return this.activeMenu === menuName ? 'folder_open' : 'folder';
     }
 }
