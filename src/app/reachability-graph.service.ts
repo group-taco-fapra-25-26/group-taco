@@ -74,6 +74,7 @@ export class ReachabilityGraphService {
                 initialReachabilityLabel,
                 this._startMarkingRG,
             );
+            initialStateNode.isStartingState=true;
 
             //TO-DO Startmarkierung hervorheben, eingehender Arc aus dem Ursprung
             // const initialEdge = new FiringEdge('Initial', 'Initial', initialId, 'Initial','Initial');
@@ -109,6 +110,8 @@ export class ReachabilityGraphService {
         let currentRgId = 'RG' + nextNodeIndex;
         const nextEdgeIndex = graph.edges.length + 1;
         const currentRgEdgeId = 'Edge' + nextEdgeIndex;
+        let compareSourceStateNode:StateNode;
+        let compareTargetStateNode:StateNode;
 
         //prüfen, ob aktuelle Zielmarkierung bereits vorhanden
         for (let i = 0; i < graph.nodes.length; i++) {
@@ -117,6 +120,7 @@ export class ReachabilityGraphService {
             if (existingNodeLabel === currentReachabilityLabel) {
                 markingExists = true;
                 currentRgId = graph.nodes[i].id;
+                compareTargetStateNode=graph.nodes[i];
 
                 // Vorhandensein der Verbindung prüfen, wenn Markierung bereits existiert;
                 // so wird sichergestellt, dass eine Markierung, die von einer anderen Transiion
@@ -184,12 +188,29 @@ export class ReachabilityGraphService {
                 firingEntry.firingSequence,
             );
 
+            
+            
+            
+            
             this._reachabilityGraph.update((graph) => {
                 const newGraph = new ReachabilityGraph();
                 newGraph.nodes = [...graph.nodes, currentStateNode];
                 newGraph.edges = [...graph.edges, currentFiringEdge];
                 return newGraph;
             });
+
+
+            //add predecessors and successors to StateNodes
+            for (let l = 0; l < graph.nodes.length; l++) {
+                compareSourceStateNode=graph.nodes[l];
+                
+                if(compareSourceStateNode.id=== this.currentSourceRgId){
+                currentStateNode.predecessors.push(compareSourceStateNode);
+                compareSourceStateNode.successors.push(currentStateNode);               
+                }
+                
+            }
+            
         }
 
         if (markingExists && !connectionExists) {
@@ -208,8 +229,24 @@ export class ReachabilityGraphService {
                 newGraph.edges = [...graph.edges, currentFiringEdge];
                 return newGraph;
             });
-            this._notificationService.showInfo('TOASTER.HEADER.STATENODE_EXISTING', 'TOASTER.BODY.STATENODE_EXISTING');
-        }
+
+            //add predecessors and successors to StateNodes
+            for (let m = 0; m < graph.nodes.length; m++) {
+                compareSourceStateNode=graph.nodes[m];
+                
+
+                //TO-DO check for better way than ! or check that value can never be unassigned
+                if(compareSourceStateNode.id=== this.currentSourceRgId){
+                    compareTargetStateNode!.predecessors.push(compareSourceStateNode);
+                    compareSourceStateNode.successors.push(compareTargetStateNode!);               
+                    }
+                }
+                
+                this._notificationService.showInfo('TOASTER.HEADER.STATENODE_EXISTING', 'TOASTER.BODY.STATENODE_EXISTING');
+            }
+
+
+        
 
         if (markingExists && connectionExists) {
             // State wechseln, damit Hinzufügen beim nächsten Aufruf der Methode an der richtigen Stelle passiert
@@ -291,6 +328,21 @@ export class ReachabilityGraphService {
 		// besucht-Status für jede Markierung, damit man beim Prüfen nicht
 		// rückwärts in Kreise läuft
 		// zunächst alle Markierungen auf unbesucht
+
+
+// if (egUnbeschraenktheitsPruefMarkierung.getMarkierungsMarkenSumme() > direkterVorgaengerMarkierungsSumme
+// 						&& einzelStellenMarkenDerPruefMarkierungGroesserGleichVorgaenger && !egUnbeschraenkt) {
+// 					System.out.println("Unbeschränkt 
+
+
+
+
+
+
+
+
+
+
     }
 
     /**
