@@ -6,9 +6,7 @@ import { AppMode } from './classes/app-mode';
 import { SourcePetriNetService } from './services/source-petri-net.service';
 import { Diagram } from './classes/diagram/diagram';
 import { ToasterNotificationService } from './services/toaster-notification.service';
-import { PetriNet } from './services/process-net-validation.service';
-import { PlayService } from './services/play.service';
-import { DisplayableNode } from './classes/displayable-graph.interface';
+import { PanningService } from './services/panning.service';
 
 @Injectable({
     providedIn: 'root',
@@ -21,6 +19,7 @@ export class ReachabilityGraphService {
     private _currentMarkingRG = signal<Record<string, number>>(this._startMarkingRG);
     private _lastProcessedDiagram: Diagram | null = null;
     private _notificationService = inject(ToasterNotificationService);
+    private _panningService = inject(PanningService);
 
     private currentSourceRgId = 'RG1';
 
@@ -153,9 +152,15 @@ export class ReachabilityGraphService {
             // const nextNodeIndex = graph.nodes.length + 1;
             // const currentRgId = 'RG' + nextNodeIndex;
 
+            const viewBox = this._panningService.viewBox();
+            const width = Math.max(viewBox.width, 400);
+            const height = Math.max(viewBox.height, 300);
+            const startX = viewBox.minX;
+            const startY = viewBox.minY;
+
             //x und y konstant festlegen
-            const currentX: number = 300 + graph.nodes.length * 100;
-            const currentY: number = 50 + graph.nodes.length * 100;
+            const currentX: number = startX + Math.random() * width;
+            const currentY: number = startY + Math.random() * height;
 
             //neuen StateNode erzeugen
             const currentStateNode = new StateNode(

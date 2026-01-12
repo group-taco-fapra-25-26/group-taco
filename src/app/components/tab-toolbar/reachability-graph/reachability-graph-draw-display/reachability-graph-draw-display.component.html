@@ -33,7 +33,20 @@
         }
 
         @for (node of reachabilityGraphDiagram().getNodes(); track node.id) {
-            <g appSvgNode [diagramNode]="node" (stateNodeClick)="stateNodeClicked(node)" />
+            <g class="node-wrapper" [attr.data-node-id]="node.id">
+                <g appSvgNode [diagramNode]="node" (stateNodeClick)="stateNodeClicked(node)" />
+                <rect
+                    class="drag-overlay"
+                    [attr.x]="node.x - 60"
+                    [attr.y]="node.y - 60"
+                    width="120"
+                    height="120"
+                    fill="none"
+                    stroke="none"
+                    pointer-events="all"
+                    style="cursor: move"
+                    (mousedown)="onNodeMouseDown($event, node)" />
+            </g>
         }
     </svg>
     <div class="toolbar">
