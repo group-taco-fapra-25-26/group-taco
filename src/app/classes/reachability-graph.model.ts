@@ -13,10 +13,14 @@ export class StateNode implements DisplayableNode {
     _y: WritableSignal<number>;
     label: string;
     rGMarking: Record<string, number>;
-    NodeVisitedState: Visited = Visited.WHITE;
+    nodeVisitedStateForAlgorithm: Visited = Visited.WHITE;
+    nodeVisitedStateForLimitCheck=false;
     isStartingState = false;
     predecessors: StateNode[] = [];
     successors: StateNode[] = [];
+    isMorMStrich=false;
+    //TO-DO add stack for saving transitions for algorithm?
+
 
     get shape(): SHAPE {
         return SHAPE.CIRCLE;
@@ -64,6 +68,7 @@ export class FiringEdge implements DisplayableEdge {
     displayLabel: string;
     bendPoints: Coords[] = [];
     rgFiringSequencePath: string;
+    isPartOfUnlimitedPath=false;
 
     constructor(id: string, source: string, target: string, transitionLabel: string, firedSequence: string) {
         this.id = id;

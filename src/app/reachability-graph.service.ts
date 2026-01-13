@@ -20,6 +20,7 @@ export class ReachabilityGraphService {
     private _lastProcessedDiagram: Diagram | null = null;
     private _notificationService = inject(ToasterNotificationService);
     private _panningService = inject(PanningService);
+    private checkedStateNode:StateNode | undefined;
 
     private currentSourceRgId = 'RG1';
 
@@ -195,15 +196,18 @@ export class ReachabilityGraphService {
                 return newGraph;
             });
 
+            
             //add predecessors and successors to StateNodes
             for (let l = 0; l < graph.nodes.length; l++) {
                 compareSourceStateNode = graph.nodes[l];
-
+                
                 if (compareSourceStateNode.id === this.currentSourceRgId) {
                     currentStateNode.predecessors.push(compareSourceStateNode);
                     compareSourceStateNode.successors.push(currentStateNode);
                 }
             }
+            //check for infinity after addition of each new StateNode
+            this.checkForInfinity(currentStateNode);
         }
 
         if (markingExists && !connectionExists) {
@@ -234,6 +238,8 @@ export class ReachabilityGraphService {
                 }
             }
 
+            
+
             this._notificationService.showInfo('TOASTER.HEADER.STATENODE_EXISTING', 'TOASTER.BODY.STATENODE_EXISTING');
         }
 
@@ -252,8 +258,6 @@ export class ReachabilityGraphService {
         console.log(currentReachabilityLabel);
         //nur 3 Fälle, !markingExists && connectionExists kann nicht auftreten
 
-        //check for infinity after addition of each StateNode
-        this.checkForInfinity();
     }
 
     /**
@@ -296,8 +300,32 @@ export class ReachabilityGraphService {
     /**
      * Method to check for infinity of Reachability Graph.
      * Triggered after each firing of a transition in the Petri Net.
+     * Goes backward from newly added StateNode and checks if there is a Combination of StateNodes which has indefinite growth
+     * Uses recursive method as well as comparison method for markings
+     * checkForInfinity initializes the recursion
      */
-    checkForInfinity() {
+    checkForInfinity(node:StateNode) {
+        for (const rgStateNode of this._reachabilityGraph().nodes) {
+          rgStateNode.nodeVisitedStateForLimitCheck=false;  
+        } 
+        
+        for (const rgEdge of this._reachabilityGraph().edges) {
+            rgEdge.isPartOfUnlimitedPath=false;
+        }
+        
+        this.checkedStateNode=node;
+        this.recursiveCheckForInfinity(node);
+
+        }
+        
+
+        /**
+         * Helper method for recursive check of method checkForInfinity
+         */
+    recursiveCheckForInfinity(node:StateNode){
+
+
+    }        
         // Abbruch, wenn unbeschränkt oder alles Möglichkeiten geschaltet, also
         // beschränkter EG vollständig
         // Marken jeder Stelle einzeln vergleichen, um Kriterium zu
@@ -312,11 +340,12 @@ export class ReachabilityGraphService {
         // gefunden (dann wie oben markieren) oder bis keine weiteren Vorgänger
         // besucht-Status für jede Markierung, damit man beim Prüfen nicht
         // rückwärts in Kreise läuft
-        // zunächst alle Markierungen auf unbesucht
-        // if (egUnbeschraenktheitsPruefMarkierung.getMarkierungsMarkenSumme() > direkterVorgaengerMarkierungsSumme
-        // 						&& einzelStellenMarkenDerPruefMarkierungGroesserGleichVorgaenger && !egUnbeschraenkt) {
-        // 					System.out.println("Unbeschränkt
-    }
+
+
+
+
+
+    
 
     /**
      * Compares Marking of StateNode with Marking of previous StateNode to check for "real growth".
