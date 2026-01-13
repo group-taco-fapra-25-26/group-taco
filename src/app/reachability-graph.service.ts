@@ -20,7 +20,7 @@ export class ReachabilityGraphService {
     private _lastProcessedDiagram: Diagram | null = null;
     private _notificationService = inject(ToasterNotificationService);
     private _panningService = inject(PanningService);
-    private checkedStateNode:StateNode | undefined;
+    private checkedStateNode: StateNode | undefined;
 
     private currentSourceRgId = 'RG1';
 
@@ -196,11 +196,10 @@ export class ReachabilityGraphService {
                 return newGraph;
             });
 
-            
             //add predecessors and successors to StateNodes
             for (let l = 0; l < graph.nodes.length; l++) {
                 compareSourceStateNode = graph.nodes[l];
-                
+
                 if (compareSourceStateNode.id === this.currentSourceRgId) {
                     currentStateNode.predecessors.push(compareSourceStateNode);
                     compareSourceStateNode.successors.push(currentStateNode);
@@ -238,8 +237,6 @@ export class ReachabilityGraphService {
                 }
             }
 
-            
-
             this._notificationService.showInfo('TOASTER.HEADER.STATENODE_EXISTING', 'TOASTER.BODY.STATENODE_EXISTING');
         }
 
@@ -257,7 +254,6 @@ export class ReachabilityGraphService {
 
         console.log(currentReachabilityLabel);
         //nur 3 Fälle, !markingExists && connectionExists kann nicht auftreten
-
     }
 
     /**
@@ -304,48 +300,37 @@ export class ReachabilityGraphService {
      * Uses recursive method as well as comparison method for markings
      * checkForInfinity initializes the recursion
      */
-    checkForInfinity(node:StateNode) {
+    checkForInfinity(node: StateNode) {
         for (const rgStateNode of this._reachabilityGraph().nodes) {
-          rgStateNode.nodeVisitedStateForLimitCheck=false;  
-        } 
-        
+            rgStateNode.nodeVisitedStateForLimitCheck = false;
+        }
+
         for (const rgEdge of this._reachabilityGraph().edges) {
-            rgEdge.isPartOfUnlimitedPath=false;
+            rgEdge.isPartOfUnlimitedPath = false;
         }
-        
-        this.checkedStateNode=node;
+
+        this.checkedStateNode = node;
         this.recursiveCheckForInfinity(node);
+    }
 
-        }
-        
-
-        /**
-         * Helper method for recursive check of method checkForInfinity
-         */
-    recursiveCheckForInfinity(node:StateNode){
-
-
-    }        
-        // Abbruch, wenn unbeschränkt oder alles Möglichkeiten geschaltet, also
-        // beschränkter EG vollständig
-        // Marken jeder Stelle einzeln vergleichen, um Kriterium zu
-        // erfüllen, sonst ungültig!
-        // Dann Kombination aus "alle StellenMarken >= und zusätzlich Summe höher bildet
-        // dannd as vollstaendige Unbeschraenktheitskriterium.
-        // wenn kleinere Markierung gefunden --> unbeschränkt true -->teil von
-        // mundmStrich =true für hinzugefuegte und gefundene Markierung
-        // --> vorabgeschaltete Transition als Teil des Pfades markieren (für alle
-        // Markierungen außer die letzte, da dort null)
-        // wenn nichts gefunden --> immer wieder vergleichen, bis kleinere Markierung
-        // gefunden (dann wie oben markieren) oder bis keine weiteren Vorgänger
-        // besucht-Status für jede Markierung, damit man beim Prüfen nicht
-        // rückwärts in Kreise läuft
-
-
-
-
-
-    
+    /**
+     * Helper method for recursive check of method checkForInfinity
+     */
+    recursiveCheckForInfinity(node: StateNode) {}
+    // Abbruch, wenn unbeschränkt oder alles Möglichkeiten geschaltet, also
+    // beschränkter EG vollständig
+    // Marken jeder Stelle einzeln vergleichen, um Kriterium zu
+    // erfüllen, sonst ungültig!
+    // Dann Kombination aus "alle StellenMarken >= und zusätzlich Summe höher bildet
+    // dannd as vollstaendige Unbeschraenktheitskriterium.
+    // wenn kleinere Markierung gefunden --> unbeschränkt true -->teil von
+    // mundmStrich =true für hinzugefuegte und gefundene Markierung
+    // --> vorabgeschaltete Transition als Teil des Pfades markieren (für alle
+    // Markierungen außer die letzte, da dort null)
+    // wenn nichts gefunden --> immer wieder vergleichen, bis kleinere Markierung
+    // gefunden (dann wie oben markieren) oder bis keine weiteren Vorgänger
+    // besucht-Status für jede Markierung, damit man beim Prüfen nicht
+    // rückwärts in Kreise läuft
 
     /**
      * Compares Marking of StateNode with Marking of previous StateNode to check for "real growth".
