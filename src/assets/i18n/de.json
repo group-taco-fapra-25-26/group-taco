@@ -12,14 +12,8 @@
     "EXAM_MODE": "Prüfungsmodus",
     "LEARNING_MODE": "Lernmodus",
     "MODE_INFO_TOOLTIP": "Nutze den Schieberegler, um zwischen zwei Modi zu wechseln: Der Lernmodus hilft dir, die verschiedenen Bereiche besser zu verstehen. Der Prüfungsmodus dient deiner Prüfungsvorbereitung mit weniger Unterstützung durch die Anwendung und weniger Hinweisen.",
-    "FIRING_SEQUENCE": "Schaltsequenz",
-    "TRANSITION_COUNT": "Anzahl Transitionen",
-    "START_MARKING": "Startmarkierung",
-    "END_MARKING": "Endmarkierung",
-    "NEW_SEQUENCE": "Neue Sequenz",
-    "VALIDATE_SEQUENCES": "Sequenzen validieren",
-    "FIND_SEQUENCES": "Sequenzen finden...",
     "RENAME": "Umbenennen",
+    "START": "Start",
     "CANCEL": "Abbrechen",
     "SAVE_AS": "Speichern unter...",
     "SAVE_AS_JSON": "Speichern als JSON",
@@ -65,6 +59,16 @@
         "EDIT_LABEL": "Beschriftung",
         "TOAST_DUPLICATE_LABEL_HEADER": "Doppelte Beschriftung",
         "TOAST_DUPLICATE_LABEL_BODY": "Die Beschriftung '{{label}}' wird bereits verwendet. Bitte wähle eine eindeutige Beschriftung."
+    },
+    "PLAY": {
+        "FIRING_SEQUENCE": "Schaltsequenz",
+        "TRANSITION_COUNT": "Anzahl Transitionen",
+        "END_MARKING": "Endmarkierung",
+        "NEW_SEQUENCE": "Neue Sequenz",
+        "VALIDATE_SEQUENCES": "Sequenzen validieren",
+        "FIND_SEQUENCES": "Sequenzen finden...",
+        "MAX_TRANSITION_COUNT": "max. Anzahl Transitionen",
+        "MAX_SEQUENCE_COUNT": "max. Anzahl Sequenzen"
     },
     "HEADER_SUBTITLE": "Fachpraktikum Programmiersysteme WiSe25/26 von Marie G., Florian M., Ben L. und Alexander K.",
     "TOASTER": {

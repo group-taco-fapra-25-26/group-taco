@@ -165,44 +165,40 @@ input[type='number'] {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.marking-input-container {
-    display: flex;
-    flex-direction: row;
-    gap: 4px;
-}
-
-.custom-input-label {
-    min-width: 18ch;
-}
-
-.transition-count-input-label {
-    width: fit-content;
-    margin-right: 20px;
-}
-
-.marking-entries-row {
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-    align-items: center;
-}
-
-.marking-entry {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-}
-
-.transition-count-and-buttons-container {
+.sliders-and-buttons-container {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    width: 100%;
+    flex: 1;
     gap: 12px;
+}
+
+.sliders-container {
+    display: flex;
+    flex: 1;
+    margin: 0 10px;
+}
+
+.slider-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+    margin: 0 10px;
+}
+
+.slider-value-display {
+    font-size: 14px;
+    text-align: center;
+    width: 100%;
+}
+
+.mat-slider {
+    width: 100%;
 }
 
 .form-button-container {
     display: flex;
     gap: 8px;
     margin-right: 10px;
+    margin-left: auto;
 }
