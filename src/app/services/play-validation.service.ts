@@ -9,8 +9,7 @@ import { max } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class PlayValidationService {
-    // TODO:
-    // - use notification service to provide user feedback, consider mode from mode service
+    // TODO: use notification service to provide user feedback, consider mode from mode service
     private _notificationService = inject(ToasterNotificationService);
     private _modeService = inject(ModeService);
     private _playService = inject(PlayService);
@@ -108,25 +107,5 @@ export class PlayValidationService {
             }
         }
         return entry.isValid;
-    }
-
-    /**
-     * TODO: Remove if still unused in the future.
-     * Checks whether two markings are equivalent.
-     * @param a
-     *          The first marking.
-     * @param b
-     *          The second marking.
-     * @returns true if the markings are equivalent, else false.
-     */
-    private _isEquivalentMarking(a: Record<string, number>, b: Record<string, number>): boolean {
-        const aKeys = Object.keys(a);
-        const bKeys = Object.keys(b);
-        if (aKeys.length !== bKeys.length) return false;
-        return aKeys.every((key) => {
-            const valA = a[key];
-            const valB = b[key];
-            return valA === valB;
-        });
     }
 }
