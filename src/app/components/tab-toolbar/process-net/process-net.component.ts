@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, DestroyRef } from '@angular/core';
+import { Component, DestroyRef, inject, OnInit } from '@angular/core';
 import { ProcessNetDisplayComponent } from './process-net-display/process-net-display.component';
 import { ProcessNetDrawDisplayComponent } from './process-net-draw-display/process-net-draw-display';
 import { DisplayService } from '../../../services/display.service';
@@ -22,6 +22,19 @@ export class ProcessNetComponent implements OnInit {
     private serializationService = inject(SerializationService);
     private parserService = inject(ParserService);
     private destroyRef = inject(DestroyRef);
+
+    //this is only needed because of the download from the global toolbar and because this component provides its own DisplayService
+    //maybe we can find a better way to do this in the future
+
+    private globalDisplayService = inject(DisplayService, { skipSelf: true, optional: true });
+
+    constructor() {
+        if (this.globalDisplayService) {
+            this.globalDisplayService.downloadRequest$
+                .pipe(takeUntilDestroyed())
+                .subscribe((req) => this.displayService.triggerDownload(req.format, req.target));
+        }
+    }
 
     ngOnInit(): void {
         this.pushCloneToLocalDisplay(this.sourcePetriNetService.getCurrentSourceNet());

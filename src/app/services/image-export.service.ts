@@ -16,14 +16,16 @@ export class ImageExportService {
      *      the SVG element to export
      * @param format
      *      the image format ('png' or 'jpeg')
+     * @param fileName
+     *      optional file name (without extension), defaults to generic name
      */
-    public exportImage(svg: SVGGraphicsElement, format: 'png' | 'jpeg'): void {
+    public exportImage(svg: SVGGraphicsElement, format: 'png' | 'jpeg', fileName?: string): void {
         const { width, height } = svg.getBoundingClientRect();
         const svgUrl = this._createSvgUrl(svg, width, height);
 
         const img = new Image();
         img.onload = () => {
-            this._renderAndDownload(img, width, height, format);
+            this._renderAndDownload(img, width, height, format, fileName);
             URL.revokeObjectURL(svgUrl);
         };
         img.onerror = () => {
@@ -45,7 +47,13 @@ export class ImageExportService {
         return URL.createObjectURL(svgBlob);
     }
 
-    private _renderAndDownload(img: HTMLImageElement, width: number, height: number, format: 'png' | 'jpeg'): void {
+    private _renderAndDownload(
+        img: HTMLImageElement,
+        width: number,
+        height: number,
+        format: 'png' | 'jpeg',
+        fileName?: string,
+    ): void {
         const canvas = document.createElement('canvas');
         canvas.width = width * this.SCALE_FACTOR;
         canvas.height = height * this.SCALE_FACTOR;
@@ -65,7 +73,7 @@ export class ImageExportService {
 
         const imgUrl = canvas.toDataURL(`image/${format}`);
         try {
-            this._triggerDownload(imgUrl, format);
+            this._triggerDownload(imgUrl, format, fileName);
         } finally {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             canvas.width = 0;
@@ -73,10 +81,10 @@ export class ImageExportService {
         }
     }
 
-    private _triggerDownload(url: string, format: string): void {
+    private _triggerDownload(url: string, format: string, fileName?: string): void {
         const downloadLink = document.createElement('a');
         downloadLink.href = url;
-        downloadLink.download = `${this.FILE_NAME}.${format}`;
+        downloadLink.download = `${fileName || this.FILE_NAME}.${format}`;
         document.body.appendChild(downloadLink);
         downloadLink.click();
         document.body.removeChild(downloadLink);

@@ -10,44 +10,6 @@
     -ms-user-select: none;
 }
 
-.toolbar {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    justify-content: flex-start; /* align left to keep consistency */
-    flex-wrap: wrap;
-    margin-bottom: 10px;
-    padding: 5px 0; /* breathe but no own background */
-    background-color: transparent;
-}
-
-.toolbar h3 {
-    margin: 0;
-    font-size: 16px;
-    color: #333;
-}
-
-.clear-btn {
-    padding: 6px 12px;
-    background-color: #f44336;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 14px;
-    transition: background-color 0.3s;
-}
-
-.clear-btn:hover {
-    background-color: #d32f2f;
-}
-
-.validate-btn,
-.clear-validation-btn,
-.start-position-btn {
-    padding: 4px 10px;
-}
-
 .drawing-canvas {
     width: 100%;
     height: 500px;
@@ -70,17 +32,7 @@
 }
 
 .instructions {
-    margin-top: 10px;
-    padding: 10px;
-    background-color: #e3f2fd;
-    border-left: 4px solid #2196f3;
-    border-radius: 4px;
-}
-
-.instructions p {
-    margin: 5px 0;
-    font-size: 13px;
-    color: #1565c0;
+    display: none; /* removed in favor of help menu overlay */
 }
 
 .validation-result {
