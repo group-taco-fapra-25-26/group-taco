@@ -5,7 +5,6 @@ import { ModeService } from './mode.service';
 import { PlayService } from './play.service';
 import { Diagram } from '../classes/diagram/diagram';
 import { FiringEntry } from '../classes/firing-entry';
-import { max } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class PlayValidationService {
