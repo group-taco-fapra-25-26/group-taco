@@ -1,0 +1,64 @@
+.pn-toolbar {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    padding: 0;
+    background-color: transparent;
+}
+
+.pn-toolbar h3 {
+    margin: 0;
+    font-size: 16px;
+    color: #333;
+}
+
+.pn-help-panel {
+    background-color: white;
+    font-family: Roboto, sans-serif;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    width: 100%;
+    overflow: hidden;
+}
+
+.pn-help-header-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.pn-help-header {
+    padding-left: 10px;
+}
+
+.pn-help-content {
+    padding: 0;
+    max-height: 420px;
+    overflow-y: auto;
+}
+
+.pn-help-item {
+    display: flex;
+    flex-direction: column;
+    padding: 12px 16px;
+    border-bottom: 1px solid #f5f5f5;
+    gap: 4px;
+}
+
+.pn-help-item:last-child {
+    border-bottom: none;
+}
+
+.pn-help-label {
+    font-weight: 600;
+    color: #1976d2;
+    font-size: 13px;
+}
+
+.pn-help-text {
+    color: #666;
+    font-size: 13px;
+    line-height: 1.4;
+}
