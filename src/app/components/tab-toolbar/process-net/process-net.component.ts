@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, DestroyRef, OnDestroy, effect } from '@angular/core';
+import { Component, OnInit, inject, DestroyRef, OnDestroy, effect, ViewChild } from '@angular/core';
 import { ProcessNetDisplayComponent } from './process-net-display/process-net-display.component';
 import { ProcessNetDrawDisplayComponent } from './process-net-draw-display/process-net-draw-display';
 import { DisplayService } from '../../../services/display.service';
@@ -29,6 +29,10 @@ export class ProcessNetComponent implements OnInit, OnDestroy {
     private tabState = inject(TabStateService);
     private processNetState = inject(ProcessNetStateService);
     private modeService = inject(ModeService);
+    private lastSourceNetRef: Diagram | null = null;
+
+    @ViewChild(ProcessNetDrawDisplayComponent)
+    private drawDisplayComponent?: ProcessNetDrawDisplayComponent;
 
     private tabSwitchEffect = effect(() => {
         const tab = this.tabState.currentTab();
@@ -38,10 +42,7 @@ export class ProcessNetComponent implements OnInit, OnDestroy {
                 this.displayService.display(restored);
                 return;
             }
-            // Only clone from source if no snapshot is present
-            if (!this.displayService.diagram) {
-                this.pushCloneToLocalDisplay(this.sourcePetriNetService.getCurrentSourceNet());
-            }
+            this.pushCloneToLocalDisplay(this.sourcePetriNetService.getCurrentSourceNet());
         } else {
             // no-op: only persist markings when firing transitions
         }
@@ -82,6 +83,10 @@ export class ProcessNetComponent implements OnInit, OnDestroy {
         }
 
         this.sourcePetriNetService.sourceNet$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((net) => {
+            if (net !== this.lastSourceNetRef) {
+                this.lastSourceNetRef = net;
+                this.drawDisplayComponent?.clearDrawing();
+            }
             if (this.tabState.currentTab() !== Tab.PROCESS_NET) {
                 return;
             }

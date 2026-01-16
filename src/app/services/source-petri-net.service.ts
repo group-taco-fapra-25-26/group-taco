@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { Diagram } from '../classes/diagram/diagram';
+import { ProcessNetStateService } from './process-net-state.service';
 
 @Injectable({
     providedIn: 'root',
@@ -41,6 +42,8 @@ export class SourcePetriNetService {
     private _previousNet: Diagram | null = null;
     private _loadingNewNet = false;
 
+    constructor(private processNetStateService: ProcessNetStateService) {}
+
     /**
      * Observable that emits whether the optimal layout has been calculated for the current source Petri net.
      */
@@ -62,6 +65,7 @@ export class SourcePetriNetService {
      *        the raw text representation of the petri net
      */
     public loadNewNet(net: Diagram, rawText: string): void {
+        this.processNetStateService.clear();
         this._loadingNewNet = true;
         this._sourceNet$.next(net);
         this._sourceText$.next(rawText);
@@ -157,6 +161,7 @@ export class SourcePetriNetService {
         this._lastChangeTriggeredByFiring = false;
         this._previousNet = null;
         this._loadingNewNet = false;
+        this.processNetStateService.clear();
     }
 
     public setSourceText(rawText: string): void {
