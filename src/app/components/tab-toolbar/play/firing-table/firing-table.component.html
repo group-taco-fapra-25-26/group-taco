@@ -23,7 +23,14 @@
             @for (entry of firingEntries; track entry.id) {
                 <tr>
                     <td class="play-sequence-td">
-                        @if (entry.isValid) {
+                        @if (entry.isPlaying) {
+                            <button
+                                mat-icon-button
+                                (click)="onStopPlaySequence(entry)"
+                                class="stop-play-sequence-button">
+                                <mat-icon color="warn">stop_circle</mat-icon>
+                            </button>
+                        } @else if (entry.isValid) {
                             <button mat-icon-button (click)="onPlaySequence(entry)" class="play-sequence-button">
                                 <mat-icon class="play-icon">play_circle</mat-icon>
                             </button>
@@ -95,7 +102,9 @@
             <div class="sliders-and-buttons-container">
                 <div class="sliders-container">
                     <div class="slider-container">
-                        <div class="slider-value-display">{{ 'PLAY.MAX_TRANSITION_COUNT' | translate }}: {{ maxTransitionCount }}</div>
+                        <div class="slider-value-display">
+                            {{ 'PLAY.MAX_TRANSITION_COUNT' | translate }}: {{ maxTransitionCount }}
+                        </div>
                         <mat-slider [min]="0" [max]="100" [step]="1">
                             <input
                                 matSliderThumb
@@ -105,7 +114,9 @@
                     </div>
 
                     <div class="slider-container">
-                        <div class="slider-value-display">{{ 'PLAY.MAX_SEQUENCE_COUNT' | translate }}: {{ maxSequenceCount }}</div>
+                        <div class="slider-value-display">
+                            {{ 'PLAY.MAX_SEQUENCE_COUNT' | translate }}: {{ maxSequenceCount }}
+                        </div>
                         <mat-slider [min]="0" [max]="500" [step]="5">
                             <input
                                 matSliderThumb
@@ -115,7 +126,9 @@
                     </div>
                 </div>
                 <div class="form-button-container">
-                    <button mat-raised-button color="primary" type="submit" (click)="onFindSequences()">{{ 'START' | translate }}</button>
+                    <button mat-raised-button color="primary" type="submit" (click)="onFindSequences()">
+                        {{ 'START' | translate }}
+                    </button>
                     <button mat-raised-button color="warn" type="button" (click)="toggleFindSequencesForm()">
                         {{ 'CANCEL' | translate }}
                     </button>
