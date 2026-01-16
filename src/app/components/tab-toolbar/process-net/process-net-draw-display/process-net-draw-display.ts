@@ -125,25 +125,24 @@ export class ProcessNetDrawDisplayComponent implements OnInit, OnDestroy, AfterV
 
     readonly viewBox = this.panningService.viewBoxAsString;
     readonly viewBoxObj = this.panningService.viewBox;
-    private modeChange = effect(() => {
-        if (this.tabStateService.currentTab() !== Tab.PROCESS_NET) {
-            return;
-        }
-        const diagram = this.diagramSignal();
-        if (!diagram) return;
-        const firingVersion = this.firingChangeVersion();
-        const isNewFiringChange = firingVersion > this.lastProcessedFiringVersion;
-        this.lastProcessedFiringVersion = firingVersion;
-        if (isNewFiringChange && this.modeService.currentMode() === AppMode.LEARN) {
-            return;
-        }
-        this.clearDrawing();
-    });
 
     // Dimensions consistent with SvgNodeComponent
     private readonly PLACE_RADIUS = PLACE_RADIUS;
     private readonly TRANSITION_HALF_W = TRANSITION_SIZE / 2;
     private readonly TRANSITION_HALF_H = TRANSITION_SIZE / 2;
+
+    constructor() {
+        // Watch for mode changes and clear drawing
+        let isFirstRun = true;
+        effect(() => {
+            this.modeService.currentMode();
+            if (!isFirstRun) {
+                console.log('Mode changed via effect, clearing drawing');
+                this.clearDrawing();
+            }
+            isFirstRun = false;
+        });
+    }
 
     ngOnInit() {
         // Listen for custom drop events
@@ -164,10 +163,13 @@ export class ProcessNetDrawDisplayComponent implements OnInit, OnDestroy, AfterV
                 this.firingChangeVersion.update((v) => v + 1);
             }
         });
-        this.sourceSub = this.sourcePetriNetService.sourceNet$.subscribe(() => {
+        this.sourceSub = this.sourcePetriNetService.sourceNet$.subscribe((net) => {
             const triggeredByFiring = this.sourcePetriNetService.consumeChangeTriggeredByFiring();
             if (triggeredByFiring) {
                 this.firingChangeVersion.update((v) => v + 1);
+            } else if (this.sourcePetriNetService.hasNetChanged(net)) {
+                // Clear drawing only when a new net is actually loaded (not on tab switches)
+                this.clearDrawing();
             }
         });
     }
@@ -705,22 +707,28 @@ export class ProcessNetDrawDisplayComponent implements OnInit, OnDestroy, AfterV
     }
 
     onCreateStartPosition() {
+        const isProcessNetTab = this.tabStateService.currentTab() === Tab.PROCESS_NET;
+
         const diagram = this.displayService.diagram;
         if (!diagram) {
-            this.toaster.showError('TOASTER.HEADER.START_POSITION', 'TOASTER.BODY.LOAD_NET_FIRST', {
-                duration: 0,
-                toastPosition: TOAST_POSITIONS.TOP_CENTER,
-            });
+            if (isProcessNetTab) {
+                this.toaster.showError('TOASTER.HEADER.START_POSITION', 'TOASTER.BODY.LOAD_NET_FIRST', {
+                    duration: 2000,
+                    toastPosition: TOAST_POSITIONS.TOP_CENTER,
+                });
+            }
             return;
         }
 
         const nodes = diagram.getNodes();
         const markedPlaces = nodes.filter((node) => node.shape === SHAPE.CIRCLE && node.tokenCount() > 0);
         if (markedPlaces.length === 0) {
-            this.toaster.showInfo('TOASTER.HEADER.START_POSITION', 'TOASTER.BODY.NO_MARKED_PLACES_FOUND', {
-                duration: 0,
-                toastPosition: TOAST_POSITIONS.TOP_CENTER,
-            });
+            if (isProcessNetTab) {
+                this.toaster.showInfo('TOASTER.HEADER.START_POSITION', 'TOASTER.BODY.NO_MARKED_PLACES_FOUND', {
+                    duration: 2000,
+                    toastPosition: TOAST_POSITIONS.TOP_CENTER,
+                });
+            }
             return;
         }
 
@@ -728,10 +736,12 @@ export class ProcessNetDrawDisplayComponent implements OnInit, OnDestroy, AfterV
             Array.from({ length: Math.max(0, Math.floor(place.tokenCount())) }, () => place),
         );
         if (tokenInstances.length === 0) {
-            this.toaster.showInfo('TOASTER.HEADER.START_POSITION', 'TOASTER.BODY.NO_MARKED_PLACES_FOUND', {
-                duration: 0,
-                toastPosition: TOAST_POSITIONS.TOP_CENTER,
-            });
+            if (isProcessNetTab) {
+                this.toaster.showInfo('TOASTER.HEADER.START_POSITION', 'TOASTER.BODY.NO_MARKED_PLACES_FOUND', {
+                    duration: 2000,
+                    toastPosition: TOAST_POSITIONS.TOP_CENTER,
+                });
+            }
             return;
         }
 
@@ -760,11 +770,13 @@ export class ProcessNetDrawDisplayComponent implements OnInit, OnDestroy, AfterV
         });
 
         this.drawnElements.set(newElements);
-        this.toaster.showSuccess('TOASTER.HEADER.START_POSITION', 'TOASTER.BODY.START_PLACES_CREATED', {
-            duration: 0,
-            toastPosition: TOAST_POSITIONS.TOP_CENTER,
-            messageParams: { count: newElements.length },
-        });
+        if (isProcessNetTab) {
+            this.toaster.showSuccess('TOASTER.HEADER.START_POSITION', 'TOASTER.BODY.START_PLACES_CREATED', {
+                duration: 2000,
+                toastPosition: TOAST_POSITIONS.TOP_CENTER,
+                messageParams: { count: newElements.length },
+            });
+        }
     }
 
     private getNextInnerLabel(): string {

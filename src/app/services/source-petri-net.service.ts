@@ -38,6 +38,8 @@ export class SourcePetriNetService {
 
     private readonly _isOptimalLayoutCalculated$ = new BehaviorSubject<boolean>(false);
     private _lastChangeTriggeredByFiring = false;
+    private _previousNet: Diagram | null = null;
+    private _loadingNewNet = false;
 
     /**
      * Observable that emits whether the optimal layout has been calculated for the current source Petri net.
@@ -60,6 +62,7 @@ export class SourcePetriNetService {
      *        the raw text representation of the petri net
      */
     public loadNewNet(net: Diagram, rawText: string): void {
+        this._loadingNewNet = true;
         this._sourceNet$.next(net);
         this._sourceText$.next(rawText);
         this._isDirty$.next(false);
@@ -86,6 +89,22 @@ export class SourcePetriNetService {
         const wasFiring = this._lastChangeTriggeredByFiring;
         this._lastChangeTriggeredByFiring = false;
         return wasFiring;
+    }
+
+    public hasNetChanged(currentNet: Diagram | null): boolean {
+        // If a new net was explicitly loaded, this is always considered a change
+        if (this._loadingNewNet) {
+            this._loadingNewNet = false;
+            this._previousNet = currentNet;
+            return true;
+        }
+
+        // Otherwise, check if the reference has changed (not on tab switches)
+        const hasChanged = this._previousNet !== currentNet;
+        if (hasChanged) {
+            this._previousNet = currentNet;
+        }
+        return hasChanged;
     }
 
     /**
@@ -136,6 +155,8 @@ export class SourcePetriNetService {
         this._isDirty$.next(false);
         this._isOptimalLayoutCalculated$.next(false);
         this._lastChangeTriggeredByFiring = false;
+        this._previousNet = null;
+        this._loadingNewNet = false;
     }
 
     public setSourceText(rawText: string): void {

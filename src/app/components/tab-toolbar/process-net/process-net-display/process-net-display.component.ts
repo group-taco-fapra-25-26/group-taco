@@ -10,6 +10,7 @@ import { ToasterNotificationService } from '../../../../services/toaster-notific
 import { Tab } from '../../../../classes/tabs';
 import { DisplayService } from '../../../../services/display.service';
 import { ProcessNetFiringService } from '../../../../services/process-net-firing.service';
+import { ProcessNetStateService } from '../../../../services/process-net-state.service';
 
 // Added strongly typed drag data interfaces and Window augmentation
 interface BasicDragData {
@@ -45,6 +46,7 @@ export class ProcessNetDisplayComponent extends DisplayComponent {
     private displayService = inject(DisplayService);
     private toaster = inject(ToasterNotificationService);
     private firingService = inject(ProcessNetFiringService);
+    private processNetState = inject(ProcessNetStateService);
 
     readonly isProcessNetTab = this._tabStateService.currentTab;
 
@@ -182,6 +184,7 @@ export class ProcessNetDisplayComponent extends DisplayComponent {
                 }));
                 node.fire(true);
                 diagram.updateMarking();
+                this.processNetState.save(diagram);
                 this.firingService.emit({
                     transitionId: node.id,
                     transitionLabel: firedTransition,
