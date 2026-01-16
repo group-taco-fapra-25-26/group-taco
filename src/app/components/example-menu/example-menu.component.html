@@ -9,45 +9,84 @@
 </button>
 
 <mat-menu #mainMenu="matMenu">
-    <button mat-menu-item (click)="loadExample('example.json')">{{ 'EXAMPLE_MENU.EXAMPLE_NET' | translate }}</button>
-    <button mat-menu-item [matMenuTriggerFor]="menuMK">{{ 'EXAMPLE_MENU.MK' | translate }}</button>
-    <button mat-menu-item [matMenuTriggerFor]="menuSS24">{{ 'EXAMPLE_MENU.SS24' | translate }}</button>
-    <button mat-menu-item [matMenuTriggerFor]="menuWS24">{{ 'EXAMPLE_MENU.WS24' | translate }}</button>
-    <button mat-menu-item [matMenuTriggerFor]="menuSS25">{{ 'EXAMPLE_MENU.SS25' | translate }}</button>
+    <button mat-menu-item (click)="loadExample('example.json')">
+        <mat-icon matMenuItemIcon>description</mat-icon>
+        {{ 'EXAMPLE_MENU.EXAMPLE_NET' | translate }}
+    </button>
+    <button
+        mat-menu-item
+        [matMenuTriggerFor]="menuMK"
+        (mouseenter)="setActiveMenu('MK')"
+        (mouseleave)="setActiveMenu(null)">
+        <mat-icon matMenuItemIcon>{{ getFolderIcon('MK') }}</mat-icon>
+        {{ 'EXAMPLE_MENU.MK' | translate }}
+    </button>
+    <button
+        mat-menu-item
+        [matMenuTriggerFor]="menuSS24"
+        (mouseenter)="setActiveMenu('SS24')"
+        (mouseleave)="setActiveMenu(null)">
+        <mat-icon matMenuItemIcon>{{ getFolderIcon('SS24') }}</mat-icon>
+        {{ 'EXAMPLE_MENU.SS24' | translate }}
+    </button>
+    <button
+        mat-menu-item
+        [matMenuTriggerFor]="menuWS24"
+        (mouseenter)="setActiveMenu('WS24')"
+        (mouseleave)="setActiveMenu(null)">
+        <mat-icon matMenuItemIcon>{{ getFolderIcon('WS24') }}</mat-icon>
+        {{ 'EXAMPLE_MENU.WS24' | translate }}
+    </button>
+    <button
+        mat-menu-item
+        [matMenuTriggerFor]="menuSS25"
+        (mouseenter)="setActiveMenu('SS25')"
+        (mouseleave)="setActiveMenu(null)">
+        <mat-icon matMenuItemIcon>{{ getFolderIcon('SS25') }}</mat-icon>
+        {{ 'EXAMPLE_MENU.SS25' | translate }}
+    </button>
 </mat-menu>
 
 <mat-menu #menuMK="matMenu">
     <button mat-menu-item (click)="loadExampleFromCategory('MK', 'task1.json')">
+        <mat-icon matMenuItemIcon>description</mat-icon>
         {{ 'EXAMPLE_MENU.TASK1' | translate }}
     </button>
     <button mat-menu-item (click)="loadExampleFromCategory('MK', 'task2.json')">
+        <mat-icon matMenuItemIcon>description</mat-icon>
         {{ 'EXAMPLE_MENU.TASK2' | translate }}
     </button>
 </mat-menu>
 
 <mat-menu #menuSS24="matMenu">
     <button mat-menu-item (click)="loadExampleFromCategory('SS24', 'task1.json')">
+        <mat-icon matMenuItemIcon>description</mat-icon>
         {{ 'EXAMPLE_MENU.TASK1' | translate }}
     </button>
     <button mat-menu-item (click)="loadExampleFromCategory('SS24', 'task2.json')">
+        <mat-icon matMenuItemIcon>description</mat-icon>
         {{ 'EXAMPLE_MENU.TASK2' | translate }}
     </button>
 </mat-menu>
 
 <mat-menu #menuWS24="matMenu">
     <button mat-menu-item (click)="loadExampleFromCategory('WS24', 'task1.json')">
+        <mat-icon matMenuItemIcon>description</mat-icon>
         {{ 'EXAMPLE_MENU.TASK1' | translate }}
     </button>
     <button mat-menu-item (click)="loadExampleFromCategory('WS24', 'task2.json')">
+        <mat-icon matMenuItemIcon>description</mat-icon>
         {{ 'EXAMPLE_MENU.TASK2' | translate }}
     </button>
 </mat-menu>
 
 <mat-menu #menuSS25="matMenu">
     <button mat-menu-item (click)="loadExampleFromCategory('SS25', 'task1.json')">
+        <mat-icon matMenuItemIcon>description</mat-icon>
         {{ 'EXAMPLE_MENU.TASK1' | translate }}
     </button>
     <button mat-menu-item (click)="loadExampleFromCategory('SS25', 'task2.json')">
+        <mat-icon matMenuItemIcon>description</mat-icon>
         {{ 'EXAMPLE_MENU.TASK2' | translate }}
     </button>
 </mat-menu>

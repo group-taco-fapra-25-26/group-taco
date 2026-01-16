@@ -59,6 +59,19 @@ export class ProcessNetComponent implements OnInit, OnDestroy {
         });
     })();
 
+    //this is only needed because of the download from the global toolbar and because this component provides its own DisplayService
+    //maybe we can find a better way to do this in the future
+
+    private globalDisplayService = inject(DisplayService, { skipSelf: true, optional: true });
+
+    constructor() {
+        if (this.globalDisplayService) {
+            this.globalDisplayService.downloadRequest$
+                .pipe(takeUntilDestroyed())
+                .subscribe((req) => this.displayService.triggerDownload(req.format, req.target));
+        }
+    }
+
     ngOnInit(): void {
         // attempt to restore cached process net when entering tab initially
         const cached = this.processNetState.restore();

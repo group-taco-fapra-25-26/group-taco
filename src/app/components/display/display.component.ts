@@ -16,6 +16,7 @@ import { ImageExportService } from '../../services/image-export.service';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ReachabilityGraphService } from 'src/app/reachability-graph.service';
 import { StateNode } from '../../classes/reachability-graph.model';
+import { GRAPH_FILENAMES, GRAPH_IDS } from './display.constants';
 
 @Component({
     selector: 'app-display',
@@ -51,15 +52,22 @@ export class DisplayComponent implements OnInit, OnDestroy {
     readonly isReachabilityGraphEnabled = computed(() => this._tabStateService.currentTab() === Tab.REACHABILITY_GRAPH);
     readonly isProcessNetEnabled = computed(() => this._tabStateService.currentTab() === Tab.PROCESS_NET);
 
+    protected graphId: 'petri-net' | 'reachability-graph' = GRAPH_IDS.PETRI_NET;
+
     ngOnInit(): void {
-        this._sub = this._displayService.downloadRequest$.subscribe((format) => {
-            if (!this._elementRef.nativeElement.offsetParent) {
+        this._sub = this._displayService.downloadRequest$.subscribe(({ format, target }) => {
+            if (target && target !== this.graphId) {
+                return;
+            }
+
+            if (this._elementRef.nativeElement.getBoundingClientRect().height === 0) {
                 return;
             }
             const svgElement = this.drawingArea?.nativeElement;
 
             if (svgElement && this.diagram()) {
-                this._imageExportService.exportImage(svgElement, format);
+                const filename = GRAPH_FILENAMES[this.graphId] || 'graph';
+                this._imageExportService.exportImage(svgElement, format, filename);
             }
         });
     }
