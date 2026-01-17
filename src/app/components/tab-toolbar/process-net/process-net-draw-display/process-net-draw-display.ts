@@ -28,14 +28,20 @@ import { ToasterNotificationService } from '../../../../services/toaster-notific
 import { PanningService } from '../../../../services/panning.service';
 import { TOAST_POSITIONS, ToastList } from '../../../../classes/toast';
 import { TranslateModule } from '@ngx-translate/core';
-import { PLACE_RADIUS, TRANSITION_SIZE } from '../../../display/display.constants';
+import { GRAPH_FILENAMES, GRAPH_IDS, PLACE_RADIUS, TRANSITION_SIZE } from '../../../display/display.constants';
 import { ModeService } from '../../../../services/mode.service';
 import { AppMode } from '../../../../classes/app-mode';
 import { TabStateService } from '../../../../services/tab-state.service';
 import { Tab } from '../../../../classes/tabs';
 import { SourcePetriNetService } from '../../../../services/source-petri-net.service';
-import { ProcessNetFiringService, ProcessNetFiringEvent } from '../../../../services/process-net-firing.service';
+import { ProcessNetFiringEvent, ProcessNetFiringService } from '../../../../services/process-net-firing.service';
 import { Subscription } from 'rxjs';
+import {
+    DrawToolbarAction,
+    DrawToolbarComponent,
+    DrawToolbarInstruction,
+} from '../../../draw-toolbar/draw-toolbar.component';
+import { ImageExportService } from '../../../../services/image-export.service';
 
 interface DrawnElement {
     node: DiagramNode;
@@ -67,7 +73,7 @@ declare global {
 @Component({
     selector: 'app-process-net-draw-display',
     standalone: true,
-    imports: [SvgNodeComponent, TranslateModule],
+    imports: [SvgNodeComponent, TranslateModule, DrawToolbarComponent],
     templateUrl: './process-net-draw-display.html',
     providers: [PanningService],
     styleUrls: ['./process-net-draw-display.css'],
@@ -97,6 +103,31 @@ export class ProcessNetDrawDisplayComponent implements OnInit, OnDestroy, AfterV
     // Currently selected element for making a connection (highlighted)
     readonly selectedElementId = signal<string | null>(null);
 
+    // Toolbar configuration
+    protected readonly toolbarActions = computed<DrawToolbarAction[]>(() => [
+        {
+            icon: 'delete',
+            tooltip: 'PROCESS_NET.BUTTON_CLEAR_DRAWING',
+            color: 'warn',
+            action: () => this.clearDrawing(),
+        },
+        {
+            icon: 'checklist',
+            tooltip: 'PROCESS_NET.BUTTON_VALIDATE_NET',
+            color: 'primary',
+            action: () => this.onValidate(),
+        },
+    ]);
+
+    protected readonly toolbarInstructions = computed<DrawToolbarInstruction[]>(() => [
+        { label: 'PROCESS_NET.ACTION_DRAG_DROP', text: 'PROCESS_NET.INSTRUCTION_DRAG_DROP' },
+        { label: 'PROCESS_NET.INSTRUCTION_MOVE', text: 'PROCESS_NET.INSTRUCTION_LEFT_CLICK_MOVE' },
+        { label: 'PROCESS_NET.INSTRUCTION_CONNECT', text: 'PROCESS_NET.INSTRUCTION_RIGHT_CLICK_CONNECT' },
+        { label: 'PROCESS_NET.INSTRUCTION_DELETE', text: 'PROCESS_NET.INSTRUCTION_MIDDLE_CLICK_DELETE' },
+        { label: 'PROCESS_NET.INSTRUCTION_DELETE_CONN', text: 'PROCESS_NET.INSTRUCTION_MIDDLE_CLICK_DELETE_CONN' },
+        { label: 'PROCESS_NET.INSTRUCTION_VALIDATE', text: 'PROCESS_NET.INSTRUCTION_VALIDATE_TOAST' },
+    ]);
+
     private elementIdCounter = 0;
     private connectionIdCounter = 0;
     private bLabelCounter = 0;
@@ -110,6 +141,7 @@ export class ProcessNetDrawDisplayComponent implements OnInit, OnDestroy, AfterV
     private customDropListener: ((event: Event) => void) | null = null;
     private displayService = inject(DisplayService);
     private toaster = inject(ToasterNotificationService);
+    private _imageExportService = inject(ImageExportService);
     private panningService = inject(PanningService);
     private modeService = inject(ModeService);
     private sourcePetriNetService = inject(SourcePetriNetService);
@@ -122,6 +154,7 @@ export class ProcessNetDrawDisplayComponent implements OnInit, OnDestroy, AfterV
     private lastProcessedFiringVersion = 0;
     private displaySub?: Subscription;
     private sourceSub?: Subscription;
+    private downloadSub?: Subscription;
 
     readonly viewBox = this.panningService.viewBoxAsString;
     readonly viewBoxObj = this.panningService.viewBox;
@@ -170,6 +203,19 @@ export class ProcessNetDrawDisplayComponent implements OnInit, OnDestroy, AfterV
                 this.firingChangeVersion.update((v) => v + 1);
             }
         });
+        this.downloadSub = this.displayService.downloadRequest$.subscribe(({ format, target }) => {
+            if (target && target !== GRAPH_IDS.PROCESS_NET) {
+                return;
+            }
+            if (this.elementRef.nativeElement.getBoundingClientRect().height === 0) {
+                return;
+            }
+            this._imageExportService.exportImage(
+                this.drawingArea.nativeElement,
+                format,
+                GRAPH_FILENAMES[GRAPH_IDS.PROCESS_NET],
+            );
+        });
     }
 
     ngAfterViewInit() {
@@ -186,6 +232,7 @@ export class ProcessNetDrawDisplayComponent implements OnInit, OnDestroy, AfterV
         this.firingSub?.unsubscribe();
         this.displaySub?.unsubscribe();
         this.sourceSub?.unsubscribe();
+        this.downloadSub?.unsubscribe();
     }
 
     private handleCanvasMouseDown = (event: MouseEvent) => {
