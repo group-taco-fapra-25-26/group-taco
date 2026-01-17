@@ -135,7 +135,7 @@ export class PlayService {
         notify: boolean,
         displayFiring: boolean,
     ): boolean {
-        const entry: FiringEntry = this._currentFiringEntry || this._getEmptyFiringEntry();
+        const entry: FiringEntry = this._currentFiringEntry || this.getEmptyFiringEntry();
         if (node.isActivated() && entry.isValid !== false) {
             node.fire(displayFiring);
             diagram.updateMarking();
@@ -185,7 +185,7 @@ export class PlayService {
         diagram.resetMarking();
         this._lastMarking = { ...diagram.marking };
         if (this._currentFiringEntry) this.closeCurrentFiringEntry();
-        this._getEmptyFiringEntry();
+        this.getEmptyFiringEntry();
         setTimeout(() => {
             document.getElementById('firing-sequence-input')?.focus();
         }, 0);
@@ -235,7 +235,7 @@ export class PlayService {
      *          the case of an invalid input to the firing sequence.
      */
     updateFiringEntry(label: string, updateEndMarking: boolean): void {
-        const entry = this._currentFiringEntry || this._getEmptyFiringEntry();
+        const entry = this._currentFiringEntry || this.getEmptyFiringEntry();
         const delimiter = entry.firingSequence.includes('; ')
             ? '; '
             : entry.firingSequence.includes(', ')
@@ -269,7 +269,7 @@ export class PlayService {
      * Creates a new empty firing entry with start values.
      * @returns A firing entry with an empty sequence.
      */
-    private _getEmptyFiringEntry(): FiringEntry {
+    private getEmptyFiringEntry(): FiringEntry {
         const endMarking = { ...this._startMarking };
         const newFiringEntry = new FiringEntry(this.getNewId(), '', 0, endMarking, false, undefined);
         this._currentFiringEntry = newFiringEntry;

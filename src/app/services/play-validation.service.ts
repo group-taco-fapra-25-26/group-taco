@@ -75,7 +75,7 @@ export class PlayValidationService {
      * @returns A promise that returns whether the input is valid when the validation is complete.
      */
     async validateInput(diagram: Diagram, entry: FiringEntry): Promise<void> {
-        const hasOnlyValidTransitions: boolean = this._hasOnlyValidTransitions(diagram, entry);
+        const hasOnlyValidTransitions: boolean = this.hasOnlyValidTransitions(diagram, entry);
         // TODO: provide user feedback if invalid transitions are present
         if (hasOnlyValidTransitions) entry.isValid = await this._playService.playSequence(diagram, entry, 0, false);
         else entry.isValid = hasOnlyValidTransitions;
@@ -89,7 +89,7 @@ export class PlayValidationService {
      *          The firing entry to be validated.
      * @returns true if all labels correnspond to existing transitions, false otherwise.
      */
-    private _hasOnlyValidTransitions(diagram: Diagram, entry: FiringEntry): boolean {
+    private hasOnlyValidTransitions(diagram: Diagram, entry: FiringEntry): boolean {
         const possibleTransitions: string[] = diagram.getTransitionLabels();
         const labels = entry.labels;
         if (labels.length === 0) return true;
