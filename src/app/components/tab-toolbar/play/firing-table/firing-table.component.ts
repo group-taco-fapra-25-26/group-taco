@@ -8,6 +8,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconButton } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
 import { MatSliderModule } from '@angular/material/slider';
+import { MatExpansionModule, MatExpansionPanel } from '@angular/material/expansion';
 import { filter, Subscription, take, tap } from 'rxjs';
 
 import { ModeService } from '../../../../services/mode.service';
@@ -16,6 +17,7 @@ import { PlayService } from '../../../../services/play.service';
 import { PlayValidationService } from '../../../../services/play-validation.service';
 import { Diagram } from '../../../../classes/diagram/diagram';
 import { FiringEntry } from '../../../../classes/firing-entry';
+import { MatTooltip } from '@angular/material/tooltip';
 
 @Component({
     selector: 'app-firing-table',
@@ -29,7 +31,9 @@ import { FiringEntry } from '../../../../classes/firing-entry';
         MatIconButton,
         MatIcon,
         MatSliderModule,
+        MatExpansionModule,
         TranslateModule,
+        MatTooltip,
     ],
     templateUrl: './firing-table.component.html',
     styleUrl: './firing-table.component.css',
@@ -145,6 +149,10 @@ export class FiringTableComponent implements OnInit, OnDestroy {
         this.buttonColor = this.isFindSequencesFormVisible ? 'primary' : 'basic';
     }
 
+    isButtonActive(): boolean {
+        return !this._diagram;
+    }
+
     onMaxTransitionCountChange(event: Event): void {
         const inputElement = event.target as HTMLInputElement;
         this.maxTransitionCount = Number(inputElement.value);
@@ -153,5 +161,23 @@ export class FiringTableComponent implements OnInit, OnDestroy {
     onMaxSequenceCountChange(event: Event): void {
         const inputElement = event.target as HTMLInputElement;
         this.maxSequenceCount = Number(inputElement.value);
+    }
+
+    onAddButton(panel: MatExpansionPanel, event: Event): void {
+        event.stopPropagation();
+        if (!panel.expanded) panel.open();
+        this.onNewEntry();
+    }
+
+    onValidateButton(panel: MatExpansionPanel, event: Event): void {
+        event.stopPropagation();
+        if (!panel.expanded) panel.open();
+        this.onValidateSequences().catch(console.error);
+    }
+
+    onFindButton(panel: MatExpansionPanel, event: Event): void {
+        event.stopPropagation();
+        if (!panel.expanded) panel.open();
+        this.onFindSequences();
     }
 }

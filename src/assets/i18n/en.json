@@ -20,6 +20,10 @@
     "SAVE_AS_PNML": "Save as PNML",
     "SAVE_AS_PNG": "Save as Image (PNG)",
     "SAVE_AS_JPEG": "Save as Image (JPEG)",
+    "DELETE": "Delete",
+    "DELETE_ALL": "Delete all",
+    "PLAY": "Play",
+    "STOP": "Stop",
     "EXPORT_PETRI_NET": "Export Petri Net",
     "EXPORT_REACHABILITY_GRAPH": "Export Reachability Graph",
     "EXPORT_PROCESS_NET": "Export Process Net",
@@ -64,6 +68,7 @@
         "TOAST_DUPLICATE_LABEL_BODY": "The label '{{label}}' is already used. Please choose a unique label."
     },
     "PLAY": {
+        "FIRING_TABLE": "Firing Table",
         "FIRING_SEQUENCE": "Firing Sequence",
         "TRANSITION_COUNT": "Transition Count",
         "END_MARKING": "End Marking",
