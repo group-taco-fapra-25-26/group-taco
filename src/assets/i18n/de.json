@@ -22,7 +22,6 @@
     "SAVE_AS_JPEG": "Speichern als Bild (JPEG)",
     "DELETE": "Löschen",
     "DELETE_ALL": "Alle löschen",
-    "PLAY": "Abspielen",
     "STOP": "Stopp",
     "EXPORT_PETRI_NET": "Petri-Netz exportieren",
     "EXPORT_REACHABILITY_GRAPH": "Erreichbarkeitsgraph exportieren",
@@ -82,7 +81,7 @@
     "TOASTER": {
         "HEADER": {
             "SAVE_IMPOSSIBLE": "Speichern nicht möglich",
-            "TRANSITION_NOT_ACTIVATED": "T  ransition nicht aktiviert",
+            "TRANSITION_NOT_ACTIVATED": "Transition nicht aktiviert",
             "MODE_SWITCHED": "Modus gewechselt",
             "READ_ERROR": "Lesefehler",
             "DOWNLOAD_FAILED": "Download fehlgeschlagen",
