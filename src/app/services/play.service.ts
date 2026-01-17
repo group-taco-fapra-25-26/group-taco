@@ -271,7 +271,8 @@ export class PlayService {
      */
     private getEmptyFiringEntry(): FiringEntry {
         const endMarking = { ...this._startMarking };
-        const newFiringEntry = new FiringEntry(this.getNewId(), '', 0, endMarking, false, undefined);
+        const isValid = this._modeService.isExamMode() ? undefined : true;
+        const newFiringEntry = new FiringEntry(this.getNewId(), '', 0, endMarking, false, isValid);
         this._currentFiringEntry = newFiringEntry;
         this.firingEntries.update((entries) => {
             entries.push(newFiringEntry);
