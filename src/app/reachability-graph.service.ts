@@ -1,5 +1,4 @@
 import { inject, Injectable, signal, Signal, WritableSignal } from '@angular/core';
-import { FiringEntry } from './classes/firing-entry';
 import { FiringEdge, ReachabilityGraph, StateNode } from './classes/reachability-graph.model';
 import { ModeService } from './services/mode.service';
 import { SourcePetriNetService } from './services/source-petri-net.service';

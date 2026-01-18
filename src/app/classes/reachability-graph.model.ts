@@ -33,7 +33,7 @@ export class StateNode implements DisplayableNode {
         y: number,
         label: string,
         marking: Record<string, number>,
-        firingPath: string = '',
+        firingPath = '',
     ) {
         this.id = id;
         this._x = signal(x);

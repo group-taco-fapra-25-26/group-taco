@@ -10,7 +10,6 @@ import { Diagram } from '../../classes/diagram/diagram';
 import { TabStateService } from '../../services/tab-state.service';
 import { SourcePetriNetService } from '../../services/source-petri-net.service';
 import { DisplayService } from '../../services/display.service';
-import { PlayService } from '../../services/play.service';
 import { SaveComponent } from '../tab-toolbar/save/save.component';
 import { UploadComponent } from '../tab-toolbar/upload/upload.component';
 import { ClearNetButtonComponent } from '../clear-net-button/clear-net-button.component';
