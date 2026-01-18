@@ -27,14 +27,7 @@ export class StateNode implements DisplayableNode {
         return signal(0);
     }
 
-    constructor(
-        id: string,
-        x: number,
-        y: number,
-        label: string,
-        marking: Record<string, number>,
-        firingPath = '',
-    ) {
+    constructor(id: string, x: number, y: number, label: string, marking: Record<string, number>, firingPath = '') {
         this.id = id;
         this._x = signal(x);
         this._y = signal(y);
