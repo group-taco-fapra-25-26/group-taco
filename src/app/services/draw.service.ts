@@ -9,6 +9,7 @@ import { SourcePetriNetService } from './source-petri-net.service';
 import { SpringEmbedderService } from './spring-embedder.service';
 import { DisplayService } from './display.service';
 import { ToasterNotificationService } from './toaster-notification.service';
+import { Tab } from '../classes/tabs';
 import { Diagram } from '../classes/diagram/diagram';
 import { Subscription } from 'rxjs';
 import { SerializationService } from './serialization.service';
@@ -20,6 +21,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { LabelEditDialogComponent } from '../components/label-edit-dialog/label-edit-dialog.component';
 import { firstValueFrom } from 'rxjs';
 import { PLACE_RADIUS as DISPLAY_PLACE_RADIUS, TRANSITION_SIZE } from '../components/display/display.constants';
+import { TabStateService } from './tab-state.service';
 
 export interface DrawnElement {
     node: DiagramNode;
@@ -61,6 +63,8 @@ export class DrawService implements OnDestroy {
     hoveredElementId = signal<string | null>(null);
     hoveredConnectionId = signal<string | null>(null);
     showTuplePreviewOnly = signal(false);
+
+    private _tabStateService = inject(TabStateService);
 
     readonly connectionLines = computed(() => {
         const nodeMap = new Map<string, DrawnElement>();
@@ -137,7 +141,7 @@ export class DrawService implements OnDestroy {
     }
 
     showTuplePreviewIfAvailable() {
-        if (this.isExamMode()) return;
+        if (this.isExamMode) return;
         const preview = this.tuplePreview();
         if (preview) {
             this.showTuplePreviewOnly.set(true);
@@ -177,11 +181,11 @@ export class DrawService implements OnDestroy {
 
     readonly viewBox = this.panning.viewBoxAsString;
     readonly viewBoxObj = this.panning.viewBox;
-    readonly isExamMode = this._modeService.isExamMode;
+    readonly isExamMode = this._modeService.isExamMode(Tab.DRAW);
 
     private readonly _examTupleEffect = this.createExamTupleEffect();
     private readonly _examModePreviewEffect = effect(() => {
-        if (this.isExamMode()) {
+        if (this.isExamMode) {
             this.showTupleInline();
         }
     });
@@ -193,7 +197,7 @@ export class DrawService implements OnDestroy {
                 this.suppressNextSourceLoad = false;
                 return;
             }
-            if (this.isExamMode()) {
+            if (this.isExamMode) {
                 this.handleExamModeSourceUpdate(diagram);
                 return;
             }
@@ -201,7 +205,7 @@ export class DrawService implements OnDestroy {
                 this.loadDiagramIntoCanvas(diagram);
                 this.resetViewIfReady();
                 const tuple = this._serializationService.serializeTuple(diagram);
-                if (tuple && !this.isExamMode()) {
+                if (tuple && !this.isExamMode) {
                     this.tupleString.set(tuple);
                 }
                 this.showTuplePreviewIfAvailable();
@@ -211,7 +215,7 @@ export class DrawService implements OnDestroy {
         });
 
         this.sourceTextSub = this._sourceNetService.sourceText$.subscribe((text: string | null) => {
-            if (this.isExamMode() && text) {
+            if (this.isExamMode && text) {
                 this.tupleString.set(text);
                 this.showTupleInline();
             }
@@ -354,7 +358,7 @@ export class DrawService implements OnDestroy {
     }
 
     onTupleButtonClick(): void {
-        if (this.isExamMode()) {
+        if (this.isExamMode) {
             this.validateDrawnNetAgainstTuple();
             return;
         }
@@ -543,7 +547,7 @@ export class DrawService implements OnDestroy {
 
     private createExamTupleEffect() {
         return effect(() => {
-            if (!this.isExamMode()) return;
+            if (!this.isExamMode) return;
             const sourceDiagram = this._sourceNetService.getCurrentSourceNet();
             const sourceText = this._sourceNetService.getSourceText();
             if (sourceDiagram) {
@@ -919,17 +923,18 @@ export class DrawService implements OnDestroy {
     }
 
     private syncSourceNetFromCanvas() {
-        if (this.isExamMode()) {
+        if (this.isExamMode) {
             return;
         }
         const diagram = this.buildDiagramFromCanvas();
 
         this.suppressNextSourceLoad = true;
         this._sourceNetService.updateEditedNet(diagram);
+        this._tabStateService.setAllLastMarkings(diagram.marking);
         this._displayService.display(diagram);
 
         const tuple = this._serializationService.serializeTuple(diagram);
-        if (tuple && !this.isExamMode()) {
+        if (tuple && !this.isExamMode) {
             this.tupleString.set(tuple);
         }
     }
@@ -1221,7 +1226,7 @@ export class DrawService implements OnDestroy {
     }
 
     setHoveredElementId(id: string | null) {
-        if (this.isExamMode()) {
+        if (this.isExamMode) {
             this.hoveredElementId.set(null);
             this.hoveredConnectionId.set(null);
             return;
@@ -1236,7 +1241,7 @@ export class DrawService implements OnDestroy {
     }
 
     setHoveredConnectionId(id: string | null) {
-        if (this.isExamMode()) {
+        if (this.isExamMode) {
             this.hoveredElementId.set(null);
             this.hoveredConnectionId.set(null);
             return;
