@@ -19,6 +19,7 @@ export class StateNode implements DisplayableNode {
     predecessors: StateNode[] = [];
     successors: StateNode[] = [];
     isMorMStrich = false;
+    tokenSum=0;
     //TO-DO add stack for saving transitions for algorithm?
 
     get shape(): SHAPE {
@@ -38,6 +39,7 @@ export class StateNode implements DisplayableNode {
         this._y = signal(y);
         this.label = label;
         this.rGMarking = marking;
+        this.calculateTokenSum(marking);
     }
 
     get x(): number {
@@ -55,6 +57,13 @@ export class StateNode implements DisplayableNode {
     set y(value: number) {
         this._y.set(value);
     }
+
+    private calculateTokenSum(marking: Record<string, number>){
+        for (const tokens of Object.values(marking)) {
+            this.tokenSum + tokens;            
+        }
+    }
+
 }
 
 /**
@@ -85,6 +94,7 @@ export class ReachabilityGraph implements DisplayableGraph {
     nodes: StateNode[] = [];
     edges: FiringEdge[] = [];
     isUnlimited = false;
+    breakLoop=false;
 
     getNodes(): DisplayableNode[] {
         return this.nodes;
