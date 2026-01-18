@@ -30,7 +30,6 @@ import { TOAST_POSITIONS, ToastList } from '../../../../classes/toast';
 import { TranslateModule } from '@ngx-translate/core';
 import { GRAPH_FILENAMES, GRAPH_IDS, PLACE_RADIUS, TRANSITION_SIZE } from '../../../display/display.constants';
 import { ModeService } from '../../../../services/mode.service';
-import { AppMode } from '../../../../classes/app-mode';
 import { TabStateService } from '../../../../services/tab-state.service';
 import { Tab } from '../../../../classes/tabs';
 import { SourcePetriNetService } from '../../../../services/source-petri-net.service';
@@ -167,7 +166,7 @@ export class ProcessNetDrawDisplayComponent implements OnInit, OnDestroy, AfterV
         const firingVersion = this.firingChangeVersion();
         const isNewFiringChange = firingVersion > this.lastProcessedFiringVersion;
         this.lastProcessedFiringVersion = firingVersion;
-        if (isNewFiringChange && this.modeService.currentMode() === AppMode.LEARN) {
+        if (isNewFiringChange && !this.modeService.isExamMode(Tab.PROCESS_NET)) {
             return;
         }
         this.clearDrawing();
@@ -645,7 +644,7 @@ export class ProcessNetDrawDisplayComponent implements OnInit, OnDestroy, AfterV
             diagram.resetMarking();
         }
 
-        if (this.modeService.currentMode() === AppMode.LEARN) {
+        if (!this.modeService.isExamMode(Tab.PROCESS_NET)) {
             this.onCreateStartPosition();
         }
 

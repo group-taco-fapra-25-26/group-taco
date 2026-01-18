@@ -86,7 +86,7 @@ export class PetriNetLoaderService {
 
             if (parsedNet) {
                 const inDrawTab = this._tabStateService.currentTab() === Tab.DRAW;
-                if (this._modeService.isExamMode() && inDrawTab) {
+                if (this._modeService.isExamMode(Tab.DRAW) && inDrawTab) {
                     const tuple = this._serializationService.serializeTuple(parsedNet) ?? content;
                     this._sourcePetriNetService.setSourceText(tuple);
                     this._toasterService.showSuccess('TOASTER.HEADER.SUCCESS', 'TOASTER.BODY.NET_LOADED_SUCCESSFULLY');
