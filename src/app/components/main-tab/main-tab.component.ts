@@ -48,7 +48,6 @@ export class MainTabComponent implements OnInit {
     private _tabStateService: TabStateService = inject(TabStateService);
     private _sourcePetriNetService: SourcePetriNetService = inject(SourcePetriNetService);
     private _displayService: DisplayService = inject(DisplayService);
-    private _playService: PlayService = inject(PlayService);
     private readonly _tabs: Tab[] = [Tab.DRAW, Tab.PLAY, Tab.REACHABILITY_GRAPH, Tab.PROCESS_NET];
 
     selectedIndex = Tab.DRAW; // Select which tab to show by default
@@ -62,15 +61,6 @@ export class MainTabComponent implements OnInit {
 
         const diagram = this._displayService.diagram;
         if (!diagram || !(diagram instanceof Diagram)) return;
-
-        if (this._tabStateService.currentTab() === Tab.DRAW || this._tabStateService.currentTab() === Tab.PROCESS_NET)
-            diagram.resetMarking();
-        else if (
-            this._tabStateService.currentTab() === Tab.PLAY ||
-            this._tabStateService.currentTab() === Tab.REACHABILITY_GRAPH
-        )
-            this._playService.recoverLastMarking(diagram);
-
         this._sourcePetriNetService.updateEditedNet(diagram, { triggeredByFiring: false });
     }
 }
