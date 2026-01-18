@@ -319,61 +319,47 @@ export class ReachabilityGraphService {
     recursiveCheckForInfinity(node: StateNode) {
         node.nodeVisitedStateForLimitCheck = true;
         let areTokensGettingBigger = false;
-        if(this.checkedStateNode){
-        for (const checkPredecessor of node.predecessors) {
+        if (this.checkedStateNode) {
+            for (const checkPredecessor of node.predecessors) {
+                if (!checkPredecessor.nodeVisitedStateForLimitCheck) {
+                    areTokensGettingBigger = this.compareTwoMarkings(
+                        this.checkedStateNode.rGMarking,
+                        checkPredecessor.rGMarking,
+                    );
 
-            if(!checkPredecessor.nodeVisitedStateForLimitCheck){
-                areTokensGettingBigger= this.compareTwoMarkings(this.checkedStateNode.rGMarking, checkPredecessor.rGMarking)
-                
-                
-                if(this.checkedStateNode.tokenSum>checkPredecessor.tokenSum && areTokensGettingBigger && !this._reachabilityGraph().isUnlimited){
-                    console.log('Unbeschränkt');
-                    this._reachabilityGraph().isUnlimited=true;
-                    checkPredecessor.isMorMStrich=true;
-                    //TODO unbeschraenkteMarkierungM = direkterVorgaengerMarkierung;
-                    this.checkedStateNode.isMorMStrich= true;
-                    //TODO unbeschraenkteMarkierungMStrich = egUnbeschraenktheitsPruefMarkierung;
-                    if(checkPredecessor.isStartingState){
-                        this._reachabilityGraph().breakLoop=true;
+                    if (
+                        this.checkedStateNode.tokenSum > checkPredecessor.tokenSum &&
+                        areTokensGettingBigger &&
+                        !this._reachabilityGraph().isUnlimited
+                    ) {
+                        console.log('Unbeschränkt');
+                        this._reachabilityGraph().isUnlimited = true;
+                        checkPredecessor.isMorMStrich = true;
+                        //TODO unbeschraenkteMarkierungM = direkterVorgaengerMarkierung;
+                        this.checkedStateNode.isMorMStrich = true;
+                        //TODO unbeschraenkteMarkierungMStrich = egUnbeschraenktheitsPruefMarkierung;
+                        if (checkPredecessor.isStartingState) {
+                            this._reachabilityGraph().breakLoop = true;
+                            return;
+                        }
                         return;
+                    } else {
+                        if (checkPredecessor.isStartingState) {
+                            this._reachabilityGraph().breakLoop = true;
+                            return;
+                        }
+                        this.recursiveCheckForInfinity(checkPredecessor);
                     }
-                    return;
-                    
                 }
-                else{
-
-                    if(checkPredecessor.isStartingState){
-                        this._reachabilityGraph().breakLoop=true;
-                        return;
-                    }
-                    this.recursiveCheckForInfinity(checkPredecessor);
-
-
-                }
-
-
-            }
-
-
-
-
-
             }
         }
 
-
-
         //isStarting State für Ursprung, damit dort Abbruch
-
-
-
 
         // Summe bilden und vergleichen, ob größer wird
         // außerdem Methode compareTwo Markings
         // Dann Kombination aus "alle StellenMarken >= und zusätzlich Summe höher bildet
         // dannd as vollstaendige Unbeschraenktheitskriterium.
-
-
 
         // wenn kleinere Markierung gefunden --> unbeschränkt true -->teil von
         // mundmStrich =true für hinzugefuegte und gefundene Markierung
@@ -384,12 +370,6 @@ export class ReachabilityGraphService {
         // besucht-Status für jede Markierung, damit man beim Prüfen nicht
         // rückwärts in Kreise läuft
     }
-  
-
-
-
-
-
 
     /**
      * Compares Marking of StateNode with Marking of previous StateNode to check for "real growth".
