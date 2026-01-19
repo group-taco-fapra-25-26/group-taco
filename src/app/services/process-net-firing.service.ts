@@ -6,6 +6,8 @@ import { DiagramTransition } from '../classes/diagram/diagram-transition';
 import { Connection, DrawnElement, ProcessNetStateService } from './process-net-state.service';
 import { PlayService } from './play.service';
 import { SourcePetriNetService } from './source-petri-net.service';
+import { ModeService } from './mode.service';
+import { Tab } from '../classes/tabs';
 
 export interface ProcessNetFiringFlow {
     placeId: string;
@@ -26,11 +28,13 @@ export class ProcessNetFiringService {
     private _sourceNetService = inject(SourcePetriNetService);
     private _toaster = inject(ToasterNotificationService);
     private _stateService = inject(ProcessNetStateService);
+    private _modeService = inject(ModeService);
 
     private autoFiringCount = 0;
     private _playService = inject(PlayService);
 
     processTransitionClicked(diagram: Diagram, node: DiagramTransition): void {
+        if (this._modeService.isExamMode(Tab.PROCESS_NET)) return;
         if (node.isActivated()) {
             const timestamp = new Date().toISOString();
             const firedTransition = node.label ?? node.id;
