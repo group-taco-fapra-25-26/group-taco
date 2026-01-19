@@ -1,4 +1,4 @@
-import { Injectable, ElementRef, computed, effect, OnDestroy, signal, inject } from '@angular/core';
+import { computed, effect, ElementRef, inject, Injectable, OnDestroy, signal } from '@angular/core';
 import { DiagramNode } from '../classes/diagram/diagram-node';
 import { DiagramPlace, DiagramPlaceLabelPlacement } from '../classes/diagram/diagram-place';
 import { DiagramTransition, DiagramTransitionOptions } from '../classes/diagram/diagram-transition';
@@ -11,7 +11,7 @@ import { DisplayService } from './display.service';
 import { ToasterNotificationService } from './toaster-notification.service';
 import { Tab } from '../classes/tabs';
 import { Diagram } from '../classes/diagram/diagram';
-import { Subscription } from 'rxjs';
+import { firstValueFrom, Subscription } from 'rxjs';
 import { SerializationService } from './serialization.service';
 import { ModeService } from './mode.service';
 import { TranslateService } from '@ngx-translate/core';
@@ -19,9 +19,9 @@ import { TOAST_POSITIONS, ToastList } from '../classes/toast';
 import { applyParallelOffsetsToArcs, DEFAULT_PARALLEL_OFFSET } from './arc-parallel-offset.util';
 import { MatDialog } from '@angular/material/dialog';
 import { LabelEditDialogComponent } from '../components/label-edit-dialog/label-edit-dialog.component';
-import { firstValueFrom } from 'rxjs';
 import { PLACE_RADIUS as DISPLAY_PLACE_RADIUS, TRANSITION_SIZE } from '../components/display/display.constants';
 import { TabStateService } from './tab-state.service';
+import { ProcessNetStateService } from './process-net-state.service';
 
 export interface DrawnElement {
     node: DiagramNode;
@@ -65,6 +65,7 @@ export class DrawService implements OnDestroy {
     showTuplePreviewOnly = signal(false);
 
     private _tabStateService = inject(TabStateService);
+    private _processNetStateService = inject(ProcessNetStateService);
 
     readonly connectionLines = computed(() => {
         const nodeMap = new Map<string, DrawnElement>();
@@ -932,6 +933,7 @@ export class DrawService implements OnDestroy {
         this._sourceNetService.updateEditedNet(diagram);
         this._tabStateService.setAllLastMarkings(diagram.marking);
         this._displayService.display(diagram);
+        this._processNetStateService.clear();
 
         const tuple = this._serializationService.serializeTuple(diagram);
         if (tuple && !this.isExamMode) {
