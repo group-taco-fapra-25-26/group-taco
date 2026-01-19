@@ -31,12 +31,6 @@ export class DisplayService implements OnDestroy {
         return this._diagram$.getValue();
     }
 
-    public consumeTriggeredByFiring(): boolean {
-        const wasFiring = this._triggeredByFiring;
-        this._triggeredByFiring = false;
-        return wasFiring;
-    }
-
     /**
      * Displays the given graph in the display area.
      *

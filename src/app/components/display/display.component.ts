@@ -17,6 +17,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { ReachabilityGraphService } from 'src/app/reachability-graph.service';
 import { StateNode } from '../../classes/reachability-graph.model';
 import { GRAPH_FILENAMES, GRAPH_IDS } from './display.constants';
+import { ProcessNetFiringService } from '../../services/process-net-firing.service';
 
 @Component({
     selector: 'app-display',
@@ -38,6 +39,7 @@ export class DisplayComponent implements OnInit, OnDestroy {
     private _playService = inject(PlayService);
     private _elementRef = inject(ElementRef);
     protected _reachabilityGraphService = inject(ReachabilityGraphService);
+    protected _processNetFiringService = inject(ProcessNetFiringService);
 
     readonly viewBox = this._panningService.viewBoxAsString;
     readonly viewBoxObj = this._panningService.viewBox;
@@ -101,12 +103,13 @@ export class DisplayComponent implements OnInit, OnDestroy {
             this._playService.processTransitionClick(diagram, node, true, true, true);
             return;
         }
-        const firedSuccessfully = this._playService.fireTransition(node, diagram, true);
+        if (currentTab === Tab.PROCESS_NET) {
+            this._processNetFiringService.processTransitionClicked(diagram, node);
+            return;
+        }
         if (currentTab === Tab.REACHABILITY_GRAPH) {
+            this._playService.fireTransition(node, diagram, true);
             this._reachabilityGraphService.convertFiringEntryLabelToReachabilityGraphID(diagram, node.label);
-        } else if (currentTab === Tab.PROCESS_NET) {
-            //Placeholder: e. g.
-            //this._processNetFiringService.handleClickedTransition(diagram, node, firedSuccessfully);
         }
         this._sourcePetriNetService.updateEditedNet(diagram, { triggeredByFiring: true });
     }

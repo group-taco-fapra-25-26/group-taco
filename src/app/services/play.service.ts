@@ -5,7 +5,6 @@ import { ToasterNotificationService } from './toaster-notification.service';
 import { SourcePetriNetService } from './source-petri-net.service';
 import { TabStateService } from './tab-state.service';
 import { Tab } from '../classes/tabs';
-import { ReachabilityGraphService } from '../reachability-graph.service';
 import { Diagram } from '../classes/diagram/diagram';
 import { DiagramTransition } from '../classes/diagram/diagram-transition';
 import { FiringEntry } from '../classes/firing-entry';
@@ -16,7 +15,6 @@ export class PlayService {
     private _notificationService = inject(ToasterNotificationService);
     private _sourceNetService = inject(SourcePetriNetService);
     private _tabStateService = inject(TabStateService);
-    private _reachabilityGraphService = inject(ReachabilityGraphService);
 
     private _startMarking: Record<string, number> = {};
     private _currentMarking = signal<Record<string, number>>({ ...this._startMarking });
@@ -123,7 +121,7 @@ export class PlayService {
      * @param updateSequence
      *          Whether the firing sequence should be updated when firing, false when validating a sequence.
      * @param notify
-     *          Whether notifications (e. g., transition not activated) should be displayed.
+     *          Whether notifications (e.g., transition not activated) should be displayed.
      * @param displayFiring
      *          Whether the color of the firing transition should be animated while firing.
      * @return true if the transition was fired successfully, otherwise false.
