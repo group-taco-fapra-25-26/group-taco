@@ -91,7 +91,8 @@
             "PROCESSING_ERROR": "Processing error",
             "START_POSITION": "Start position",
             "VALIDATION": "Validation",
-            "STATENODE_ARC_EXISTING": "StateNode and arc exist"
+            "STATENODE_ARC_EXISTING": "StateNode and arc exist",
+            "REACHABILITY_GRAPH_UNLIMITED": "Reachability Graph unlimited"
         },
         "BODY": {
             "NO_NET_TO_SAVE": "There is no Petri net to save.",
@@ -112,7 +113,8 @@
             "VALIDATION_VALID_WITH_INFOS": "The process net is valid.",
             "VALIDATION_INVALID": "The process net is invalid.",
             "SWITCHED_STATE_SUCCESSFULLY": "Petri Net marking was successfully switched to corresponding state.",
-            "STATENODE_ARC_EXISTING": "StateNode and arc already exist, state of RG was updated."
+            "STATENODE_ARC_EXISTING": "StateNode and arc already exist, state of RG was updated.",
+            "REACHABILITY_GRAPH_UNLIMITED": "Reachability Graph is unlimited."
         },
         "VALIDATION_MESSAGES": {
             "TRANSITION_NO_MATCH": "❌ Transition {{label}} has no matching label in the Petri net.",

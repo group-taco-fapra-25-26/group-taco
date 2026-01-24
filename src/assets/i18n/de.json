@@ -92,7 +92,8 @@
             "START_POSITION": "Startposition",
             "VALIDATION": "Validierung",
             "STATENODE_EXISTING": "Zustandsknoten vorhanden",
-            "STATENODE_ARC_EXISTING": "Zustandsknoten und Verbindung vorhanden"
+            "STATENODE_ARC_EXISTING": "Zustandsknoten und Verbindung vorhanden",
+            "REACHABILITY_GRAPH_UNLIMITED": "Erreichbarkeitsgraph unbeschränkt"
         },
         "BODY": {
             "NO_NET_TO_SAVE": "Es ist kein Petri-Netz zum Speichern vorhanden.",
@@ -114,7 +115,8 @@
             "VALIDATION_INVALID": "Das Prozessnetz ist ungültig.",
             "SWITCHED_STATE_SUCCESSFULLY": "Die Markierung des Petrinetzes wurde erfolgreich angepasst.",
             "STATENODE_EXISTING": "Der Zustandsknoten existiert bereits, neue Verbindung wurde erstellt.",
-            "STATENODE_ARC_EXISTING": "Der Zustandsknoten und die Verbindung existieren bereits, EG-Status wurde angepasst."
+            "STATENODE_ARC_EXISTING": "Der Zustandsknoten und die Verbindung existieren bereits, EG-Status wurde angepasst.",
+            "REACHABILITY_GRAPH_UNLIMITED": "Der Erreichbarkeitsgraph ist unbeschränkt."
         },
         "VALIDATION_MESSAGES": {
             "TRANSITION_NO_MATCH": "❌ Transition {{label}} hat keine passende Beschriftung im Petri-Netz.",

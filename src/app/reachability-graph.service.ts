@@ -301,6 +301,7 @@ export class ReachabilityGraphService {
      * checkForInfinity initializes the recursion
      */
     checkForInfinity(node: StateNode) {
+        console.log('CheckForInfinity');
         for (const rgStateNode of this._reachabilityGraph().nodes) {
             rgStateNode.nodeVisitedStateForLimitCheck = false;
         }
@@ -317,15 +318,19 @@ export class ReachabilityGraphService {
      * Helper method for recursive check of method checkForInfinity
      */
     recursiveCheckForInfinity(node: StateNode) {
+        console.log('Recursive CheckForInfinity');
         node.nodeVisitedStateForLimitCheck = true;
         let areTokensGettingBigger = false;
         if (this.checkedStateNode) {
+            console.log('Reec CheckForInfinity - If this.CheckedStateNode');
             for (const checkPredecessor of node.predecessors) {
                 if (!checkPredecessor.nodeVisitedStateForLimitCheck) {
+                    console.log('Rec CheckForInfinity - !checkPredecessor.nodeVisitedStateForLimitCheck');
                     areTokensGettingBigger = this.compareTwoMarkings(
                         this.checkedStateNode.rGMarking,
                         checkPredecessor.rGMarking,
                     );
+                    console.log('Are tokens getting bigger - '+ areTokensGettingBigger);
 
                     if (
                         this.checkedStateNode.tokenSum > checkPredecessor.tokenSum &&
@@ -333,6 +338,10 @@ export class ReachabilityGraphService {
                         !this._reachabilityGraph().isUnlimited
                     ) {
                         console.log('Unbeschränkt');
+                        this._notificationService.showInfo(
+                'TOASTER.HEADER.REACHABILITY_GRAPH_UNLIMITED',
+                'TOASTER.BODY.REACHABILITY_GRAPH_UNLIMITED',
+            );
                         this._reachabilityGraph().isUnlimited = true;
                         checkPredecessor.isMorMStrich = true;
                         //TODO unbeschraenkteMarkierungM = direkterVorgaengerMarkierung;
