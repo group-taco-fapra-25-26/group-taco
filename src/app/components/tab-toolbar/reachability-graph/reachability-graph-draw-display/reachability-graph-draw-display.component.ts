@@ -147,8 +147,4 @@ export class ReachabilityGraphDrawDisplayComponent extends DisplayComponent {
     private onValidate() {
         //maybe not validate but check for "beschränktheit" through a button?
     }
-
-   
-
-    
 }

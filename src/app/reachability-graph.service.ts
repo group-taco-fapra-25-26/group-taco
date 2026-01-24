@@ -330,9 +330,9 @@ export class ReachabilityGraphService {
                         this.checkedStateNode.rGMarking,
                         checkPredecessor.rGMarking,
                     );
-                    console.log('Are tokens getting bigger - '+ areTokensGettingBigger);
-                    console.log('this.checkedStateNode.tokenSum '+ this.checkedStateNode.tokenSum);
-                    console.log('checkPredecessor.tokenSum'+ checkPredecessor.tokenSum);
+                    console.log('Are tokens getting bigger - ' + areTokensGettingBigger);
+                    console.log('this.checkedStateNode.tokenSum ' + this.checkedStateNode.tokenSum);
+                    console.log('checkPredecessor.tokenSum' + checkPredecessor.tokenSum);
 
                     if (
                         this.checkedStateNode.tokenSum > checkPredecessor.tokenSum &&
@@ -341,9 +341,9 @@ export class ReachabilityGraphService {
                     ) {
                         console.log('Unbeschränkt');
                         this._notificationService.showInfo(
-                'TOASTER.HEADER.PETRI_NET_UNLIMITED',
-                'TOASTER.BODY.PETRI_NET_UNLIMITED',
-            );
+                            'TOASTER.HEADER.PETRI_NET_UNLIMITED',
+                            'TOASTER.BODY.PETRI_NET_UNLIMITED',
+                        );
                         this._reachabilityGraph().isUnlimited = true;
                         checkPredecessor.isMorMStrich = true;
                         //TODO unbeschraenkteMarkierungM = direkterVorgaengerMarkierung;

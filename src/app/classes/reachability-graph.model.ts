@@ -62,7 +62,7 @@ export class StateNode implements DisplayableNode {
     private calculateTokenSum(marking: Record<string, number>) {
         console.log('calculateTokenSum' + this.id);
         for (const tokens of Object.values(marking)) {
-            this.tokenSum =this.tokenSum + tokens;
+            this.tokenSum = this.tokenSum + tokens;
             console.log('calculatedSum' + this.tokenSum);
         }
     }
