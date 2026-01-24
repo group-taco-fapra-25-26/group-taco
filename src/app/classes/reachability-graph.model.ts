@@ -3,6 +3,7 @@ import { SHAPE } from './diagram/diagram-node';
 import { Coords } from './json-petri-net';
 import { signal, Signal, WritableSignal } from '@angular/core';
 import { Visited } from './visited';
+import { __values } from 'tslib';
 
 /**
  * A node representing a state in the reachability graph.
@@ -59,8 +60,10 @@ export class StateNode implements DisplayableNode {
     }
 
     private calculateTokenSum(marking: Record<string, number>) {
+        console.log('calculateTokenSum' + this.id);
         for (const tokens of Object.values(marking)) {
-            this.tokenSum + tokens;
+            this.tokenSum =this.tokenSum + tokens;
+            console.log('calculatedSum' + this.tokenSum);
         }
     }
 }
