@@ -133,7 +133,10 @@ export class PlayService {
         notify: boolean,
         displayFiring: boolean,
     ): boolean {
-        const entry: FiringEntry = this._currentFiringEntry || this.getEmptyFiringEntry();
+        const entry: FiringEntry =
+            this._currentFiringEntry && !this._currentFiringEntry.isClosed
+                ? this._currentFiringEntry
+                : this.getEmptyFiringEntry();
         if (node.isActivated() && entry.isValid !== false) {
             this.fireTransition(node, diagram, displayFiring);
             this._currentMarking.set({ ...diagram.marking });
