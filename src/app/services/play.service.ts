@@ -1,4 +1,4 @@
-import { inject, Injectable, signal } from '@angular/core';
+import { computed, inject, Injectable, signal } from '@angular/core';
 
 import { ModeService } from './mode.service';
 import { ToasterNotificationService } from './toaster-notification.service';
@@ -22,6 +22,8 @@ export class PlayService {
     private _idCounter = 0;
 
     firingEntries = signal<FiringEntry[]>([]);
+
+    private _isExamMode = computed(() => this._modeService.isExamMode(Tab.PLAY));
 
     set startMarking(marking: Record<string, number>) {
         this._startMarking = marking;
@@ -141,18 +143,17 @@ export class PlayService {
             this._currentFiringEntry && (!this._currentFiringEntry.isClosed || isSimulation)
                 ? this._currentFiringEntry
                 : this.getEmptyFiringEntry();
-        if (node.isActivated() && entry.isValid !== false) {
+        if (node.isActivated() && entry.isValid !== false && (!this._isExamMode() || isSimulation)) {
             this.fireTransition(node, diagram, displayFiring);
             this._currentMarking.set({ ...diagram.marking });
             entry.endMarking = { ...diagram.marking };
             if (updateSequence) {
                 this._sourceNetService.updateEditedNet(diagram, { triggeredByFiring: true });
-                const updateEndMarking = !this._modeService.isExamMode(Tab.PLAY);
-                this.updateFiringEntry(node.label, updateEndMarking);
+                this.updateFiringEntry(node.label, true);
             }
             entry.isValid = true;
             return true;
-        } else if (notify) {
+        } else if (notify && !this._isExamMode()) {
             this._notificationService.showWarning(
                 'TOASTER.HEADER.TRANSITION_NOT_ACTIVATED',
                 'TOASTER.BODY.TRANSITION_NOT_ACTIVATED',
@@ -160,7 +161,7 @@ export class PlayService {
             );
         }
         if (updateSequence) this.updateFiringEntry(node.label, false);
-        entry.isValid = false;
+        if (isSimulation) entry.isValid = false;
         return false;
     }
 
@@ -250,7 +251,7 @@ export class PlayService {
         if (entry.firingSequence.length === 0) entry.firingSequence = label;
         else entry.firingSequence = entry.firingSequence.replace(/[\s,;]+$/, '') + delimiter + label;
         entry.transitionCount += 1;
-        if (this._modeService.isExamMode(Tab.PLAY)) entry.isValid = undefined;
+        if (this._isExamMode()) entry.isValid = undefined;
         if (updateEndMarking) entry.endMarking = { ...this._currentMarking() };
     }
 
@@ -272,7 +273,7 @@ export class PlayService {
      */
     private getEmptyFiringEntry(): FiringEntry {
         const endMarking = { ...this._startMarking };
-        const isValid = this._modeService.isExamMode(Tab.PLAY) ? undefined : true;
+        const isValid = this._isExamMode() ? undefined : true;
         const newFiringEntry = new FiringEntry(this.getNewId(), '', 0, endMarking, false, isValid);
         this._currentFiringEntry = newFiringEntry;
         this.firingEntries.update((entries) => {
