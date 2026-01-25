@@ -119,7 +119,7 @@ export class FiringTableComponent implements OnInit, OnDestroy {
 
     async onPlaySequence(entry: FiringEntry): Promise<void> {
         if (this._diagram) {
-            this._playService.closeCurrentFiringEntry();
+            //this._playService.closeCurrentFiringEntry();
             await this._playService.playSequence(this._diagram, entry, this._TRANSITION_TIME, true);
         }
     }

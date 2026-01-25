@@ -19,7 +19,6 @@ export class PlayService {
     private _startMarking: Record<string, number> = {};
     private _currentMarking = signal<Record<string, number>>({ ...this._startMarking });
     private _currentFiringEntry: FiringEntry | undefined;
-    private _lastMarking: Record<string, number> | undefined;
     private _idCounter = 0;
 
     firingEntries = signal<FiringEntry[]>([]);
@@ -41,7 +40,6 @@ export class PlayService {
      */
     resetFiringEntries(): void {
         this.firingEntries.set([]);
-        this._lastMarking = undefined;
         this._currentFiringEntry = undefined;
     }
 
@@ -63,11 +61,13 @@ export class PlayService {
         transitionTime: number,
         displayFiring: boolean,
     ): Promise<boolean> {
+        const endMarkingCopy: Record<string, number> = { ...entry.endMarking };
+        if (this._currentFiringEntry) this._currentFiringEntry.endMarking = { ...diagram.marking };
         diagram.resetMarking();
         this._currentFiringEntry = entry;
+        entry.endMarking = diagram.marking;
         entry.isValid = true;
         entry.isPlaying = true;
-        const endMarkingCopy: Record<string, number> = { ...entry.endMarking };
 
         for (const label of entry.labels) {
             // Check if the playback was cancelled
@@ -80,12 +80,13 @@ export class PlayService {
             const node: DiagramTransition | undefined = diagram.getTransitionByLabel(label);
 
             if (node) {
-                const successfullyFired: boolean = this.processTransitionClick(
+                const successfullyFired: boolean = this.processTransitionClicked(
                     diagram,
                     node,
                     false,
                     true,
                     displayFiring,
+                    true,
                 );
                 if (!successfullyFired) {
                     entry.isValid = false;
@@ -124,23 +125,25 @@ export class PlayService {
      *          Whether notifications (e.g., transition not activated) should be displayed.
      * @param displayFiring
      *          Whether the color of the firing transition should be animated while firing.
+     * @param isSimulation
+     *          Whether the firing takes place only for simulation purposes.
      * @return true if the transition was fired successfully, otherwise false.
      */
-    processTransitionClick(
+    processTransitionClicked(
         diagram: Diagram,
         node: DiagramTransition,
         updateSequence: boolean,
         notify: boolean,
         displayFiring: boolean,
+        isSimulation: boolean,
     ): boolean {
         const entry: FiringEntry =
-            this._currentFiringEntry && !this._currentFiringEntry.isClosed
+            this._currentFiringEntry && (!this._currentFiringEntry.isClosed || isSimulation)
                 ? this._currentFiringEntry
                 : this.getEmptyFiringEntry();
         if (node.isActivated() && entry.isValid !== false) {
             this.fireTransition(node, diagram, displayFiring);
             this._currentMarking.set({ ...diagram.marking });
-            this._lastMarking = { ...diagram.marking };
             entry.endMarking = { ...diagram.marking };
             if (updateSequence) {
                 this._sourceNetService.updateEditedNet(diagram, { triggeredByFiring: true });
@@ -183,7 +186,6 @@ export class PlayService {
      */
     startNewFiringSequence(diagram: Diagram): void {
         diagram.resetMarking();
-        this._lastMarking = { ...diagram.marking };
         if (this._currentFiringEntry) this.closeCurrentFiringEntry();
         this.getEmptyFiringEntry();
         setTimeout(() => {
