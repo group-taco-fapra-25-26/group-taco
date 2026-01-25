@@ -20,6 +20,7 @@ export class ReachabilityGraphService {
     private _lastProcessedDiagram: Diagram | null = null;
     private _notificationService = inject(ToasterNotificationService);
     private _panningService = inject(PanningService);
+    private checkedStateNode: StateNode | undefined;
 
     private currentSourceRgId = 'RG1';
 
@@ -74,6 +75,7 @@ export class ReachabilityGraphService {
                 initialReachabilityLabel,
                 this._startMarkingRG,
             );
+            initialStateNode.isStartingState = true;
 
             //TO-DO Startmarkierung hervorheben, eingehender Arc aus dem Ursprung
             // const initialEdge = new FiringEdge('Initial', 'Initial', initialId, 'Initial','Initial');
@@ -109,6 +111,8 @@ export class ReachabilityGraphService {
         let currentRgId = 'RG' + nextNodeIndex;
         const nextEdgeIndex = graph.edges.length + 1;
         const currentRgEdgeId = 'Edge' + nextEdgeIndex;
+        let compareSourceStateNode: StateNode;
+        let compareTargetStateNode: StateNode;
 
         //prüfen, ob aktuelle Zielmarkierung bereits vorhanden
         for (let i = 0; i < graph.nodes.length; i++) {
@@ -117,6 +121,7 @@ export class ReachabilityGraphService {
             if (existingNodeLabel === currentReachabilityLabel) {
                 markingExists = true;
                 currentRgId = graph.nodes[i].id;
+                compareTargetStateNode = graph.nodes[i];
 
                 // Vorhandensein der Verbindung prüfen, wenn Markierung bereits existiert;
                 // so wird sichergestellt, dass eine Markierung, die von einer anderen Transiion
@@ -190,6 +195,18 @@ export class ReachabilityGraphService {
                 newGraph.edges = [...graph.edges, currentFiringEdge];
                 return newGraph;
             });
+
+            //add predecessors and successors to StateNodes
+            for (let l = 0; l < graph.nodes.length; l++) {
+                compareSourceStateNode = graph.nodes[l];
+
+                if (compareSourceStateNode.id === this.currentSourceRgId) {
+                    currentStateNode.predecessors.push(compareSourceStateNode);
+                    compareSourceStateNode.successors.push(currentStateNode);
+                }
+            }
+            //check for infinity after addition of each new StateNode
+            this.checkForInfinity(currentStateNode);
         }
 
         if (markingExists && !connectionExists) {
@@ -208,11 +225,23 @@ export class ReachabilityGraphService {
                 newGraph.edges = [...graph.edges, currentFiringEdge];
                 return newGraph;
             });
+
+            //add predecessors and successors to StateNodes
+            for (let m = 0; m < graph.nodes.length; m++) {
+                compareSourceStateNode = graph.nodes[m];
+
+                //TO-DO check for better way than ! or check that value can never be unassigned
+                if (compareSourceStateNode.id === this.currentSourceRgId) {
+                    compareTargetStateNode!.predecessors.push(compareSourceStateNode);
+                    compareSourceStateNode.successors.push(compareTargetStateNode!);
+                }
+            }
+
             this._notificationService.showInfo('TOASTER.HEADER.STATENODE_EXISTING', 'TOASTER.BODY.STATENODE_EXISTING');
         }
 
         if (markingExists && connectionExists) {
-            // State wechseln, damit Hinzufügen beim ächsten aufruf der Methode an der richtigen Stelle passiert
+            // State wechseln, damit Hinzufügen beim nächsten Aufruf der Methode an der richtigen Stelle passiert
             //wird nach Durchlaufen aller if-Schleifen getriggert
             this._notificationService.showInfo(
                 'TOASTER.HEADER.STATENODE_ARC_EXISTING',
@@ -262,5 +291,117 @@ export class ReachabilityGraphService {
             // console.log('Changed PN:' + oldPetriNet.currentMarking$);
             this._notificationService.showSuccess('TOASTER.HEADER.SUCCESS', 'TOASTER.BODY.SWITCHED_STATE_SUCCESSFULLY');
         }
+    }
+
+    /**
+     * Method to check for infinity of Reachability Graph.
+     * Triggered after each firing of a transition in the Petri Net.
+     * Goes backward from newly added StateNode and checks if there is a Combination of StateNodes which has indefinite growth
+     * Uses recursive method as well as comparison method for markings
+     * checkForInfinity initializes the recursion
+     */
+    checkForInfinity(node: StateNode) {
+        console.log('CheckForInfinity');
+        for (const rgStateNode of this._reachabilityGraph().nodes) {
+            rgStateNode.nodeVisitedStateForLimitCheck = false;
+        }
+
+        for (const rgEdge of this._reachabilityGraph().edges) {
+            rgEdge.isPartOfUnlimitedPath = false;
+        }
+
+        this.checkedStateNode = node;
+        this.recursiveCheckForInfinity(node);
+    }
+
+    /**
+     * Helper method for recursive check of method checkForInfinity
+     */
+    recursiveCheckForInfinity(node: StateNode) {
+        console.log('Recursive CheckForInfinity');
+        node.nodeVisitedStateForLimitCheck = true;
+        let areTokensGettingBigger = false;
+        if (this.checkedStateNode) {
+            console.log('Reec CheckForInfinity - If this.CheckedStateNode');
+            for (const checkPredecessor of node.predecessors) {
+                if (!checkPredecessor.nodeVisitedStateForLimitCheck) {
+                    console.log('Rec CheckForInfinity - !checkPredecessor.nodeVisitedStateForLimitCheck');
+                    areTokensGettingBigger = this.compareTwoMarkings(
+                        this.checkedStateNode.rGMarking,
+                        checkPredecessor.rGMarking,
+                    );
+                    console.log('Are tokens getting bigger - ' + areTokensGettingBigger);
+                    console.log('this.checkedStateNode.tokenSum ' + this.checkedStateNode.tokenSum);
+                    console.log('checkPredecessor.tokenSum' + checkPredecessor.tokenSum);
+
+                    if (
+                        this.checkedStateNode.tokenSum > checkPredecessor.tokenSum &&
+                        areTokensGettingBigger &&
+                        !this._reachabilityGraph().isUnlimited
+                    ) {
+                        console.log('Unbeschränkt');
+                        this._notificationService.showInfo(
+                            'TOASTER.HEADER.PETRI_NET_UNLIMITED',
+                            'TOASTER.BODY.PETRI_NET_UNLIMITED',
+                        );
+                        this._reachabilityGraph().isUnlimited = true;
+                        checkPredecessor.isMorMStrich = true;
+                        //TODO unbeschraenkteMarkierungM = direkterVorgaengerMarkierung;
+                        this.checkedStateNode.isMorMStrich = true;
+                        //TODO unbeschraenkteMarkierungMStrich = egUnbeschraenktheitsPruefMarkierung;
+                        if (checkPredecessor.isStartingState) {
+                            this._reachabilityGraph().breakLoop = true;
+                            return;
+                        }
+                        return;
+                    } else {
+                        if (checkPredecessor.isStartingState) {
+                            this._reachabilityGraph().breakLoop = true;
+                            return;
+                        }
+                        this.recursiveCheckForInfinity(checkPredecessor);
+                    }
+                }
+            }
+        }
+
+        //isStarting State für Ursprung, damit dort Abbruch
+
+        // Summe bilden und vergleichen, ob größer wird
+        // außerdem Methode compareTwo Markings
+        // Dann Kombination aus "alle StellenMarken >= und zusätzlich Summe höher bildet
+        // dannd as vollstaendige Unbeschraenktheitskriterium.
+
+        // wenn kleinere Markierung gefunden --> unbeschränkt true -->teil von
+        // mundmStrich =true für hinzugefuegte und gefundene Markierung
+        // --> vorabgeschaltete Transition als Teil des Pfades markieren (für alle
+        // Markierungen außer die letzte, da dort null)
+        // wenn nichts gefunden --> immer wieder vergleichen, bis kleinere Markierung
+        // gefunden (dann wie oben markieren) oder bis keine weiteren Vorgänger
+        // besucht-Status für jede Markierung, damit man beim Prüfen nicht
+        // rückwärts in Kreise läuft
+    }
+
+    /**
+     * Compares Marking of StateNode with Marking of previous StateNode to check for "real growth".
+     * Returns "true" when current marking "bigger" than previous marking on same path.
+     * Needed for InfinityCheck.
+     * @param currentlyVisitedMarking
+     * @param previouslyVisitedMarking
+     */
+    compareTwoMarkings(
+        currentlyVisitedMarking: Record<string, number>,
+        previouslyVisitedMarking: Record<string, number>,
+    ): boolean {
+        let currentMarkingHigher = true;
+
+        const currentPlaceMarking = Object.values(currentlyVisitedMarking);
+        const previousPlaceMarking = Object.values(previouslyVisitedMarking);
+
+        for (let i = 0; i < currentPlaceMarking.length; i++) {
+            if (previousPlaceMarking[i] > currentPlaceMarking[i]) currentMarkingHigher = false;
+        }
+
+        return currentMarkingHigher;
     }
 }

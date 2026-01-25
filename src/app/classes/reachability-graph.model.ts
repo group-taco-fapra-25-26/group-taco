@@ -2,6 +2,8 @@ import { DisplayableEdge, DisplayableGraph, DisplayableNode } from './displayabl
 import { SHAPE } from './diagram/diagram-node';
 import { Coords } from './json-petri-net';
 import { signal, Signal, WritableSignal } from '@angular/core';
+import { Visited } from './visited';
+import { __values } from 'tslib';
 
 /**
  * A node representing a state in the reachability graph.
@@ -12,8 +14,14 @@ export class StateNode implements DisplayableNode {
     _y: WritableSignal<number>;
     label: string;
     rGMarking: Record<string, number>;
-
-    //To-Do: is StartNode :true -- kann aber trotzdem Vorgänger haben
+    nodeVisitedStateForAlgorithm: Visited = Visited.WHITE;
+    nodeVisitedStateForLimitCheck = false;
+    isStartingState = false;
+    predecessors: StateNode[] = [];
+    successors: StateNode[] = [];
+    isMorMStrich = false;
+    tokenSum = 0;
+    //TO-DO add stack for saving transitions for algorithm?
 
     get shape(): SHAPE {
         return SHAPE.CIRCLE;
@@ -32,6 +40,7 @@ export class StateNode implements DisplayableNode {
         this._y = signal(y);
         this.label = label;
         this.rGMarking = marking;
+        this.calculateTokenSum(marking);
     }
 
     get x(): number {
@@ -49,6 +58,14 @@ export class StateNode implements DisplayableNode {
     set y(value: number) {
         this._y.set(value);
     }
+
+    private calculateTokenSum(marking: Record<string, number>) {
+        console.log('calculateTokenSum' + this.id);
+        for (const tokens of Object.values(marking)) {
+            this.tokenSum = this.tokenSum + tokens;
+            console.log('calculatedSum' + this.tokenSum);
+        }
+    }
 }
 
 /**
@@ -61,6 +78,7 @@ export class FiringEdge implements DisplayableEdge {
     displayLabel: string;
     bendPoints: Coords[] = [];
     rgFiringSequencePath: string;
+    isPartOfUnlimitedPath = false;
 
     constructor(id: string, source: string, target: string, transitionLabel: string, firedSequence: string) {
         this.id = id;
@@ -77,6 +95,8 @@ export class FiringEdge implements DisplayableEdge {
 export class ReachabilityGraph implements DisplayableGraph {
     nodes: StateNode[] = [];
     edges: FiringEdge[] = [];
+    isUnlimited = false;
+    breakLoop = false;
 
     getNodes(): DisplayableNode[] {
         return this.nodes;

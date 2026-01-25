@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, computed, signal } from '@angular/core';
 import { SvgNodeComponent } from '../../../display/svg-node/svg-node.component';
 import { PanningService } from 'src/app/services/panning.service';
 import { DisplayComponent } from 'src/app/components/display/display.component';
@@ -9,6 +9,7 @@ import {
     DrawToolbarComponent,
     DrawToolbarInstruction,
 } from '../../../draw-toolbar/draw-toolbar.component';
+import { DisplayableNode } from '../../../../classes/displayable-graph.interface';
 
 @Component({
     selector: 'app-reachability-graph-draw-display',
@@ -102,8 +103,6 @@ export class ReachabilityGraphDrawDisplayComponent extends DisplayComponent {
 
         return { x, y };
     }
-    readonly rgNodes = signal<StateNode[]>([]);
-    readonly rgEdges = signal<FiringEdge[]>([]);
 
     /**
      * Toolbar actions for the reachability graph drawing display.
