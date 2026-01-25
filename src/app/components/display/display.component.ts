@@ -6,9 +6,9 @@ import { SvgArcComponent } from './svg-arc/svg-arc.component';
 import { TabStateService } from '../../services/tab-state.service';
 import { Tab } from '../../classes/tabs';
 import { PetriNetLoaderService } from '../../services/petri-net-loader.service';
+import { SourcePetriNetService } from '../../services/source-petri-net.service';
 import { DisplayableNode } from '../../classes/displayable-graph.interface';
 import { DiagramTransition } from '../../classes/diagram/diagram-transition';
-import { ModeService } from '../../services/mode.service';
 import { PlayService } from '../../services/play.service';
 import { Diagram } from '../../classes/diagram/diagram';
 import { PanningService } from '../../services/panning.service';
@@ -17,6 +17,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { ReachabilityGraphService } from 'src/app/reachability-graph.service';
 import { StateNode } from '../../classes/reachability-graph.model';
 import { GRAPH_FILENAMES, GRAPH_IDS } from './display.constants';
+import { ProcessNetFiringService } from '../../services/process-net-firing.service';
 
 @Component({
     selector: 'app-display',
@@ -34,10 +35,11 @@ export class DisplayComponent implements OnInit, OnDestroy {
     protected _tabStateService = inject(TabStateService);
     private _imageExportService = inject(ImageExportService);
     private _loaderService = inject(PetriNetLoaderService);
-    private _modeService = inject(ModeService);
+    private _sourcePetriNetService = inject(SourcePetriNetService);
     private _playService = inject(PlayService);
     private _elementRef = inject(ElementRef);
     protected _reachabilityGraphService = inject(ReachabilityGraphService);
+    protected _processNetFiringService = inject(ProcessNetFiringService);
 
     readonly viewBox = this._panningService.viewBoxAsString;
     readonly viewBoxObj = this._panningService.viewBox;
@@ -88,11 +90,28 @@ export class DisplayComponent implements OnInit, OnDestroy {
 
     public processNodeClick(node: DisplayableNode) {
         const diagram = this.diagram();
-        if (this.isPlayingEnabled() && diagram && diagram instanceof Diagram && node instanceof DiagramTransition) {
-            if (this._modeService.isExamMode()) {
-                this._playService.updateFiringEntry(node.label, false);
-            } else this._playService.processTransitionClick(diagram, node, true, true, true);
+        if (
+            !this.isPlayingEnabled() ||
+            !diagram ||
+            !(diagram instanceof Diagram) ||
+            !(node instanceof DiagramTransition)
+        )
+            return;
+        const currentTab = this._tabStateService.currentTab();
+        if (currentTab === Tab.PLAY) {
+            // In PLAY tab, the actual firing is executed within processTransitionClick
+            this._playService.processTransitionClick(diagram, node, true, true, true);
+            return;
         }
+        if (currentTab === Tab.PROCESS_NET) {
+            this._processNetFiringService.processTransitionClicked(diagram, node);
+            return;
+        }
+        if (currentTab === Tab.REACHABILITY_GRAPH) {
+            this._playService.fireTransition(node, diagram, true);
+            this._reachabilityGraphService.convertFiringEntryLabelToReachabilityGraphID(diagram, node.label);
+        }
+        this._sourcePetriNetService.updateEditedNet(diagram, { triggeredByFiring: true });
     }
 
     public stateNodeClicked(node: DisplayableNode) {

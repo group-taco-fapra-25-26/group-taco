@@ -10,6 +10,8 @@ import { ToasterNotificationService } from './toaster-notification.service';
 import { TabStateService } from './tab-state.service';
 import { Tab } from '../classes/tabs';
 import { SerializationService } from './serialization.service';
+import { ProcessNetStateService } from './process-net-state.service';
+import { PanningService } from './panning.service';
 
 @Injectable({
     providedIn: 'root',
@@ -24,6 +26,8 @@ export class PetriNetLoaderService {
     private _modeService = inject(ModeService);
     private _tabStateService = inject(TabStateService);
     private _serializationService = inject(SerializationService);
+    private _processNetSateService = inject(ProcessNetStateService);
+    private _panningService = inject(PanningService);
 
     /**
      * Processes an uploaded file (File object).
@@ -85,15 +89,20 @@ export class PetriNetLoaderService {
             const parsedNet = this._parser.parse(content);
 
             if (parsedNet) {
+                this._processNetSateService.clear();
                 const inDrawTab = this._tabStateService.currentTab() === Tab.DRAW;
-                if (this._modeService.isExamMode() && inDrawTab) {
+                if (this._modeService.isExamMode(Tab.DRAW) && inDrawTab) {
                     const tuple = this._serializationService.serializeTuple(parsedNet) ?? content;
                     this._sourcePetriNetService.setSourceText(tuple);
                     this._toasterService.showSuccess('TOASTER.HEADER.SUCCESS', 'TOASTER.BODY.NET_LOADED_SUCCESSFULLY');
                     return;
                 }
                 this._sourcePetriNetService.loadNewNet(parsedNet, content);
+                this._tabStateService.setAllLastMarkings(parsedNet.marking);
                 this._displayService.display(parsedNet, { triggeredByFiring: false });
+                if (this._tabStateService.currentTab() === Tab.PROCESS_NET) {
+                    this._processNetSateService.createStartPositions(parsedNet, this._panningService.INITIAL_VIEWBOX);
+                }
                 this._toasterService.showSuccess('TOASTER.HEADER.SUCCESS', 'TOASTER.BODY.NET_LOADED_SUCCESSFULLY');
             } else {
                 this._toasterService.showWarning('TOASTER.HEADER.PARSER_ERROR', 'TOASTER.BODY.FILE_NOT_INTERPRETABLE');

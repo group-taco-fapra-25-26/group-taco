@@ -21,7 +21,9 @@ export class StateNode implements DisplayableNode {
     successors: StateNode[] = [];
     isMorMStrich = false;
     tokenSum = 0;
+    firingPath: string;
     //TO-DO add stack for saving transitions for algorithm?
+
 
     get shape(): SHAPE {
         return SHAPE.CIRCLE;
@@ -34,12 +36,13 @@ export class StateNode implements DisplayableNode {
         return signal(0);
     }
 
-    constructor(id: string, x: number, y: number, label: string, marking: Record<string, number>) {
+    constructor(id: string, x: number, y: number, label: string, marking: Record<string, number>, firingPath = '') {
         this.id = id;
         this._x = signal(x);
         this._y = signal(y);
         this.label = label;
         this.rGMarking = marking;
+        this.firingPath = firingPath;
         this.calculateTokenSum(marking);
     }
 
