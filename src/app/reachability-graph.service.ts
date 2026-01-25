@@ -175,12 +175,15 @@ export class ReachabilityGraphService {
                 firingPath,
             );
 
+            //Automatically show new graph in Learn Mode
+            if (!this._modeService.isExamMode(Tab.REACHABILITY_GRAPH)) {
             this._reachabilityGraph.update((graph) => {
                 const newGraph = new ReachabilityGraph();
                 newGraph.nodes = [...graph.nodes, currentStateNode];
                 newGraph.edges = [...graph.edges, currentFiringEdge];
                 return newGraph;
             });
+            }
 
             //add predecessors and successors to StateNodes
             for (const graphNodeElement of graph.nodes) {
@@ -207,12 +210,15 @@ export class ReachabilityGraphService {
                 firingPath,
             );
 
+            //Automatically show new graph in Learn Mode
+            if (!this._modeService.isExamMode(Tab.REACHABILITY_GRAPH)) {
             this._reachabilityGraph.update((graph) => {
                 const newGraph = new ReachabilityGraph();
                 newGraph.nodes = [...graph.nodes];
                 newGraph.edges = [...graph.edges, currentFiringEdge];
                 return newGraph;
             });
+        }
 
             //add predecessors and successors to StateNodes
             for (const nodeElementIterator of graph.nodes) {
@@ -228,6 +234,7 @@ export class ReachabilityGraphService {
             this._notificationService.showInfo('TOASTER.HEADER.STATENODE_EXISTING', 'TOASTER.BODY.STATENODE_EXISTING');
         }
 
+        //TO-DO: Decide, if behavior should change in Exam Mode, otherwise keep it like this
         if (markingExists && connectionExists) {
             // State wechseln, damit Hinzufügen beim nächsten Aufruf der Methode an der richtigen Stelle passiert
             //wird nach Durchlaufen aller if-Schleifen getriggert
