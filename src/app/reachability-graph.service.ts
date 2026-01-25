@@ -114,22 +114,22 @@ export class ReachabilityGraphService {
         let compareTargetStateNode: StateNode;
 
         //prüfen, ob aktuelle Zielmarkierung bereits vorhanden
-        for (let i = 0; i < graph.nodes.length; i++) {
-            const existingNodeLabel: string = graph.nodes[i].label;
+        for (const nodeElement of graph.nodes) {
+            const existingNodeLabel: string = nodeElement.label;
 
             if (existingNodeLabel === currentReachabilityLabel) {
                 markingExists = true;
-                currentRgId = graph.nodes[i].id;
-                compareTargetStateNode = graph.nodes[i];
+                currentRgId = nodeElement.id;
+                compareTargetStateNode = nodeElement;
 
                 // Vorhandensein der Verbindung prüfen, wenn Markierung bereits existiert;
                 // so wird sichergestellt, dass eine Markierung, die von einer anderen Transiion
                 // erzeugt wurde, ebenfalls verbunden bzw. eingefügt wird
                 //displayLabel, source und target der Verbindungen vergleichen, um Gleichheit eindeutig zu prüfen
-                for (let j = 0; j < graph.edges.length; j++) {
-                    const existingArcDisplayLabel: string = graph.edges[j].displayLabel;
-                    const existingArcSource: string = graph.edges[j].source;
-                    const existingArcTarget: string = graph.edges[j].target;
+                for (const edgeElement of graph.edges) {
+                    const existingArcDisplayLabel: string = edgeElement.displayLabel;
+                    const existingArcSource: string = edgeElement.source;
+                    const existingArcTarget: string = edgeElement.target;
 
                     if (
                         existingArcDisplayLabel === label &&
@@ -142,19 +142,8 @@ export class ReachabilityGraphService {
             }
         }
 
-        //TO-DO Nächste 4 Zeilen Löschen nach Testung
-        //Zustand nach Schalten / Target für Arcs
-        // const currentReachabilityLabel: string = Object.entries(firingEntry.endMarking)
-        //     .map(([, value]) => `${value}`)
-        //     .join(' ');
-
         if (!markingExists && !connectionExists) {
             // neuer Knoten und neue Kante
-
-            //TODO: Nächste 3 Zeilen Löschen nach Testung
-            // const graph = this._reachabilityGraph();
-            // const nextNodeIndex = graph.nodes.length + 1;
-            // const currentRgId = 'RG' + nextNodeIndex;
 
             const viewBox = this._panningService.viewBox();
             const width = Math.max(viewBox.width, 400);
@@ -178,10 +167,6 @@ export class ReachabilityGraphService {
                 firingPath,
             );
 
-            //TO-DO: Nächste 2 Zeilen Löschen nach Testung
-            // const nextEdgeIndex = graph.edges.length + 1;
-            // const currentRgEdgeId = 'Edge' + nextEdgeIndex;
-
             const currentFiringEdge = new FiringEdge(
                 currentRgEdgeId,
                 this.currentSourceRgId,
@@ -198,8 +183,8 @@ export class ReachabilityGraphService {
             });
 
             //add predecessors and successors to StateNodes
-            for (let l = 0; l < graph.nodes.length; l++) {
-                compareSourceStateNode = graph.nodes[l];
+            for (const graphNodeElement of graph.nodes) {
+                compareSourceStateNode = graphNodeElement;
 
                 if (compareSourceStateNode.id === this.currentSourceRgId) {
                     currentStateNode.predecessors.push(compareSourceStateNode);
@@ -230,8 +215,8 @@ export class ReachabilityGraphService {
             });
 
             //add predecessors and successors to StateNodes
-            for (let m = 0; m < graph.nodes.length; m++) {
-                compareSourceStateNode = graph.nodes[m];
+            for (const nodeElementIterator of graph.nodes) {
+                compareSourceStateNode = nodeElementIterator;
 
                 //TO-DO check for better way than ! or check that value can never be unassigned
                 if (compareSourceStateNode.id === this.currentSourceRgId) {
