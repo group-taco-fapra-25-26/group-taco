@@ -244,6 +244,48 @@ export class DrawService implements OnDestroy {
         if (event.dataTransfer) {
             event.dataTransfer.setData('element-type', type);
             event.dataTransfer.effectAllowed = 'copy';
+
+            // Create a custom SVG drag image
+            const svgNS = 'http://www.w3.org/2000/svg';
+            const size = 56;
+            const svg = document.createElementNS(svgNS, 'svg');
+            svg.setAttribute('width', size.toString());
+            svg.setAttribute('height', size.toString());
+            svg.setAttribute('viewBox', `0 0 ${size} ${size}`);
+            svg.style.background = 'none';
+
+            if (type === 'place') {
+                const circle = document.createElementNS(svgNS, 'circle');
+                circle.setAttribute('cx', '28');
+                circle.setAttribute('cy', '28');
+                circle.setAttribute('r', '22');
+                circle.setAttribute('fill', '#fff');
+                circle.setAttribute('stroke', '#222');
+                circle.setAttribute('stroke-width', '2.5');
+                svg.appendChild(circle);
+            } else {
+                const rect = document.createElementNS(svgNS, 'rect');
+                rect.setAttribute('x', '6');
+                rect.setAttribute('y', '6');
+                rect.setAttribute('width', '44');
+                rect.setAttribute('height', '44');
+                rect.setAttribute('fill', '#fff');
+                rect.setAttribute('stroke', '#222');
+                rect.setAttribute('stroke-width', '2.5');
+                rect.setAttribute('rx', '3');
+                svg.appendChild(rect);
+            }
+
+            // Add to DOM off-screen to render
+            svg.style.position = 'absolute';
+            svg.style.left = '-9999px';
+            document.body.appendChild(svg);
+
+            // Use the SVG as drag image
+            event.dataTransfer.setDragImage(svg, size / 2, size / 2);
+
+            // Remove after a short delay to ensure drag image is set
+            setTimeout(() => document.body.removeChild(svg), 0);
         }
         window.__dragData = {
             elementType: type,

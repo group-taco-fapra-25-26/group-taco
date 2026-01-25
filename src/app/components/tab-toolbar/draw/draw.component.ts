@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ElementRef, inject, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, computed, ElementRef, inject, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { SvgNodeComponent } from '../../display/svg-node/svg-node.component';
 import { PanningService } from '../../../services/panning.service';
 import { CommonModule } from '@angular/common';
@@ -10,11 +10,12 @@ import { DisplayService } from '../../../services/display.service';
 import { ImageExportService } from '../../../services/image-export.service';
 import { Subscription } from 'rxjs';
 import { GRAPH_FILENAMES, GRAPH_IDS } from '../../display/display.constants';
+import { DrawToolbarComponent, DrawToolbarInstruction } from '../../draw-toolbar/draw-toolbar.component';
 
 @Component({
     selector: 'app-draw',
     standalone: true,
-    imports: [CommonModule, FormsModule, TranslateModule, SvgNodeComponent, MatDialogModule],
+    imports: [CommonModule, FormsModule, TranslateModule, SvgNodeComponent, MatDialogModule, DrawToolbarComponent],
     templateUrl: './draw.component.html',
     styleUrl: './draw.component.css',
     providers: [PanningService, DrawService],
@@ -164,4 +165,18 @@ export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
 
     trackLineById = (_: number, line: { id: string }) => line.id;
     trackElementById = (_: number, element: DrawnElement) => element.id;
+
+    toolbarActions() {
+        return [];
+    }
+    protected readonly toolbarInstructions = computed<DrawToolbarInstruction[]>(() => {
+        return [
+            { label: 'PROCESS_NET.ACTION_DRAG_DROP', text: 'PROCESS_NET.INSTRUCTION_DRAG_DROP' },
+            { label: 'DRAW.INSTRUCTION.MOVE', text: 'DRAW.INSTRUCTION.LEFT_CLICK_MOVE' },
+            { label: 'DRAW.INSTRUCTION.CONNECT', text: 'DRAW.INSTRUCTION.RIGHT_CLICK_CONNECT' },
+            { label: 'DRAW.INSTRUCTION.DELETE', text: 'DRAW.INSTRUCTION.MIDDLE_CLICK_DELETE' },
+            { label: 'DRAW.INSTRUCTION.EDIT_LABEL', text: 'DRAW.INSTRUCTION.DOUBLE_CLICK_EDIT_LABEL' },
+            { label: 'DRAW.INSTRUCTION.SCROLL', text: 'DRAW.INSTRUCTION.SCROLL_CHANGE_TOKENS_WEIGHT' },
+        ];
+    });
 }
