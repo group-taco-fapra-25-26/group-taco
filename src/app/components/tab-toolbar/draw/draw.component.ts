@@ -1,11 +1,15 @@
-import { AfterViewInit, Component, OnDestroy, ViewChild, ElementRef, OnInit, inject } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, inject, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { SvgNodeComponent } from '../../display/svg-node/svg-node.component';
 import { PanningService } from '../../../services/panning.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { DrawService, DrawnElement } from '../../../services/draw.service';
+import { DrawnElement, DrawService } from '../../../services/draw.service';
 import { MatDialogModule } from '@angular/material/dialog';
+import { DisplayService } from '../../../services/display.service';
+import { ImageExportService } from '../../../services/image-export.service';
+import { Subscription } from 'rxjs';
+import { GRAPH_FILENAMES, GRAPH_IDS } from '../../display/display.constants';
 
 @Component({
     selector: 'app-draw',
@@ -19,6 +23,10 @@ export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
     @ViewChild('drawingArea') drawingArea!: ElementRef<SVGGraphicsElement>;
 
     draw = inject(DrawService);
+    private _elementRef = inject(ElementRef);
+    private _displayService = inject(DisplayService);
+    private _imageExportService = inject(ImageExportService);
+    private _sub?: Subscription;
 
     readonly drawnElements = this.draw.drawnElements;
     readonly isDragOver = this.draw.isDragOver;
@@ -42,6 +50,19 @@ export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
 
     ngOnInit(): void {
         this.draw.init();
+        this._sub = this._displayService.downloadRequest$.subscribe(({ format, target }) => {
+            if (target && target !== GRAPH_IDS.PETRI_NET) {
+                return;
+            }
+            if (this._elementRef.nativeElement.getBoundingClientRect().height === 0) {
+                return;
+            }
+            this._imageExportService.exportImage(
+                this.drawingArea.nativeElement,
+                format,
+                GRAPH_FILENAMES[GRAPH_IDS.PETRI_NET],
+            );
+        });
     }
 
     ngAfterViewInit() {
@@ -50,6 +71,7 @@ export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
 
     ngOnDestroy(): void {
         this.draw.destroy();
+        this._sub?.unsubscribe();
     }
 
     // Palette drag helpers

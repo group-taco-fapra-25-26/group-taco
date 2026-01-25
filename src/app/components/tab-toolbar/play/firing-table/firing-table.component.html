@@ -1,166 +1,156 @@
-<div class="firing-table-container">
-    <table class="firing-table">
-        <thead>
-            <tr>
-                <th>
-                    <mat-icon>playlist_add_check</mat-icon>
-                </th>
-                <th class="firing-sequence-th">{{ 'FIRING_SEQUENCE' | translate }}</th>
-                <th class="end-marking-th">{{ 'END_MARKING' | translate }}</th>
-                <th class="transition-count-th">{{ 'TRANSITION_COUNT' | translate }}</th>
-                <th class="delete-button-th">
-                    <button
-                        mat-icon-button
-                        color="warn"
-                        (click)="onDeleteAllEntries()"
-                        class="delete-all-entries-button">
-                        <mat-icon>delete_sweep</mat-icon>
-                    </button>
-                </th>
-            </tr>
-        </thead>
-        <tbody>
-            @for (entry of firingEntries; track entry.id) {
-                <tr>
-                    <td class="play-sequence-td">
-                        @if (entry.isValid) {
-                            <button mat-icon-button (click)="onPlaySequence(entry)" class="play-sequence-button">
-                                <mat-icon class="play-icon">play_circle</mat-icon>
-                            </button>
-                        } @else if (entry.isValid === false) {
-                            <button mat-icon-button class="invalid-sequence-button">
-                                <mat-icon color="warn">cancel</mat-icon>
-                            </button>
-                        }
-                    </td>
-                    <td class="firing-sequence-td">
-                        @if (!entry.isClosed) {
-                            <input
-                                type="text"
-                                [(ngModel)]="entry.firingSequence"
-                                id="firing-sequence-input"
-                                (input)="onInputChange(entry)"
-                                (keyup.Backspace)="onInputChange(entry)"
-                                (keyup.Delete)="onInputChange(entry)"
-                                (keydown.enter)="onNewEntry()" />
-                        } @else {
-                            {{ entry.firingSequence }}
-                        }
-                    </td>
-                    <td class="end-marking-td">
-                        @if (entry.isValid) {
-                            {{ entry.formattedEndMarking }}
-                        } @else if (entry.isValid === false) {
-                            X
-                        } @else {
-                            ?
-                        }
-                    </td>
-                    <td class="transition-count-td">{{ entry.transitionCount }}</td>
-                    <td class="delete-button-td">
-                        @if (entry.isClosed) {
+<div class="firing-table-wrapper">
+    @if (isFindSequencesFormVisible) {
+        <div class="find-sequences-form">
+            <div class="slider-wrapper">
+                <span class="slider-label">{{ 'PLAY.MAX_TRANSITION_COUNT' | translate }}:</span>
+                <mat-slider [min]="0" [max]="50" [step]="1">
+                    <input
+                        matSliderThumb
+                        [(ngModel)]="maxTransitionCount"
+                        (change)="onMaxTransitionCountChange($event)" />
+                </mat-slider>
+                <span class="slider-value">{{ maxTransitionCount }}</span>
+            </div>
+
+            <div class="form-divider-vertical" aria-hidden="true"></div>
+
+            <div class="slider-wrapper">
+                <span class="slider-label">{{ 'PLAY.MAX_SEQUENCE_COUNT' | translate }}:</span>
+                <mat-slider [min]="0" [max]="250" [step]="1">
+                    <input matSliderThumb [(ngModel)]="maxSequenceCount" (change)="onMaxSequenceCountChange($event)" />
+                </mat-slider>
+                <span class="slider-value">{{ maxSequenceCount }}</span>
+            </div>
+
+            <div class="form-button-container">
+                <button mat-raised-button color="primary" type="submit" (click)="onFindButton(firingPanel, $event)">
+                    <mat-icon>search</mat-icon>
+                    {{ 'START' | translate }}
+                </button>
+                <button mat-raised-button color="warn" type="button" (click)="toggleFindSequencesForm()">
+                    <mat-icon>close</mat-icon>
+                    {{ 'CANCEL' | translate }}
+                </button>
+            </div>
+        </div>
+    }
+    <mat-expansion-panel class="firing-table-panel" [expanded]="true" #firingPanel>
+        <mat-expansion-panel-header class="firing-table-header">
+            <div class="firing-table-header-title">
+                <mat-icon color="primary">table_chart</mat-icon>
+                <mat-panel-title>{{ 'PLAY.FIRING_TABLE' | translate }}</mat-panel-title>
+            </div>
+            <div class="firing-table-header-actions">
+                <button
+                    matIconButton
+                    [disabled]="isButtonActive()"
+                    color="primary"
+                    [matTooltip]="'PLAY.NEW_SEQUENCE' | translate"
+                    (click)="onAddButton(firingPanel, $event)">
+                    <mat-icon>add</mat-icon>
+                </button>
+                <button
+                    matIconButton
+                    [disabled]="isButtonActive()"
+                    color="primary"
+                    [matTooltip]="'PLAY.VALIDATE_SEQUENCES' | translate"
+                    (click)="onValidateButton(firingPanel, $event)">
+                    <mat-icon>checklist</mat-icon>
+                </button>
+                <button
+                    matIconButton
+                    [disabled]="isButtonActive()"
+                    [color]="buttonColor"
+                    [matTooltip]="'PLAY.FIND_SEQUENCES' | translate"
+                    (click)="toggleFindSequencesForm(); $event.stopPropagation()">
+                    <mat-icon>search</mat-icon>
+                </button>
+            </div>
+        </mat-expansion-panel-header>
+        <div class="firing-table-container">
+            <table class="firing-table">
+                <thead>
+                    <tr>
+                        <th>
+                            <mat-icon>playlist_add_check</mat-icon>
+                        </th>
+                        <th class="firing-sequence-th">{{ 'PLAY.FIRING_SEQUENCE' | translate }}</th>
+                        <th class="end-marking-th">{{ 'PLAY.END_MARKING' | translate }}</th>
+                        <th class="transition-count-th">{{ 'PLAY.TRANSITION_COUNT' | translate }}</th>
+                        <th class="delete-button-th">
                             <button
                                 mat-icon-button
                                 color="warn"
-                                (click)="onDeleteEntry(entry.id)"
-                                class="delete-entry-button">
-                                <mat-icon>delete</mat-icon>
+                                (click)="onDeleteAllEntries()"
+                                class="delete-all-entries-button">
+                                <mat-icon>delete_sweep</mat-icon>
                             </button>
-                        }
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
-</div>
-<div class="tab-toolbar-container">
-    <div class="tab-toolbar-row">
-        <div class="main-button-container">
-            <button mat-raised-button id="new-entry-button" (click)="onNewEntry()">
-                {{ 'NEW_SEQUENCE' | translate }}
-            </button>
-            <button mat-raised-button id="validate-firing-table-button" (click)="onValidateSequences()">
-                {{ 'VALIDATE_SEQUENCES' | translate }}
-            </button>
-            <button
-                mat-raised-button
-                id="find-sequences-button"
-                [color]="buttonColor"
-                (click)="toggleFindSequencesForm()">
-                {{ 'FIND_SEQUENCES' | translate }}
-            </button>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (entry of firingEntries; track entry.id) {
+                        <tr>
+                            <td class="play-sequence-td">
+                                @if (entry.isPlaying) {
+                                    <button
+                                        mat-icon-button
+                                        (click)="onStopPlaySequence(entry)"
+                                        class="stop-play-sequence-button">
+                                        <mat-icon color="warn">stop_circle</mat-icon>
+                                    </button>
+                                } @else if (entry.isValid) {
+                                    <button
+                                        mat-icon-button
+                                        (click)="onPlaySequence(entry)"
+                                        class="play-sequence-button">
+                                        <mat-icon class="play-icon">play_circle</mat-icon>
+                                    </button>
+                                } @else if (entry.isValid === false) {
+                                    <button mat-icon-button class="invalid-sequence-button">
+                                        <mat-icon color="warn">cancel</mat-icon>
+                                    </button>
+                                }
+                            </td>
+                            <td class="firing-sequence-td">
+                                @if (!entry.isClosed) {
+                                    <input
+                                        type="text"
+                                        [(ngModel)]="entry.firingSequence"
+                                        id="firing-sequence-input"
+                                        (input)="onInputChange(entry)"
+                                        (keyup.Backspace)="onInputChange(entry)"
+                                        (keyup.Delete)="onInputChange(entry)"
+                                        (keydown.enter)="onNewEntry()" />
+                                } @else {
+                                    {{ entry.firingSequence }}
+                                }
+                            </td>
+                            <td class="end-marking-td">
+                                @if (entry.isValid) {
+                                    {{ entry.formattedEndMarking }}
+                                } @else if (entry.isValid === false) {
+                                    X
+                                } @else {
+                                    ?
+                                }
+                            </td>
+                            <td class="transition-count-td">{{ entry.transitionCount }}</td>
+                            <td class="delete-button-td">
+                                @if (entry.isClosed) {
+                                    <button
+                                        mat-icon-button
+                                        color="warn"
+                                        (click)="onDeleteEntry(entry.id)"
+                                        class="delete-entry-button">
+                                        <mat-icon>delete</mat-icon>
+                                    </button>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
         </div>
-
-        @if (isFindSequencesFormVisible) {
-            <form (ngSubmit)="onFindSequences()" class="find-sequences-form">
-                <div class="marking-input-container">
-                    <span class="custom-input-label">{{ 'START_MARKING' | translate }}</span>
-                    <div class="marking-entries-row">
-                        @for (item of requiredStartMarking() | keyvalue; track item.key) {
-                            <div class="marking-entry">
-                                <span>{{ item.key }}:</span>
-                                <input
-                                    matInput
-                                    type="number"
-                                    min="0"
-                                    step="1"
-                                    inputmode="numeric"
-                                    pattern="[0-9]*"
-                                    [name]="'start_' + item.key"
-                                    [value]="requiredStartMarking()[item.key]"
-                                    (input)="updateRequiredStartMarking(item.key, $event)"
-                                    required />
-                            </div>
-                        }
-                    </div>
-                </div>
-
-                <div class="marking-input-container">
-                    <span class="custom-input-label">{{ 'END_MARKING' | translate }}</span>
-                    <div class="marking-entries-row">
-                        @for (item of requiredEndMarking() | keyvalue; track item.key) {
-                            <div class="marking-entry">
-                                <span>{{ item.key }}:</span>
-                                <input
-                                    matInput
-                                    type="number"
-                                    min="0"
-                                    step="1"
-                                    inputmode="numeric"
-                                    pattern="[0-9]*"
-                                    [name]="'start_' + item.key"
-                                    [value]="requiredEndMarking()[item.key]"
-                                    (input)="updateRequiredEndMarking(item.key, $event)"
-                                    required />
-                            </div>
-                        }
-                    </div>
-                </div>
-
-                <div class="transition-count-and-buttons-container">
-                    <div class="transition-count-input-container">
-                        <span class="custom-input-label transition-count-input-label"
-                            >{{ 'TRANSITION_COUNT' | translate }} (optional)</span
-                        >
-                        <input
-                            matInput
-                            type="number"
-                            min="0"
-                            step="1"
-                            inputmode="numeric"
-                            pattern="[0-9]*"
-                            name="requiredTransitionCount"
-                            [value]="requiredTransitionCount"
-                            (input)="updateRequiredTransitionCount($event)" />
-                    </div>
-                    <div class="form-button-container">
-                        <button mat-raised-button color="primary">{{ 'START' | translate }}</button>
-                        <button mat-raised-button color="warn" (click)="toggleFindSequencesForm()">
-                            {{ 'CANCEL' | translate }}
-                        </button>
-                    </div>
-                </div>
-            </form>
-        }
-    </div>
+    </mat-expansion-panel>
 </div>

@@ -1,4 +1,4 @@
-import { Component, inject, Input, OnDestroy, OnInit, signal } from '@angular/core';
+import { Component, inject, Input, OnDestroy, OnInit } from '@angular/core';
 import { TranslateModule } from '@ngx-translate/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -7,6 +7,8 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconButton } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
+import { MatSliderModule } from '@angular/material/slider';
+import { MatExpansionModule, MatExpansionPanel } from '@angular/material/expansion';
 import { filter, Subscription, take, tap } from 'rxjs';
 
 import { ModeService } from '../../../../services/mode.service';
@@ -15,6 +17,7 @@ import { PlayService } from '../../../../services/play.service';
 import { PlayValidationService } from '../../../../services/play-validation.service';
 import { Diagram } from '../../../../classes/diagram/diagram';
 import { FiringEntry } from '../../../../classes/firing-entry';
+import { MatTooltip } from '@angular/material/tooltip';
 
 @Component({
     selector: 'app-firing-table',
@@ -27,7 +30,10 @@ import { FiringEntry } from '../../../../classes/firing-entry';
         MatButtonModule,
         MatIconButton,
         MatIcon,
+        MatSliderModule,
+        MatExpansionModule,
         TranslateModule,
+        MatTooltip,
     ],
     templateUrl: './firing-table.component.html',
     styleUrl: './firing-table.component.css',
@@ -41,45 +47,31 @@ export class FiringTableComponent implements OnInit, OnDestroy {
     private _playValidationService = inject(PlayValidationService);
 
     private readonly _TRANSITION_TIME: number = 1000;
+    private readonly _MAX_TRANSITIONS_DEFAULT: number = 50;
+    private readonly _MAX_SEQUENCES_DEFAULT: number = 250;
 
     private _lastFiringSequence = '';
     private _diagram: Diagram | undefined;
     @Input() firingEntries: FiringEntry[] = [];
 
-    isFindSequencesFormVisible = false;
-    requiredStartMarking = signal<Record<string, number>>({});
-    requiredEndMarking = signal<Record<string, number>>({});
-    requiredTransitionCount = signal<number | undefined>(undefined);
-    buttonColor = 'basic';
+    protected isFindSequencesFormVisible = false;
+    protected maxTransitionCount: number = this._MAX_TRANSITIONS_DEFAULT;
+    protected maxSequenceCount: number = this._MAX_SEQUENCES_DEFAULT;
+    protected buttonColor = 'basic';
 
     ngOnInit(): void {
         this._sub = this._displayService.diagram$
             .pipe(
-                tap((diagram) => {
-                    if (!diagram) {
-                        this._diagram = undefined;
-                        this.requiredStartMarking.set({});
-                        this.requiredEndMarking.set({});
-                        this.requiredTransitionCount.set(undefined);
-                    }
+                tap((_) => {
+                    this._diagram = undefined;
+                    this.maxTransitionCount = this._MAX_TRANSITIONS_DEFAULT;
+                    this.maxSequenceCount = this._MAX_SEQUENCES_DEFAULT;
                 }),
-                filter((diagram): diagram is Diagram => !!diagram && diagram instanceof Diagram),
-                tap((diagram: Diagram) => {
-                    this._diagram = diagram;
-                    this.requiredStartMarking.set({ ...diagram.startMarking });
-                    this.requiredEndMarking.set(
-                        Object.keys(diagram.startMarking).reduce(
-                            (acc, key) => {
-                                acc[key] = 0;
-                                return acc;
-                            },
-                            {} as Record<string, number>,
-                        ),
-                    );
-                    this.requiredTransitionCount.set(undefined);
-                }),
+                filter((diagram): diagram is Diagram => diagram instanceof Diagram),
             )
-            .subscribe();
+            .subscribe((diagram: Diagram) => {
+                this._diagram = diagram;
+            });
     }
 
     ngOnDestroy(): void {
@@ -125,7 +117,14 @@ export class FiringTableComponent implements OnInit, OnDestroy {
     }
 
     async onPlaySequence(entry: FiringEntry): Promise<void> {
-        if (this._diagram) await this._playService.playSequence(this._diagram, entry, this._TRANSITION_TIME, true);
+        if (this._diagram) {
+            this._playService.closeCurrentFiringEntry();
+            await this._playService.playSequence(this._diagram, entry, this._TRANSITION_TIME, true);
+        }
+    }
+
+    onStopPlaySequence(entry: FiringEntry): void {
+        entry.isPlaying = false;
     }
 
     async onValidateSequences(): Promise<void> {
@@ -138,44 +137,47 @@ export class FiringTableComponent implements OnInit, OnDestroy {
 
     onFindSequences(): void {
         if (this._diagram) {
-            this._diagram.marking = this.requiredStartMarking();
-            this._playValidationService.findSequences(
-                this._diagram,
-                this.requiredStartMarking(),
-                this.requiredEndMarking(),
-                this.requiredTransitionCount(),
-            );
+            this._playService.resetFiringEntries();
+            this._playValidationService.findSequences(this._diagram, this.maxTransitionCount, this.maxSequenceCount);
+            this._diagram.resetMarking();
         }
     }
 
     toggleFindSequencesForm(): void {
+        if (!this._diagram) return;
         this.isFindSequencesFormVisible = !this.isFindSequencesFormVisible;
         this.buttonColor = this.isFindSequencesFormVisible ? 'primary' : 'basic';
     }
 
-    updateMarking(tokenCount: number | undefined, event: Event): void {
-        const inputValue = (event.target as HTMLInputElement).value;
-        tokenCount = inputValue === '' ? undefined : Number(inputValue);
+    isButtonActive(): boolean {
+        return !this._diagram;
     }
 
-    updateRequiredStartMarking(key: string, event: Event): void {
-        const value = Number((event.target as HTMLInputElement).value);
-        this.requiredStartMarking.set({
-            ...this.requiredStartMarking(),
-            [key]: value,
-        });
+    onMaxTransitionCountChange(event: Event): void {
+        const inputElement = event.target as HTMLInputElement;
+        this.maxTransitionCount = Number(inputElement.value);
     }
 
-    updateRequiredEndMarking(key: string, event: Event): void {
-        const value = Number((event.target as HTMLInputElement).value);
-        this.requiredEndMarking.set({
-            ...this.requiredEndMarking(),
-            [key]: value,
-        });
+    onMaxSequenceCountChange(event: Event): void {
+        const inputElement = event.target as HTMLInputElement;
+        this.maxSequenceCount = Number(inputElement.value);
     }
 
-    updateRequiredTransitionCount(event: Event): void {
-        const value = Number((event.target as HTMLInputElement).value);
-        this.requiredTransitionCount.set(value);
+    onAddButton(panel: MatExpansionPanel, event: Event): void {
+        event.stopPropagation();
+        if (!panel.expanded) panel.open();
+        this.onNewEntry();
+    }
+
+    onValidateButton(panel: MatExpansionPanel, event: Event): void {
+        event.stopPropagation();
+        if (!panel.expanded) panel.open();
+        this.onValidateSequences().catch(console.error);
+    }
+
+    onFindButton(panel: MatExpansionPanel, event: Event): void {
+        event.stopPropagation();
+        if (!panel.expanded) panel.open();
+        this.onFindSequences();
     }
 }
