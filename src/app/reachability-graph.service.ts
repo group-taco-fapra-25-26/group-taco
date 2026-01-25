@@ -86,6 +86,20 @@ export class ReachabilityGraphService {
 
             console.log('initialReachabilityLabel' + initialReachabilityLabel);
         } else if (this._modeService.isExamMode(Tab.REACHABILITY_GRAPH)) {
+
+// if (element.node instanceof DiagramPlace) {
+//             const currentLabel = element.node.label ?? element.node.displayLabel;
+//             this.promptForLabel('DRAW.PROMPT_EDIT_PLACE_TITLE', currentLabel).then((newLabel) => {
+//                 if (!newLabel || newLabel === currentLabel) return;
+//                 if (this.isLabelTaken(newLabel, element.id)) {
+//                     this.showDuplicateLabelError(newLabel);
+//                     return;
+//                 }
+
+
+
+
+
             //nur im Hintergrund vergleichen, User gibt NodeLabel, also Marking, selbst ein und bekommt Feedback
         }
     }
