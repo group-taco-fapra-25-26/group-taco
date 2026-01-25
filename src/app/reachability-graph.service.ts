@@ -1,14 +1,10 @@
 import { inject, Injectable, signal, Signal, WritableSignal } from '@angular/core';
-import { FiringEntry } from './classes/firing-entry';
 import { FiringEdge, ReachabilityGraph, StateNode } from './classes/reachability-graph.model';
 import { ModeService } from './services/mode.service';
-import { AppMode } from './classes/app-mode';
 import { SourcePetriNetService } from './services/source-petri-net.service';
 import { Diagram } from './classes/diagram/diagram';
 import { ToasterNotificationService } from './services/toaster-notification.service';
-import { PetriNet } from './services/process-net-validation.service';
-import { PlayService } from './services/play.service';
-import { DisplayableNode } from './classes/displayable-graph.interface';
+import { Tab } from './classes/tabs';
 
 @Injectable({
     providedIn: 'root',
@@ -56,7 +52,7 @@ export class ReachabilityGraphService {
 
         this._lastProcessedDiagram = currentNet;
 
-        if (this._modeService.currentMode() === AppMode.LEARN) {
+        if (!this._modeService.isExamMode(Tab.REACHABILITY_GRAPH)) {
             //AUTOMATISCH StateNode erzeugen
             //Current marking auslesen
             this._startMarkingRG = currentNet.startMarking || {};
@@ -82,7 +78,7 @@ export class ReachabilityGraphService {
             this._reachabilityGraph.set(newGraph);
 
             console.log('initialReachabilityLabel' + initialReachabilityLabel);
-        } else if (this._modeService.currentMode() === AppMode.EXAM) {
+        } else if (this._modeService.isExamMode(Tab.REACHABILITY_GRAPH)) {
             //nur im Hintergrund vergleichen, User gibt NodeLabel, also Marking, selbst ein und bekommt Feedback
         }
     }
@@ -91,12 +87,12 @@ export class ReachabilityGraphService {
      * Gets firing entry from play service
      * Converts marking to RG ID (only displays token numbers sorted ascending by place id (alphanumerical))
      *
-     * @param firingEntry The firing entry containing start and end markings.
+     * @param diagram The current diagram.
      * @param label The label of the fired transition.
      */
-    convertFiringEntryLabelToReachabilityGraphID(firingEntry: FiringEntry, label: string) {
+    convertFiringEntryLabelToReachabilityGraphID(diagram: Diagram, label: string) {
         //Zustand nach Schalten / Target für Arcs
-        const currentReachabilityLabel: string = Object.entries(firingEntry.endMarking)
+        const currentReachabilityLabel: string = Object.entries(diagram.marking)
             .map(([, value]) => `${value}`)
             .join(' ');
 
@@ -109,12 +105,15 @@ export class ReachabilityGraphService {
         const currentY: number = 50 + graph.nodes.length * 100;
 
         //neuen StateNode erzeugen
+        const previousNode = graph.nodes.find((node) => node.id === this.currentSourceRgId);
+        const firingPath = previousNode ? previousNode.firingPath + ' ' + label : label;
         const currentStateNode = new StateNode(
             currentRgId,
             currentX,
             currentY,
             currentReachabilityLabel,
-            firingEntry.endMarking as Record<string, number>,
+            { ...diagram.marking } as Record<string, number>,
+            firingPath,
         );
 
         const nextEdgeIndex = graph.edges.length + 1;
@@ -125,7 +124,7 @@ export class ReachabilityGraphService {
             this.currentSourceRgId,
             currentRgId,
             label,
-            firingEntry.firingSequence,
+            firingPath,
         );
 
         this._reachabilityGraph.update((graph) => {

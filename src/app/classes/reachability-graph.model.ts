@@ -12,6 +12,7 @@ export class StateNode implements DisplayableNode {
     _y: WritableSignal<number>;
     label: string;
     rGMarking: Record<string, number>;
+    firingPath: string;
 
     //To-Do: is StartNode :true -- kann aber trotzdem Vorgänger haben
 
@@ -26,12 +27,13 @@ export class StateNode implements DisplayableNode {
         return signal(0);
     }
 
-    constructor(id: string, x: number, y: number, label: string, marking: Record<string, number>) {
+    constructor(id: string, x: number, y: number, label: string, marking: Record<string, number>, firingPath = '') {
         this.id = id;
         this._x = signal(x);
         this._y = signal(y);
         this.label = label;
         this.rGMarking = marking;
+        this.firingPath = firingPath;
     }
 
     get x(): number {
