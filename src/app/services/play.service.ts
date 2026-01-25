@@ -5,7 +5,6 @@ import { ToasterNotificationService } from './toaster-notification.service';
 import { SourcePetriNetService } from './source-petri-net.service';
 import { TabStateService } from './tab-state.service';
 import { Tab } from '../classes/tabs';
-import { ReachabilityGraphService } from '../reachability-graph.service';
 import { Diagram } from '../classes/diagram/diagram';
 import { DiagramTransition } from '../classes/diagram/diagram-transition';
 import { FiringEntry } from '../classes/firing-entry';
@@ -16,7 +15,6 @@ export class PlayService {
     private _notificationService = inject(ToasterNotificationService);
     private _sourceNetService = inject(SourcePetriNetService);
     private _tabStateService = inject(TabStateService);
-    private _reachabilityGraphService = inject(ReachabilityGraphService);
 
     private _startMarking: Record<string, number> = {};
     private _currentMarking = signal<Record<string, number>>({ ...this._startMarking });
@@ -36,15 +34,6 @@ export class PlayService {
 
     set currentFiringEntry(entry: FiringEntry | undefined) {
         this._currentFiringEntry = entry;
-    }
-
-    /**
-     * Recovers the marking of the diagram from the last marking stored in the service.
-     * @param diagram
-     *          The diagram to recover the marking for.
-     */
-    recoverLastMarking(diagram: Diagram): void {
-        if (this._lastMarking) diagram.marking = this._lastMarking;
     }
 
     /**
@@ -113,6 +102,15 @@ export class PlayService {
         return true;
     }
 
+    fireTransition(node: DiagramTransition, diagram: Diagram, displayFiring: boolean): boolean {
+        if (node.isActivated()) {
+            node.fire(displayFiring);
+            diagram.updateMarking();
+            return true;
+        }
+        return false;
+    }
+
     /**
      * Fires a transition if it is activated, updates the diagram
      * and optionally records the firing in the firing sequence.
@@ -123,7 +121,7 @@ export class PlayService {
      * @param updateSequence
      *          Whether the firing sequence should be updated when firing, false when validating a sequence.
      * @param notify
-     *          Whether notifications (e. g., transition not activated) should be displayed.
+     *          Whether notifications (e.g., transition not activated) should be displayed.
      * @param displayFiring
      *          Whether the color of the firing transition should be animated while firing.
      * @return true if the transition was fired successfully, otherwise false.
@@ -137,14 +135,13 @@ export class PlayService {
     ): boolean {
         const entry: FiringEntry = this._currentFiringEntry || this.getEmptyFiringEntry();
         if (node.isActivated() && entry.isValid !== false) {
-            node.fire(displayFiring);
-            diagram.updateMarking();
+            this.fireTransition(node, diagram, displayFiring);
             this._currentMarking.set({ ...diagram.marking });
             this._lastMarking = { ...diagram.marking };
             entry.endMarking = { ...diagram.marking };
             if (updateSequence) {
                 this._sourceNetService.updateEditedNet(diagram, { triggeredByFiring: true });
-                const updateEndMarking = !this._modeService.isExamMode();
+                const updateEndMarking = !this._modeService.isExamMode(Tab.PLAY);
                 this.updateFiringEntry(node.label, updateEndMarking);
             }
             entry.isValid = true;
@@ -248,9 +245,8 @@ export class PlayService {
         if (entry.firingSequence.length === 0) entry.firingSequence = label;
         else entry.firingSequence = entry.firingSequence.replace(/[\s,;]+$/, '') + delimiter + label;
         entry.transitionCount += 1;
-        if (this._modeService.isExamMode()) entry.isValid = undefined;
+        if (this._modeService.isExamMode(Tab.PLAY)) entry.isValid = undefined;
         if (updateEndMarking) entry.endMarking = { ...this._currentMarking() };
-        this._reachabilityGraphService.convertFiringEntryLabelToReachabilityGraphID(entry, label);
     }
 
     /**
@@ -271,7 +267,7 @@ export class PlayService {
      */
     private getEmptyFiringEntry(): FiringEntry {
         const endMarking = { ...this._startMarking };
-        const isValid = this._modeService.isExamMode() ? undefined : true;
+        const isValid = this._modeService.getIsExamModeSignal(Tab.PLAY) ? undefined : true;
         const newFiringEntry = new FiringEntry(this.getNewId(), '', 0, endMarking, false, isValid);
         this._currentFiringEntry = newFiringEntry;
         this.firingEntries.update((entries) => {

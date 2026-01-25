@@ -8,6 +8,7 @@ import { DrawnElement, DrawService } from '../../../services/draw.service';
 import { MatDialogModule } from '@angular/material/dialog';
 import { DisplayService } from '../../../services/display.service';
 import { ImageExportService } from '../../../services/image-export.service';
+import { ModeService } from '../../../services/mode.service';
 import { Subscription } from 'rxjs';
 import { GRAPH_FILENAMES, GRAPH_IDS } from '../../display/display.constants';
 import { DrawToolbarComponent, DrawToolbarInstruction } from '../../draw-toolbar/draw-toolbar.component';
@@ -27,6 +28,7 @@ export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
     private _elementRef = inject(ElementRef);
     private _displayService = inject(DisplayService);
     private _imageExportService = inject(ImageExportService);
+    private _modeService = inject(ModeService);
     private _sub?: Subscription;
 
     readonly drawnElements = this.draw.drawnElements;
@@ -47,7 +49,9 @@ export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
 
     readonly viewBox = this.draw.viewBox;
     readonly viewBoxObj = this.draw.viewBoxObj;
-    readonly isExamMode = this.draw.isExamMode;
+    protected isExamMode = computed(() => {
+        return this._modeService.isExamMode(Tab.DRAW);
+    });
 
     ngOnInit(): void {
         this.draw.init();

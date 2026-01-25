@@ -15,6 +15,7 @@ import { ModeService } from '../../../../services/mode.service';
 import { DisplayService } from '../../../../services/display.service';
 import { PlayService } from '../../../../services/play.service';
 import { PlayValidationService } from '../../../../services/play-validation.service';
+import { Tab } from '../../../../classes/tabs';
 import { Diagram } from '../../../../classes/diagram/diagram';
 import { FiringEntry } from '../../../../classes/firing-entry';
 import { MatTooltip } from '@angular/material/tooltip';
@@ -88,7 +89,7 @@ export class FiringTableComponent implements OnInit, OnDestroy {
         if (!this._diagram) return;
         entry.transitionCount = entry.labels.length;
         this._playService.currentFiringEntry = entry;
-        if (this.modeService.isExamMode()) entry.isValid = undefined;
+        if (this.modeService.isExamMode(Tab.PLAY)) entry.isValid = undefined;
         else {
             if (entry.firingSequence.trim() === this._lastFiringSequence.trim()) return;
             this._lastFiringSequence = entry.firingSequence;
