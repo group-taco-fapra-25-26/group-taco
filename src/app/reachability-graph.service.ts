@@ -353,21 +353,6 @@ export class ReachabilityGraphService {
             }
         }
 
-        //isStarting State für Ursprung, damit dort Abbruch
-
-        // Summe bilden und vergleichen, ob größer wird
-        // außerdem Methode compareTwo Markings
-        // Dann Kombination aus "alle StellenMarken >= und zusätzlich Summe höher bildet
-        // dannd as vollstaendige Unbeschraenktheitskriterium.
-
-        // wenn kleinere Markierung gefunden --> unbeschränkt true -->teil von
-        // mundmStrich =true für hinzugefuegte und gefundene Markierung
-        // --> vorabgeschaltete Transition als Teil des Pfades markieren (für alle
-        // Markierungen außer die letzte, da dort null)
-        // wenn nichts gefunden --> immer wieder vergleichen, bis kleinere Markierung
-        // gefunden (dann wie oben markieren) oder bis keine weiteren Vorgänger
-        // besucht-Status für jede Markierung, damit man beim Prüfen nicht
-        // rückwärts in Kreise läuft
     }
 
     /**
