@@ -6,6 +6,15 @@
     "TAB_PLAY": "Schalten",
     "TAB_REACHABILITY": "Erreichbarkeitsgraph",
     "TAB_PROCESS": "Prozessnetz",
+    "REACHABILITY_GRAPH": {
+        "TOGGLE_VIEW": "Ansichtsmodus umschalten",
+        "ACTION_BUILD": "Graph aufbauen",
+        "INSTRUCTION_BUILD": "Schalte aktive Transitionen im Petri-Netz, um den Erreichbarkeitsgraphen schrittweise zu erkunden.",
+        "ACTION_MOVE": "Knoten verschieben",
+        "INSTRUCTION_MOVE": "Linksklick und Ziehen, um Zustandsknoten frei anzuordnen.",
+        "ACTION_RESET": "Zu Zustand springen",
+        "INSTRUCTION_RESET": "Doppelklick auf einen Zustandsknoten, um das Petri-Netz auf diese Markierung zurückzusetzen."
+    },
     "TOGGLE_MODE": "Modus umschalten",
     "SWITCH_TO_LEARNING_MODE": "Wechsel zu Lernmodus",
     "SWITCH_TO_EXAM_MODE": "Wechsel zu Prüfungsmodus",

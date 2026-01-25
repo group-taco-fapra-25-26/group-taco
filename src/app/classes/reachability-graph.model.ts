@@ -3,7 +3,6 @@ import { SHAPE } from './diagram/diagram-node';
 import { Coords } from './json-petri-net';
 import { signal, Signal, WritableSignal } from '@angular/core';
 import { Visited } from './visited';
-import { __values } from 'tslib';
 
 /**
  * A node representing a state in the reachability graph.
@@ -24,12 +23,11 @@ export class StateNode implements DisplayableNode {
     firingPath: string;
     //TO-DO add stack for saving transitions for algorithm?
 
-
     get shape(): SHAPE {
         return SHAPE.CIRCLE;
     }
     get displayLabel(): string {
-        return `[${this.label}]`;
+        return `(${this.label.replace(/ /g, ',')})`;
     }
 
     get tokenCount(): Signal<number> {

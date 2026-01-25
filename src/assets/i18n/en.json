@@ -6,6 +6,15 @@
     "TAB_PLAY": "Play",
     "TAB_REACHABILITY": "Reachability Graph",
     "TAB_PROCESS": "Process Net",
+    "REACHABILITY_GRAPH": {
+        "TOGGLE_VIEW": "Toggle View Mode",
+        "ACTION_BUILD": "Build Graph",
+        "INSTRUCTION_BUILD": "Fire enabled transitions in the Petri net to explore the reachability graph step by step.",
+        "ACTION_MOVE": "Move Node",
+        "INSTRUCTION_MOVE": "Left-click and drag state nodes to customize the layout.",
+        "ACTION_RESET": "Jump to State",
+        "INSTRUCTION_RESET": "Double-click a state node to reset the Petri net to this marking."
+    },
     "TOGGLE_MODE": "Toggle Mode",
     "SWITCH_TO_LEARNING_MODE": "Switch to Learning Mode",
     "SWITCH_TO_EXAM_MODE": "Switch to Exam Mode",

@@ -166,36 +166,36 @@ export class ReachabilityGraphService {
             const currentX: number = startX + Math.random() * width;
             const currentY: number = startY + Math.random() * height;
 
-        //neuen StateNode erzeugen
-        const previousNode = graph.nodes.find((node) => node.id === this.currentSourceRgId);
-        const firingPath = previousNode ? previousNode.firingPath + ' ' + label : label;
-        const currentStateNode = new StateNode(
-            currentRgId,
-            currentX,
-            currentY,
-            currentReachabilityLabel,
-            { ...diagram.marking } as Record<string, number>,
-            firingPath,
-        );
+            //neuen StateNode erzeugen
+            const previousNode = graph.nodes.find((node) => node.id === this.currentSourceRgId);
+            const firingPath = previousNode && previousNode.firingPath ? previousNode.firingPath + ' ' + label : label;
+            const currentStateNode = new StateNode(
+                currentRgId,
+                currentX,
+                currentY,
+                currentReachabilityLabel,
+                { ...diagram.marking } as Record<string, number>,
+                firingPath,
+            );
 
             //TO-DO: Nächste 2 Zeilen Löschen nach Testung
             // const nextEdgeIndex = graph.edges.length + 1;
             // const currentRgEdgeId = 'Edge' + nextEdgeIndex;
 
-        const currentFiringEdge = new FiringEdge(
-            currentRgEdgeId,
-            this.currentSourceRgId,
-            currentRgId,
-            label,
-            firingPath,
-        );
+            const currentFiringEdge = new FiringEdge(
+                currentRgEdgeId,
+                this.currentSourceRgId,
+                currentRgId,
+                label,
+                firingPath,
+            );
 
-        this._reachabilityGraph.update((graph) => {
-            const newGraph = new ReachabilityGraph();
-            newGraph.nodes = [...graph.nodes, currentStateNode];
-            newGraph.edges = [...graph.edges, currentFiringEdge];
-            return newGraph;
-        });
+            this._reachabilityGraph.update((graph) => {
+                const newGraph = new ReachabilityGraph();
+                newGraph.nodes = [...graph.nodes, currentStateNode];
+                newGraph.edges = [...graph.edges, currentFiringEdge];
+                return newGraph;
+            });
 
             //add predecessors and successors to StateNodes
             for (let l = 0; l < graph.nodes.length; l++) {
@@ -212,12 +212,14 @@ export class ReachabilityGraphService {
 
         if (markingExists && !connectionExists) {
             // neue Kante zu vorhandenem Markierungsknoten
+            const previousNode = graph.nodes.find((node) => node.id === this.currentSourceRgId);
+            const firingPath = previousNode && previousNode.firingPath ? previousNode.firingPath + ' ' + label : label;
             const currentFiringEdge = new FiringEdge(
                 currentRgEdgeId,
                 this.currentSourceRgId,
                 currentRgId,
                 label,
-                firingEntry.firingSequence,
+                firingPath,
             );
 
             this._reachabilityGraph.update((graph) => {
