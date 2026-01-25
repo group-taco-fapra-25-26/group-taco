@@ -352,7 +352,6 @@ export class ReachabilityGraphService {
                 }
             }
         }
-
     }
 
     /**
