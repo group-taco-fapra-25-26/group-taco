@@ -74,6 +74,8 @@
         "TOAST_DUPLICATE_LABEL_HEADER": "Duplicate label",
         "TOAST_DUPLICATE_LABEL_BODY": "The label '{{label}}' is already used. Please choose a unique label.",
         "INSTRUCTION": {
+            "ACTION_DRAG_DROP": "Drag & Drop",
+            "DRAG_DROP": "Drag elements from the palette to the canvas to create your Petri net.",
             "MOVE": "Move",
             "LEFT_CLICK_MOVE": "Left-click and drag to move elements around the canvas and from the palette to the canvas.",
             "CONNECT": "Connect",

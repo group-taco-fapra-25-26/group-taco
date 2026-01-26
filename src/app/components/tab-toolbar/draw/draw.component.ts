@@ -175,7 +175,7 @@ export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
     }
     protected readonly toolbarInstructions = computed<DrawToolbarInstruction[]>(() => {
         return [
-            { label: 'PROCESS_NET.ACTION_DRAG_DROP', text: 'PROCESS_NET.INSTRUCTION_DRAG_DROP' },
+            { label: 'DRAW.INSTRUCTION.ACTION_DRAG_DROP', text: 'DRAW.INSTRUCTION.DRAG_DROP' },
             { label: 'DRAW.INSTRUCTION.MOVE', text: 'DRAW.INSTRUCTION.LEFT_CLICK_MOVE' },
             { label: 'DRAW.INSTRUCTION.CONNECT', text: 'DRAW.INSTRUCTION.RIGHT_CLICK_CONNECT' },
             { label: 'DRAW.INSTRUCTION.DELETE', text: 'DRAW.INSTRUCTION.MIDDLE_CLICK_DELETE' },

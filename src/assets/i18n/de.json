@@ -75,6 +75,8 @@
         "TOAST_DUPLICATE_LABEL_HEADER": "Doppelte Beschriftung",
         "TOAST_DUPLICATE_LABEL_BODY": "Die Beschriftung '{{label}}' wird bereits verwendet. Bitte wähle eine eindeutige Beschriftung.",
         "INSTRUCTION": {
+            "ACTION_DRAG_DROP": "Ziehen & Ablegen",
+            "DRAG_DROP": "Ziehen Sie Elemente aus der linken Palette ins Zeichenfeld, um Ihr Petri-Netz zu erstellen.",
             "MOVE": "Verschieben",
             "LEFT_CLICK_MOVE": "Linksklick und Ziehen, um Elemente auf der Leinwand und aus der Palette auf die Leinwand zu verschieben.",
             "CONNECT": "Verbinden",
