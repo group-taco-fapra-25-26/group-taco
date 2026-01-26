@@ -43,9 +43,9 @@
                 <g appSvgStateNode [stateNode]="node" [viewMode]="viewMode()" />
                 <rect
                     class="drag-overlay"
-                    [attr.x]="node.x - 20"
+                    [attr.x]="computePosition(node)"
                     [attr.y]="node.y - 20"
-                    width="40"
+                    [attr.width]="calculateWidth(node)"
                     height="40"
                     fill="none"
                     stroke="none"

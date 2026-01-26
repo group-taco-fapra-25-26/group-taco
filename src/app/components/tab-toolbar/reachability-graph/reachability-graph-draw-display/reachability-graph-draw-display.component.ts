@@ -10,6 +10,7 @@ import {
     DrawToolbarInstruction,
 } from '../../../draw-toolbar/draw-toolbar.component';
 import { DisplayableNode } from '../../../../classes/displayable-graph.interface';
+import { StateNode } from '../../../../classes/reachability-graph.model';
 
 @Component({
     selector: 'app-reachability-graph-draw-display',
@@ -27,6 +28,13 @@ export class ReachabilityGraphDrawDisplayComponent extends DisplayComponent {
     private draggedNode: DisplayableNode | null = null;
     private dragOffset = { x: 0, y: 0 };
     private isDraggingNode = false;
+
+    calculateWidth(node: StateNode) {
+        if (this.viewMode() === VIEW_MODES.SIMPLE) {
+            return 40;
+        }
+        return node.displayLabel.length * 8;
+    }
 
     onNodeMouseDown(event: MouseEvent, node: DisplayableNode) {
         // Only start dragging for left mouse button
@@ -156,5 +164,9 @@ export class ReachabilityGraphDrawDisplayComponent extends DisplayComponent {
 
     private toggleViewMode() {
         this.viewMode.update((mode) => (mode === VIEW_MODES.SIMPLE ? VIEW_MODES.DESCRIPTIVE : VIEW_MODES.SIMPLE));
+    }
+
+    protected computePosition(node: StateNode) {
+        return node.x - this.calculateWidth(node) / 2;
     }
 }
