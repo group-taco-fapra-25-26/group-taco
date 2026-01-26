@@ -11,11 +11,12 @@ import {
 } from '../../../draw-toolbar/draw-toolbar.component';
 import { DisplayableNode } from '../../../../classes/displayable-graph.interface';
 import { StateNode } from '../../../../classes/reachability-graph.model';
+import { RgMarkingDialogComponent } from '../rg-marking-dialog/rg-marking-dialog.component';
 
 @Component({
     selector: 'app-reachability-graph-draw-display',
     standalone: true,
-    imports: [SvgStateNodeComponent, SvgStateArcComponent, DrawToolbarComponent],
+    imports: [SvgStateNodeComponent, SvgStateArcComponent, DrawToolbarComponent, RgMarkingDialogComponent],
     providers: [PanningService],
     templateUrl: './reachability-graph-draw-display.component.html',
     styleUrl: './reachability-graph-draw-display.component.css',
