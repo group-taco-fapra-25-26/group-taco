@@ -4,6 +4,12 @@ import { Coords } from '../../../classes/json-petri-net';
 import { DisplayableEdge, DisplayableNode } from '../../../classes/displayable-graph.interface';
 import { PLACE_RADIUS, TRANSITION_SIZE } from '../display.constants';
 
+// Extend DisplayableEdge to allow startOffset/endOffset
+export interface DisplayableEdgeWithOffset extends DisplayableEdge {
+    startOffset?: Coords;
+    endOffset?: Coords;
+}
+
 @Component({
     selector: 'g[appSvgArc]',
     imports: [],
@@ -15,7 +21,7 @@ export class SvgArcComponent {
     readonly RECT_WIDTH = TRANSITION_SIZE;
     readonly RECT_HEIGHT = TRANSITION_SIZE;
 
-    readonly diagramArc = input<DisplayableEdge>();
+    readonly diagramArc = input<DisplayableEdgeWithOffset>();
     readonly nodes = input<DisplayableNode[]>([]);
 
     readonly sourceNode = computed(() => {
@@ -38,7 +44,7 @@ export class SvgArcComponent {
     private getOffsetConnectionPoint(
         node: DisplayableNode | undefined,
         otherNode: DisplayableNode | undefined,
-        offset: number = 0,
+        offset = 0,
     ): Coords {
         if (!node || !otherNode) return { x: 0, y: 0 };
         const dx = otherNode.x - node.x;
@@ -81,8 +87,7 @@ export class SvgArcComponent {
         const source = this.sourceNode();
         const target = this.targetNode();
         // Use startOffset if present (for parallel arcs)
-        const offset =
-            arc && (arc as any).startOffset ? this.getOffsetFromCenters(source, target, (arc as any).startOffset) : 0;
+        const offset = arc && arc.startOffset ? this.getOffsetFromCenters(source, target, arc.startOffset) : 0;
         return this.getOffsetConnectionPoint(source, target, offset);
     });
 
@@ -91,8 +96,7 @@ export class SvgArcComponent {
         const source = this.sourceNode();
         const target = this.targetNode();
         // Use endOffset if present (for parallel arcs)
-        const offset =
-            arc && (arc as any).endOffset ? this.getOffsetFromCenters(target, source, (arc as any).endOffset) : 0;
+        const offset = arc && arc.endOffset ? this.getOffsetFromCenters(target, source, arc.endOffset) : 0;
         return this.getOffsetConnectionPoint(target, source, offset);
     });
 

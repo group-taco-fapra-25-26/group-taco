@@ -128,6 +128,12 @@ export function computeBendPointsForArc(
     return calculateBendPoints(start, end, offset, perpX, perpY);
 }
 
+// Patch: Extend DisplayableEdge to allow startOffset/endOffset
+export interface DisplayableEdgeWithOffset extends DisplayableEdge {
+    startOffset?: Coords;
+    endOffset?: Coords;
+}
+
 /**
  * Applies symmetric bend-point offsets to parallel arcs between the same node pair.
  * Mutates the provided arcs in place by writing bendPoints.
@@ -186,8 +192,8 @@ export function applyParallelOffsetsToArcs(
 
                 if (offset === null) {
                     arc.bendPoints = [];
-                    delete (arc as any).startOffset;
-                    delete (arc as any).endOffset;
+                    (arc as DisplayableEdgeWithOffset).startOffset = undefined;
+                    (arc as DisplayableEdgeWithOffset).endOffset = undefined;
                     return;
                 }
 
@@ -199,11 +205,11 @@ export function applyParallelOffsetsToArcs(
                 const perpY = dx / distance;
 
                 // Offset start and end points
-                (arc as any).startOffset = {
+                (arc as DisplayableEdgeWithOffset).startOffset = {
                     x: start.x + perpX * offset,
                     y: start.y + perpY * offset,
                 };
-                (arc as any).endOffset = {
+                (arc as DisplayableEdgeWithOffset).endOffset = {
                     x: end.x + perpX * offset,
                     y: end.y + perpY * offset,
                 };
