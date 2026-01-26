@@ -36,14 +36,24 @@
                 [nodes]="reachabilityGraphDiagram().getNodes() || []"
                 [edges]="reachabilityGraphDiagram().getEdges() || []"
                 [viewMode]="viewMode()" />
-            <g
-                appSvgStateArc
-                [diagramArc]="edge"
-                [nodes]="reachabilityGraphDiagram().getNodes() || []"
-                [edges]="reachabilityGraphDiagram().getEdges() || []"
-                [viewMode]="viewMode()" />
         }
 
+        @for (node of reachabilityGraphDiagram().nodes; track node.id) {
+            <g class="node-wrapper" [attr.data-node-id]="node.id">
+                <g appSvgStateNode [stateNode]="node" [viewMode]="viewMode()" />
+                <rect
+                    class="drag-overlay"
+                    [attr.x]="computePosition(node)"
+                    [attr.y]="node.y - 20"
+                    [attr.width]="calculateWidth(node)"
+                    height="40"
+                    fill="none"
+                    stroke="none"
+                    pointer-events="all"
+                    style="cursor: move"
+                    (mousedown)="onNodeMouseDown($event, node)"
+                    (dblclick)="stateNodeClicked(node)" />
+            </g>
         @for (node of reachabilityGraphDiagram().nodes; track node.id) {
             <g class="node-wrapper" [attr.data-node-id]="node.id">
                 <g appSvgStateNode [stateNode]="node" [viewMode]="viewMode()" />

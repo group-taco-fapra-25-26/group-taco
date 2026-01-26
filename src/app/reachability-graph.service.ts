@@ -9,6 +9,7 @@ import { PanningService } from './services/panning.service';
 import { MatButtonModule } from '@angular/material/button';
 import { RgMarkingDialogComponent } from './components/tab-toolbar/reachability-graph/rg-marking-dialog/rg-marking-dialog.component';
 import { MatDialog } from '@angular/material/dialog';
+import { PanningService } from './services/panning.service';
 
 @Injectable({
     providedIn: 'root',
@@ -24,6 +25,8 @@ export class ReachabilityGraphService {
     private _panningService = inject(PanningService);
     private checkedStateNode: StateNode | undefined;
     readonly dialog = inject(MatDialog);
+    private _panningService = inject(PanningService);
+    private checkedStateNode: StateNode | undefined;
 
     private currentSourceRgId = 'RG1';
 
@@ -78,7 +81,11 @@ export class ReachabilityGraphService {
             this._startMarkingRG,
         );
         initialStateNode.isStartingState = true;
-        
+                    initialStateNode.isStartingState = true;
+
+            //TO-DO Startmarkierung hervorheben, eingehender Arc aus dem Ursprung
+            // const initialEdge = new FiringEdge('Initial', 'Initial', initialId, 'Initial','Initial');
+
         //TO-DO Startmarkierung hervorheben, eingehender Arc aus dem Ursprung
         // const initialEdge = new FiringEdge('Initial', 'Initial', initialId, 'Initial','Initial');
         if (!this._modeService.isExamMode(Tab.REACHABILITY_GRAPH)) {

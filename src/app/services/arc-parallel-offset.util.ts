@@ -1,5 +1,7 @@
 import { DisplayableEdge, DisplayableNode } from '../classes/displayable-graph.interface';
 import { Coords } from '../classes/json-petri-net';
+import { DisplayableEdge, DisplayableNode } from '../classes/displayable-graph.interface';
+import { Coords } from '../classes/json-petri-net';
 
 export const DEFAULT_PARALLEL_OFFSET = 26;
 export const OFFSET_TOLERANCE = 0.01;
@@ -128,12 +130,6 @@ export function computeBendPointsForArc(
     return calculateBendPoints(start, end, offset, perpX, perpY);
 }
 
-// Patch: Extend DisplayableEdge to allow startOffset/endOffset
-export interface DisplayableEdgeWithOffset extends DisplayableEdge {
-    startOffset?: Coords;
-    endOffset?: Coords;
-}
-
 /**
  * Applies symmetric bend-point offsets to parallel arcs between the same node pair.
  * Mutates the provided arcs in place by writing bendPoints.
@@ -141,10 +137,14 @@ export interface DisplayableEdgeWithOffset extends DisplayableEdge {
 export function applyParallelOffsetsToArcs(
     arcs: DisplayableEdge[],
     nodes: DisplayableNode[] | Map<string, DisplayableNode>,
+    arcs: DisplayableEdge[],
+    nodes: DisplayableNode[] | Map<string, DisplayableNode>,
     parallelOffset = DEFAULT_PARALLEL_OFFSET,
 ): void {
     const nodeMap: Map<string, DisplayableNode> = nodes instanceof Map ? nodes : new Map(nodes.map((n) => [n.id, n]));
+    const nodeMap: Map<string, DisplayableNode> = nodes instanceof Map ? nodes : new Map(nodes.map((n) => [n.id, n]));
 
+    const groups = new Map<string, DisplayableEdge[]>();
     const groups = new Map<string, DisplayableEdge[]>();
     arcs.forEach((arc) => {
         const key = arc.source < arc.target ? `${arc.source}~${arc.target}` : `${arc.target}~${arc.source}`;
@@ -155,6 +155,7 @@ export function applyParallelOffsetsToArcs(
 
     groups.forEach((group, key) => {
         if (group.length < MIN_GROUP_SIZE) return;
+        if (group.length < MIN_GROUP_SIZE) return;
         const [aId, bId] = key.split('~');
         const nodeA = nodeMap.get(aId);
         const nodeB = nodeMap.get(bId);
@@ -163,6 +164,7 @@ export function applyParallelOffsetsToArcs(
         const dx = nodeB.x - nodeA.x;
         const dy = nodeB.y - nodeA.y;
         const distance = Math.hypot(dx, dy);
+        if (distance < MIN_ARC_LENGTH) return;
         if (distance < MIN_ARC_LENGTH) return;
 
         const perpX = -dy / distance;
@@ -178,17 +180,15 @@ export function applyParallelOffsetsToArcs(
         const applyOffsets = (list: DisplayableEdge[], baseShiftSign: -1 | 0 | 1) => {
             const pairedExists = baseShiftSign === 0 ? backward.length > 0 : forward.length > 0;
 
+        const applyOffsets = (list: DisplayableEdge[], baseShiftSign: -1 | 0 | 1) => {
+            const pairedExists = baseShiftSign === 0 ? backward.length > 0 : forward.length > 0;
+
             list.forEach((arc, index) => {
                 const start = nodeMap.get(arc.source);
                 const end = nodeMap.get(arc.target);
                 if (!start || !end) return;
 
-                let offset = calculateOffset(index, list.length, pairedExists, baseShiftSign, parallelOffset);
-
-                // Negate offset for backward arcs to shift to the opposite side
-                if (baseShiftSign === -1 && offset !== null) {
-                    offset = -offset;
-                }
+                const offset = calculateOffset(index, list.length, pairedExists, baseShiftSign, parallelOffset);
 
                 if (offset === null) {
                     arc.bendPoints = [];
@@ -197,27 +197,12 @@ export function applyParallelOffsetsToArcs(
                     return;
                 }
 
-                // Calculate perpendicular vector
-                const dx = end.x - start.x;
-                const dy = end.y - start.y;
-                const distance = Math.hypot(dx, dy);
-                const perpX = -dy / distance;
-                const perpY = dx / distance;
-
-                // Offset start and end points
-                (arc as DisplayableEdgeWithOffset).startOffset = {
-                    x: start.x + perpX * offset,
-                    y: start.y + perpY * offset,
-                };
-                (arc as DisplayableEdgeWithOffset).endOffset = {
-                    x: end.x + perpX * offset,
-                    y: end.y + perpY * offset,
-                };
-
-                arc.bendPoints = [];
+                arc.bendPoints = calculateBendPoints(start, end, offset, perpX, perpY);
             });
         };
 
+        applyOffsets(forward, 0);
+        applyOffsets(backward, -1);
         applyOffsets(forward, 0);
         applyOffsets(backward, -1);
     });
