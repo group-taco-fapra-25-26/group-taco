@@ -1,6 +1,5 @@
 import { AfterViewInit, Component, computed, ElementRef, inject, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { SvgNodeComponent } from '../../display/svg-node/svg-node.component';
-import { PanningService } from '../../../services/panning.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -12,6 +11,7 @@ import { ModeService } from '../../../services/mode.service';
 import { Subscription } from 'rxjs';
 import { GRAPH_FILENAMES, GRAPH_IDS } from '../../display/display.constants';
 import { DrawToolbarComponent, DrawToolbarInstruction } from '../../draw-toolbar/draw-toolbar.component';
+import { Tab } from '../../../classes/tabs';
 
 @Component({
     selector: 'app-draw',
@@ -19,7 +19,7 @@ import { DrawToolbarComponent, DrawToolbarInstruction } from '../../draw-toolbar
     imports: [CommonModule, FormsModule, TranslateModule, SvgNodeComponent, MatDialogModule, DrawToolbarComponent],
     templateUrl: './draw.component.html',
     styleUrl: './draw.component.css',
-    providers: [PanningService, DrawService],
+    providers: [],
 })
 export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
     @ViewChild('drawingArea') drawingArea!: ElementRef<SVGGraphicsElement>;

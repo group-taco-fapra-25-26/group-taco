@@ -100,6 +100,11 @@ export class PetriNetLoaderService {
                 this._sourcePetriNetService.loadNewNet(parsedNet, content);
                 this._tabStateService.setAllLastMarkings(parsedNet.marking);
                 this._displayService.display(parsedNet, { triggeredByFiring: false });
+                this._panningService.fitViewToGraph(parsedNet);
+                if (inDrawTab) {
+                    this._panningService.nudgeViewBox(0, -80);
+                    this._panningService.expandViewBox(1.1);
+                }
                 if (this._tabStateService.currentTab() === Tab.PROCESS_NET) {
                     this._processNetSateService.createStartPositions(parsedNet, this._panningService.INITIAL_VIEWBOX);
                 }

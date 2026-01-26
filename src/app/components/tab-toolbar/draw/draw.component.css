@@ -1,12 +1,18 @@
 .draw-layout {
     display: grid;
     grid-template-columns: auto 1fr;
-    gap: 12px;
-    align-items: start;
-    height: 70vh;
+    grid-template-rows: 1fr auto;
+    column-gap: 12px;
+    row-gap: 4px;
+    height: 750px;
     width: 100%;
     box-sizing: border-box;
     overflow-x: hidden;
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 12px 12px 5px 12px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
 :host {
@@ -28,8 +34,7 @@
     width: fit-content;
     min-width: 0;
     max-width: 100%;
-    margin-top: 12px;
-    margin-left: 12px;
+    align-self: start;
 }
 
 .palette h3 {
@@ -66,11 +71,13 @@
 .canvas-container {
     width: 100%;
     height: 100%;
+    min-height: 0;
     position: relative;
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
     overflow-x: hidden;
+    padding-bottom: 5px;
 }
 
 .inline-tuple-input {
@@ -293,5 +300,5 @@ svg text {
     grid-column: 1 / -1;
     width: 100%;
     box-sizing: border-box;
-    margin-top: 12px;
+    margin-top: 0;
 }

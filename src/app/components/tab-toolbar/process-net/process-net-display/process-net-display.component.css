@@ -1,7 +1,7 @@
 /* Styles inherited from DisplayComponent */
 .canvas {
     width: 100%;
-    height: 500px; /* Align height with drawing canvas */
+    height: 600px; /* Align height with drawing canvas */
     border: 1px dashed lightgrey; /* subtler border */
     user-select: none;
     -webkit-user-select: none;
@@ -18,8 +18,6 @@
 
 :host {
     /* Remove own green border & padding, handled by parent panel */
-    border: none;
-    padding: 0;
     display: block;
     box-sizing: border-box;
 }

@@ -98,7 +98,8 @@
         "MAX_TRANSITION_COUNT": "max. Anzahl Transitionen",
         "MAX_SEQUENCE_COUNT": "max. Anzahl Sequenzen"
     },
-    "HEADER_SUBTITLE": "Fachpraktikum Programmiersysteme WiSe25/26 von Marie G., Florian M., Ben L. und Alexander K.",
+    "HEADER_SUBTITLE": "Fachpraktikum Programmiersysteme WiSe25/26 von",
+    "HEADER_SUBTITLE_NAMES": "Marie G., Alexander K., Ben L. & Florian M.",
     "TOASTER": {
         "HEADER": {
             "SAVE_IMPOSSIBLE": "Speichern nicht möglich",

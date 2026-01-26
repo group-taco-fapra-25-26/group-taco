@@ -54,7 +54,9 @@ export interface TuplePreview {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare const window: any;
 
-@Injectable()
+@Injectable({
+    providedIn: 'root',
+})
 export class DrawService implements OnDestroy {
     drawnElements = signal<DrawnElement[]>([]);
     connections = signal<Connection[]>([]);
@@ -64,6 +66,8 @@ export class DrawService implements OnDestroy {
     hoveredConnectionId = signal<string | null>(null);
     showTuplePreviewOnly = signal(false);
 
+    private _lastDiagramRef: Diagram | null = null;
+    private _shouldResetView = false;
     private _tabStateService = inject(TabStateService);
     private _processNetStateService = inject(ProcessNetStateService);
 
@@ -204,7 +208,6 @@ export class DrawService implements OnDestroy {
             }
             if (diagram) {
                 this.loadDiagramIntoCanvas(diagram);
-                this.resetViewIfReady();
                 const tuple = this._serializationService.serializeTuple(diagram);
                 if (tuple && !this.isExamMode) {
                     this.tupleString.set(tuple);
@@ -227,7 +230,6 @@ export class DrawService implements OnDestroy {
         if (!drawingArea) return;
         this.drawingArea = drawingArea;
         this.svgElement = (this.drawingArea?.nativeElement as SVGSVGElement) ?? null;
-        this.resetViewIfReady();
     }
 
     ngOnDestroy(): void {
@@ -340,7 +342,7 @@ export class DrawService implements OnDestroy {
         const target = event.target as Element | null;
         const isOnElement = target?.closest('.element-wrapper') || target?.classList.contains('drag-overlay');
         if (isOnElement) return;
-        this.panning.startPan(event, undefined, this.drawingArea);
+        this.panning.startPan(event, this.drawingArea);
     }
 
     onCanvasPan(event: MouseEvent) {
@@ -355,7 +357,7 @@ export class DrawService implements OnDestroy {
 
     onCanvasWheel(event: WheelEvent) {
         if (!this.drawingArea) return;
-        this.panning.zoom(event, this.drawingArea, undefined);
+        this.panning.zoom(event, this.drawingArea);
     }
 
     preventContext(event: MouseEvent) {
@@ -626,16 +628,6 @@ export class DrawService implements OnDestroy {
             this.showTupleInline();
         } else {
             this.clearCanvas(true);
-        }
-    }
-
-    private resetViewIfReady() {
-        if (this.drawingArea) {
-            this.panning.resetViewBox(this.drawingArea);
-            // Nudge view down so top overlays (tuple input/preview) don't cover the net
-            this.panning.nudgeViewBox(0, -70);
-            // Slightly zoom out to keep bottom content visible after the nudge
-            this.panning.expandViewBox(1.1);
         }
     }
 
