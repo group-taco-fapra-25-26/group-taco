@@ -184,9 +184,16 @@ export class DrawService implements OnDestroy {
     private panning = inject(PanningService);
     private _dialog = inject(MatDialog);
 
-    readonly viewBox = this.panning.viewBoxAsString;
-    readonly viewBoxObj = this.panning.viewBox;
-    readonly isExamMode = this._modeService.isExamMode(Tab.DRAW);
+    get isExamMode() {
+        return this._modeService.isExamMode(Tab.DRAW);
+    }
+
+    get viewBox() {
+        return this.panning.viewBoxAsString;
+    }
+    get viewBoxObj() {
+        return this.panning.viewBox;
+    }
 
     private readonly _examTupleEffect = this.createExamTupleEffect();
     private readonly _examModePreviewEffect = effect(() => {
