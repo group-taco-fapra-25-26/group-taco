@@ -128,12 +128,6 @@ export function computeBendPointsForArc(
     return calculateBendPoints(start, end, offset, perpX, perpY);
 }
 
-// Patch: Extend DisplayableEdge to allow startOffset/endOffset
-export interface DisplayableEdgeWithOffset extends DisplayableEdge {
-    startOffset?: Coords;
-    endOffset?: Coords;
-}
-
 /**
  * Applies symmetric bend-point offsets to parallel arcs between the same node pair.
  * Mutates the provided arcs in place by writing bendPoints.
@@ -183,12 +177,7 @@ export function applyParallelOffsetsToArcs(
                 const end = nodeMap.get(arc.target);
                 if (!start || !end) return;
 
-                let offset = calculateOffset(index, list.length, pairedExists, baseShiftSign, parallelOffset);
-
-                // Negate offset for backward arcs to shift to the opposite side
-                if (baseShiftSign === -1 && offset !== null) {
-                    offset = -offset;
-                }
+                const offset = calculateOffset(index, list.length, pairedExists, baseShiftSign, parallelOffset);
 
                 if (offset === null) {
                     arc.bendPoints = [];
@@ -197,24 +186,7 @@ export function applyParallelOffsetsToArcs(
                     return;
                 }
 
-                // Calculate perpendicular vector
-                const dx = end.x - start.x;
-                const dy = end.y - start.y;
-                const distance = Math.hypot(dx, dy);
-                const perpX = -dy / distance;
-                const perpY = dx / distance;
-
-                // Offset start and end points
-                (arc as DisplayableEdgeWithOffset).startOffset = {
-                    x: start.x + perpX * offset,
-                    y: start.y + perpY * offset,
-                };
-                (arc as DisplayableEdgeWithOffset).endOffset = {
-                    x: end.x + perpX * offset,
-                    y: end.y + perpY * offset,
-                };
-
-                arc.bendPoints = [];
+                arc.bendPoints = calculateBendPoints(start, end, offset, perpX, perpY);
             });
         };
 
