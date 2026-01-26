@@ -177,14 +177,38 @@ export function applyParallelOffsetsToArcs(
                 const end = nodeMap.get(arc.target);
                 if (!start || !end) return;
 
-                const offset = calculateOffset(index, list.length, pairedExists, baseShiftSign, parallelOffset);
+                let offset = calculateOffset(index, list.length, pairedExists, baseShiftSign, parallelOffset);
+
+                // Negate offset for backward arcs to shift to the opposite side
+                if (baseShiftSign === -1 && offset !== null) {
+                    offset = -offset;
+                }
 
                 if (offset === null) {
                     arc.bendPoints = [];
+                    delete (arc as any).startOffset;
+                    delete (arc as any).endOffset;
                     return;
                 }
 
-                arc.bendPoints = calculateBendPoints(start, end, offset, perpX, perpY);
+                // Calculate perpendicular vector
+                const dx = end.x - start.x;
+                const dy = end.y - start.y;
+                const distance = Math.hypot(dx, dy);
+                const perpX = -dy / distance;
+                const perpY = dx / distance;
+
+                // Offset start and end points
+                (arc as any).startOffset = {
+                    x: start.x + perpX * offset,
+                    y: start.y + perpY * offset,
+                };
+                (arc as any).endOffset = {
+                    x: end.x + perpX * offset,
+                    y: end.y + perpY * offset,
+                };
+
+                arc.bendPoints = [];
             });
         };
 
