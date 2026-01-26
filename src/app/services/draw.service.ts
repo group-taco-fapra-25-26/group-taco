@@ -404,6 +404,11 @@ export class DrawService implements OnDestroy {
             this._springEmbedderService.calculateLayout().catch((error) => console.error(error));
             this._toaster.showSuccess('TUPLE_INPUT.TOAST_SUCCESS_HEADER', 'TUPLE_INPUT.TOAST_SUCCESS_BODY');
             this.showTuplePreviewIfAvailable();
+
+            // Build node map and apply parallel offsets to arcs
+            const nodeMap = new Map<string, DiagramNode>();
+            diagram.allNodes.forEach((node: DiagramNode) => nodeMap.set(node.id, node));
+            this.applyParallelOffsetsToArcs(diagram.arcs, nodeMap);
         } else {
             this._toaster.showError('TUPLE_INPUT.TOAST_ERROR_HEADER', 'TUPLE_INPUT.TOAST_ERROR_BODY');
         }
