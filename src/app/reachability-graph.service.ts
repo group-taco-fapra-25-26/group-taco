@@ -5,6 +5,7 @@ import { SourcePetriNetService } from './services/source-petri-net.service';
 import { Diagram } from './classes/diagram/diagram';
 import { ToasterNotificationService } from './services/toaster-notification.service';
 import { Tab } from './classes/tabs';
+import { PanningService } from './services/panning.service';
 
 @Injectable({
     providedIn: 'root',
@@ -17,6 +18,8 @@ export class ReachabilityGraphService {
     private _currentMarkingRG = signal<Record<string, number>>(this._startMarkingRG);
     private _lastProcessedDiagram: Diagram | null = null;
     private _notificationService = inject(ToasterNotificationService);
+    private _panningService = inject(PanningService);
+    private checkedStateNode: StateNode | undefined;
 
     private currentSourceRgId = 'RG1';
 
@@ -71,6 +74,10 @@ export class ReachabilityGraphService {
                 initialReachabilityLabel,
                 this._startMarkingRG,
             );
+            initialStateNode.isStartingState = true;
+
+            //TO-DO Startmarkierung hervorheben, eingehender Arc aus dem Ursprung
+            // const initialEdge = new FiringEdge('Initial', 'Initial', initialId, 'Initial','Initial');
 
             const newGraph = new ReachabilityGraph();
             newGraph.nodes = [initialStateNode];
@@ -91,53 +98,150 @@ export class ReachabilityGraphService {
      * @param label The label of the fired transition.
      */
     convertFiringEntryLabelToReachabilityGraphID(diagram: Diagram, label: string) {
-        //Zustand nach Schalten / Target für Arcs
+        let markingExists = false;
+        let connectionExists = false;
+
         const currentReachabilityLabel: string = Object.entries(diagram.marking)
             .map(([, value]) => `${value}`)
             .join(' ');
 
         const graph = this._reachabilityGraph();
         const nextNodeIndex = graph.nodes.length + 1;
-        const currentRgId = 'RG' + nextNodeIndex;
-
-        //x und y Startwert konstant festlegen
-        const currentX: number = 300 + graph.nodes.length * 100;
-        const currentY: number = 50 + graph.nodes.length * 100;
-
-        //neuen StateNode erzeugen
-        const previousNode = graph.nodes.find((node) => node.id === this.currentSourceRgId);
-        const firingPath = previousNode ? previousNode.firingPath + ' ' + label : label;
-        const currentStateNode = new StateNode(
-            currentRgId,
-            currentX,
-            currentY,
-            currentReachabilityLabel,
-            { ...diagram.marking } as Record<string, number>,
-            firingPath,
-        );
-
+        let currentRgId = 'RG' + nextNodeIndex;
         const nextEdgeIndex = graph.edges.length + 1;
         const currentRgEdgeId = 'Edge' + nextEdgeIndex;
+        let compareSourceStateNode: StateNode;
+        let compareTargetStateNode: StateNode;
 
-        const currentFiringEdge = new FiringEdge(
-            currentRgEdgeId,
-            this.currentSourceRgId,
-            currentRgId,
-            label,
-            firingPath,
-        );
+        //prüfen, ob aktuelle Zielmarkierung bereits vorhanden
+        for (const nodeElement of graph.nodes) {
+            const existingNodeLabel: string = nodeElement.label;
 
-        this._reachabilityGraph.update((graph) => {
-            const newGraph = new ReachabilityGraph();
-            newGraph.nodes = [...graph.nodes, currentStateNode];
-            newGraph.edges = [...graph.edges, currentFiringEdge];
-            return newGraph;
-        });
+            if (existingNodeLabel === currentReachabilityLabel) {
+                markingExists = true;
+                currentRgId = nodeElement.id;
+                compareTargetStateNode = nodeElement;
+
+                // Vorhandensein der Verbindung prüfen, wenn Markierung bereits existiert;
+                // so wird sichergestellt, dass eine Markierung, die von einer anderen Transiion
+                // erzeugt wurde, ebenfalls verbunden bzw. eingefügt wird
+                //displayLabel, source und target der Verbindungen vergleichen, um Gleichheit eindeutig zu prüfen
+                for (const edgeElement of graph.edges) {
+                    const existingArcDisplayLabel: string = edgeElement.displayLabel;
+                    const existingArcSource: string = edgeElement.source;
+                    const existingArcTarget: string = edgeElement.target;
+
+                    if (
+                        existingArcDisplayLabel === label &&
+                        existingArcSource === this.currentSourceRgId &&
+                        existingArcTarget === currentRgId
+                    ) {
+                        connectionExists = true;
+                    }
+                }
+            }
+        }
+
+        if (!markingExists && !connectionExists) {
+            // neuer Knoten und neue Kante
+
+            const viewBox = this._panningService.viewBox();
+            const width = Math.max(viewBox.width, 400);
+            const height = Math.max(viewBox.height, 300);
+            const startX = viewBox.minX;
+            const startY = viewBox.minY;
+
+            //x und y konstant festlegen
+            const currentX: number = startX + Math.random() * width;
+            const currentY: number = startY + Math.random() * height;
+
+            //neuen StateNode erzeugen
+            const previousNode = graph.nodes.find((node) => node.id === this.currentSourceRgId);
+            const firingPath = previousNode && previousNode.firingPath ? previousNode.firingPath + ' ' + label : label;
+            const currentStateNode = new StateNode(
+                currentRgId,
+                currentX,
+                currentY,
+                currentReachabilityLabel,
+                { ...diagram.marking } as Record<string, number>,
+                firingPath,
+            );
+
+            const currentFiringEdge = new FiringEdge(
+                currentRgEdgeId,
+                this.currentSourceRgId,
+                currentRgId,
+                label,
+                firingPath,
+            );
+
+            this._reachabilityGraph.update((graph) => {
+                const newGraph = new ReachabilityGraph();
+                newGraph.nodes = [...graph.nodes, currentStateNode];
+                newGraph.edges = [...graph.edges, currentFiringEdge];
+                return newGraph;
+            });
+
+            //add predecessors and successors to StateNodes
+            for (const graphNodeElement of graph.nodes) {
+                compareSourceStateNode = graphNodeElement;
+
+                if (compareSourceStateNode.id === this.currentSourceRgId) {
+                    currentStateNode.predecessors.push(compareSourceStateNode);
+                    compareSourceStateNode.successors.push(currentStateNode);
+                }
+            }
+            //check for infinity after addition of each new StateNode
+            this.checkForInfinity(currentStateNode);
+        }
+
+        if (markingExists && !connectionExists) {
+            // neue Kante zu vorhandenem Markierungsknoten
+            const previousNode = graph.nodes.find((node) => node.id === this.currentSourceRgId);
+            const firingPath = previousNode && previousNode.firingPath ? previousNode.firingPath + ' ' + label : label;
+            const currentFiringEdge = new FiringEdge(
+                currentRgEdgeId,
+                this.currentSourceRgId,
+                currentRgId,
+                label,
+                firingPath,
+            );
+
+            this._reachabilityGraph.update((graph) => {
+                const newGraph = new ReachabilityGraph();
+                newGraph.nodes = [...graph.nodes];
+                newGraph.edges = [...graph.edges, currentFiringEdge];
+                return newGraph;
+            });
+
+            //add predecessors and successors to StateNodes
+            for (const nodeElementIterator of graph.nodes) {
+                compareSourceStateNode = nodeElementIterator;
+
+                //TO-DO check for better way than ! or check that value can never be unassigned
+                if (compareSourceStateNode.id === this.currentSourceRgId) {
+                    compareTargetStateNode!.predecessors.push(compareSourceStateNode);
+                    compareSourceStateNode.successors.push(compareTargetStateNode!);
+                }
+            }
+
+            this._notificationService.showInfo('TOASTER.HEADER.STATENODE_EXISTING', 'TOASTER.BODY.STATENODE_EXISTING');
+        }
+
+        if (markingExists && connectionExists) {
+            // State wechseln, damit Hinzufügen beim nächsten Aufruf der Methode an der richtigen Stelle passiert
+            //wird nach Durchlaufen aller if-Schleifen getriggert
+            this._notificationService.showInfo(
+                'TOASTER.HEADER.STATENODE_ARC_EXISTING',
+                'TOASTER.BODY.STATENODE_ARC_EXISTING',
+            );
+        }
 
         //change target to new source for arcs
         this.currentSourceRgId = currentRgId;
 
         console.log(currentReachabilityLabel);
+        //nur 3 Fälle, !markingExists && connectionExists kann nicht auftreten
     }
 
     /**
@@ -167,11 +271,108 @@ export class ReachabilityGraphService {
                 'Old PN nodes:  ' + oldPetriNet.allNodes + '      ' + 'marking  ' + oldPetriNet.currentMarking$,
             );
             oldPetriNet.marking = node.rGMarking;
+            //change state of net
+            this.currentSourceRgId = node.id;
 
             oldPetriNet.updateMarking();
             this._sourceNetService.updateEditedNet(oldPetriNet, { triggeredByFiring: false });
-            console.log('Changed PN:' + oldPetriNet.currentMarking$);
             this._notificationService.showSuccess('TOASTER.HEADER.SUCCESS', 'TOASTER.BODY.SWITCHED_STATE_SUCCESSFULLY');
         }
+    }
+
+    /**
+     * Method to check for infinity of Reachability Graph.
+     * Triggered after each firing of a transition in the Petri Net.
+     * Goes backward from newly added StateNode and checks if there is a Combination of StateNodes which has indefinite growth
+     * Uses recursive method as well as comparison method for markings
+     * checkForInfinity initializes the recursion
+     */
+    checkForInfinity(node: StateNode) {
+        console.log('CheckForInfinity');
+        for (const rgStateNode of this._reachabilityGraph().nodes) {
+            rgStateNode.nodeVisitedStateForLimitCheck = false;
+        }
+
+        for (const rgEdge of this._reachabilityGraph().edges) {
+            rgEdge.isPartOfUnlimitedPath = false;
+        }
+
+        this.checkedStateNode = node;
+        this.recursiveCheckForInfinity(node);
+    }
+
+    /**
+     * Helper method for recursive check of method checkForInfinity
+     */
+    recursiveCheckForInfinity(node: StateNode) {
+        console.log('Recursive CheckForInfinity');
+        node.nodeVisitedStateForLimitCheck = true;
+        let areTokensGettingBigger = false;
+        if (this.checkedStateNode) {
+            console.log('Reec CheckForInfinity - If this.CheckedStateNode');
+            for (const checkPredecessor of node.predecessors) {
+                if (!checkPredecessor.nodeVisitedStateForLimitCheck) {
+                    console.log('Rec CheckForInfinity - !checkPredecessor.nodeVisitedStateForLimitCheck');
+                    areTokensGettingBigger = this.compareTwoMarkings(
+                        this.checkedStateNode.rGMarking,
+                        checkPredecessor.rGMarking,
+                    );
+                    console.log('Are tokens getting bigger - ' + areTokensGettingBigger);
+                    console.log('this.checkedStateNode.tokenSum ' + this.checkedStateNode.tokenSum);
+                    console.log('checkPredecessor.tokenSum' + checkPredecessor.tokenSum);
+
+                    if (
+                        this.checkedStateNode.tokenSum > checkPredecessor.tokenSum &&
+                        areTokensGettingBigger &&
+                        !this._reachabilityGraph().isUnlimited
+                    ) {
+                        console.log('Unbeschränkt');
+                        this._notificationService.showInfo(
+                            'TOASTER.HEADER.PETRI_NET_UNLIMITED',
+                            'TOASTER.BODY.PETRI_NET_UNLIMITED',
+                        );
+                        this._reachabilityGraph().isUnlimited = true;
+                        checkPredecessor.isMorMStrich = true;
+                        //TODO unbeschraenkteMarkierungM = direkterVorgaengerMarkierung;
+                        this.checkedStateNode.isMorMStrich = true;
+                        //TODO unbeschraenkteMarkierungMStrich = egUnbeschraenktheitsPruefMarkierung;
+                        if (checkPredecessor.isStartingState) {
+                            this._reachabilityGraph().breakLoop = true;
+                            return;
+                        }
+                        return;
+                    } else {
+                        if (checkPredecessor.isStartingState) {
+                            this._reachabilityGraph().breakLoop = true;
+                            return;
+                        }
+                        this.recursiveCheckForInfinity(checkPredecessor);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Compares Marking of StateNode with Marking of previous StateNode to check for "real growth".
+     * Returns "true" when current marking "bigger" than previous marking on same path.
+     * Needed for InfinityCheck.
+     * @param currentlyVisitedMarking
+     * @param previouslyVisitedMarking
+     */
+    compareTwoMarkings(
+        currentlyVisitedMarking: Record<string, number>,
+        previouslyVisitedMarking: Record<string, number>,
+    ): boolean {
+        let currentMarkingHigher = true;
+
+        const currentPlaceMarking = Object.values(currentlyVisitedMarking);
+        const previousPlaceMarking = Object.values(previouslyVisitedMarking);
+
+        for (let i = 0; i < currentPlaceMarking.length; i++) {
+            if (previousPlaceMarking[i] > currentPlaceMarking[i]) currentMarkingHigher = false;
+        }
+
+        return currentMarkingHigher;
     }
 }

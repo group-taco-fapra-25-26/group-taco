@@ -16,8 +16,9 @@ import { ImageExportService } from '../../services/image-export.service';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ReachabilityGraphService } from 'src/app/reachability-graph.service';
 import { StateNode } from '../../classes/reachability-graph.model';
-import { GRAPH_FILENAMES, GRAPH_IDS } from './display.constants';
+import { GRAPH_FILENAMES, GRAPH_IDS, GraphId } from './display.constants';
 import { ProcessNetFiringService } from '../../services/process-net-firing.service';
+import { ToasterNotificationService } from '../../services/toaster-notification.service';
 
 @Component({
     selector: 'app-display',
@@ -40,6 +41,7 @@ export class DisplayComponent implements OnInit, OnDestroy {
     private _elementRef = inject(ElementRef);
     protected _reachabilityGraphService = inject(ReachabilityGraphService);
     protected _processNetFiringService = inject(ProcessNetFiringService);
+    private _notificationService = inject(ToasterNotificationService);
 
     readonly viewBox = this._panningService.viewBoxAsString;
     readonly viewBoxObj = this._panningService.viewBox;
@@ -54,7 +56,7 @@ export class DisplayComponent implements OnInit, OnDestroy {
     readonly isReachabilityGraphEnabled = computed(() => this._tabStateService.currentTab() === Tab.REACHABILITY_GRAPH);
     readonly isProcessNetEnabled = computed(() => this._tabStateService.currentTab() === Tab.PROCESS_NET);
 
-    protected graphId: 'petri-net' | 'reachability-graph' = GRAPH_IDS.PETRI_NET;
+    protected graphId: GraphId = GRAPH_IDS.PETRI_NET;
 
     ngOnInit(): void {
         this._sub = this._displayService.downloadRequest$.subscribe(({ format, target }) => {
@@ -108,8 +110,16 @@ export class DisplayComponent implements OnInit, OnDestroy {
             return;
         }
         if (currentTab === Tab.REACHABILITY_GRAPH) {
-            this._playService.fireTransition(node, diagram, true);
-            this._reachabilityGraphService.convertFiringEntryLabelToReachabilityGraphID(diagram, node.label);
+            if (node.isActivated()) {
+                this._playService.fireTransition(node, diagram, true);
+                this._reachabilityGraphService.convertFiringEntryLabelToReachabilityGraphID(diagram, node.label);
+            } else {
+                this._notificationService.showWarning(
+                    'TOASTER.HEADER.TRANSITION_NOT_ACTIVATED',
+                    'TOASTER.BODY.TRANSITION_NOT_ACTIVATED',
+                    { messageParams: { label: node.label } },
+                );
+            }
         }
         this._sourcePetriNetService.updateEditedNet(diagram, { triggeredByFiring: true });
     }
