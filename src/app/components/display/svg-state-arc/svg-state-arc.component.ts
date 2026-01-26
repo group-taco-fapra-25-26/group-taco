@@ -48,16 +48,6 @@ export class SvgStateArcComponent {
             return arc.bendPoints;
         }
 
-        if (arc.source === arc.target) {
-            const node = nodes.find((n) => n.id === arc.source);
-            if (node) {
-                return [
-                    { x: node.x - 20, y: node.y - 50 },
-                    { x: node.x + 20, y: node.y - 50 },
-                ];
-            }
-        }
-
         return computeBendPointsForArc(arc, edges, nodes);
     });
 

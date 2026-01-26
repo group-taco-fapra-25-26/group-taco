@@ -12,6 +12,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { RgMarkingDialogComponent } from './components/tab-toolbar/reachability-graph/rg-marking-dialog/rg-marking-dialog.component';
 import { MatDialog } from '@angular/material/dialog';
 import { ToastList } from './classes/toast';
+import { PanningService } from './services/panning.service';
 
 @Injectable({
     providedIn: 'root',
@@ -85,6 +86,10 @@ export class ReachabilityGraphService {
         );
         initialStateNode.isStartingState = true;
         initialStateNode.isStartingState = true;
+            initialStateNode.isStartingState = true;
+
+            //TO-DO Startmarkierung hervorheben, eingehender Arc aus dem Ursprung
+            // const initialEdge = new FiringEdge('Initial', 'Initial', initialId, 'Initial','Initial');
 
         if (!this._modeService.isExamMode(Tab.REACHABILITY_GRAPH)) {
             //AUTOMATISCH StateNode erzeugen
@@ -336,6 +341,102 @@ export class ReachabilityGraphService {
             // console.log('Changed PN:' + oldPetriNet.currentMarking$);
             this._notificationService.showSuccess('TOASTER.HEADER.SUCCESS', 'TOASTER.BODY.SWITCHED_STATE_SUCCESSFULLY');
         }
+    }
+
+    /**
+     * Method to check for infinity of Reachability Graph.
+     * Triggered after each firing of a transition in the Petri Net.
+     * Goes backward from newly added StateNode and checks if there is a Combination of StateNodes which has indefinite growth
+     * Uses recursive method as well as comparison method for markings
+     * checkForInfinity initializes the recursion
+     */
+    checkForInfinity(node: StateNode) {
+        console.log('CheckForInfinity');
+        for (const rgStateNode of this._reachabilityGraph().nodes) {
+            rgStateNode.nodeVisitedStateForLimitCheck = false;
+        }
+
+        for (const rgEdge of this._reachabilityGraph().edges) {
+            rgEdge.isPartOfUnlimitedPath = false;
+        }
+
+        this.checkedStateNode = node;
+        this.recursiveCheckForInfinity(node);
+    }
+
+    /**
+     * Helper method for recursive check of method checkForInfinity
+     */
+    recursiveCheckForInfinity(node: StateNode) {
+        console.log('Recursive CheckForInfinity');
+        node.nodeVisitedStateForLimitCheck = true;
+        let areTokensGettingBigger = false;
+        if (this.checkedStateNode) {
+            console.log('Reec CheckForInfinity - If this.CheckedStateNode');
+            for (const checkPredecessor of node.predecessors) {
+                if (!checkPredecessor.nodeVisitedStateForLimitCheck) {
+                    console.log('Rec CheckForInfinity - !checkPredecessor.nodeVisitedStateForLimitCheck');
+                    areTokensGettingBigger = this.compareTwoMarkings(
+                        this.checkedStateNode.rGMarking,
+                        checkPredecessor.rGMarking,
+                    );
+                    console.log('Are tokens getting bigger - ' + areTokensGettingBigger);
+                    console.log('this.checkedStateNode.tokenSum ' + this.checkedStateNode.tokenSum);
+                    console.log('checkPredecessor.tokenSum' + checkPredecessor.tokenSum);
+
+                    if (
+                        this.checkedStateNode.tokenSum > checkPredecessor.tokenSum &&
+                        areTokensGettingBigger &&
+                        !this._reachabilityGraph().isUnlimited
+                    ) {
+                        console.log('Unbeschränkt');
+                        this._notificationService.showInfo(
+                            'TOASTER.HEADER.PETRI_NET_UNLIMITED',
+                            'TOASTER.BODY.PETRI_NET_UNLIMITED',
+                        );
+                        this._reachabilityGraph().isUnlimited = true;
+                        checkPredecessor.isMorMStrich = true;
+                        //TODO unbeschraenkteMarkierungM = direkterVorgaengerMarkierung;
+                        this.checkedStateNode.isMorMStrich = true;
+                        //TODO unbeschraenkteMarkierungMStrich = egUnbeschraenktheitsPruefMarkierung;
+                        if (checkPredecessor.isStartingState) {
+                            this._reachabilityGraph().breakLoop = true;
+                            return;
+                        }
+                        return;
+                    } else {
+                        if (checkPredecessor.isStartingState) {
+                            this._reachabilityGraph().breakLoop = true;
+                            return;
+                        }
+                        this.recursiveCheckForInfinity(checkPredecessor);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Compares Marking of StateNode with Marking of previous StateNode to check for "real growth".
+     * Returns "true" when current marking "bigger" than previous marking on same path.
+     * Needed for InfinityCheck.
+     * @param currentlyVisitedMarking
+     * @param previouslyVisitedMarking
+     */
+    compareTwoMarkings(
+        currentlyVisitedMarking: Record<string, number>,
+        previouslyVisitedMarking: Record<string, number>,
+    ): boolean {
+        let currentMarkingHigher = true;
+
+        const currentPlaceMarking = Object.values(currentlyVisitedMarking);
+        const previousPlaceMarking = Object.values(previouslyVisitedMarking);
+
+        for (let i = 0; i < currentPlaceMarking.length; i++) {
+            if (previousPlaceMarking[i] > currentPlaceMarking[i]) currentMarkingHigher = false;
+        }
+
+        return currentMarkingHigher;
     }
 
     /**

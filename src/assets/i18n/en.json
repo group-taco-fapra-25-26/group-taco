@@ -8,7 +8,6 @@
     "TAB_PROCESS": "Process Net",
     "REACHABILITY_GRAPH": {
         "TOGGLE_VIEW": "Toggle View Mode",
-        "BUTTON_VALIDATE_NET": "Validate Reachability Graph",
         "ACTION_BUILD": "Build Graph",
         "INSTRUCTION_BUILD": "Fire enabled transitions in the Petri net to explore the reachability graph step by step.",
         "ACTION_MOVE": "Move Node",
@@ -122,6 +121,9 @@
             "PROCESSING_ERROR": "Processing error",
             "START_POSITION": "Start position",
             "VALIDATION": "Validation",
+            "STATENODE_ARC_EXISTING": "StateNode and arc exist",
+            "PETRI_NET_UNLIMITED": "Petri Net unlimited"
+            "VALIDATION": "Validation",
             "STATENODE_EXISTING": "StateNode exists",
             "STATENODE_ARC_EXISTING": "StateNode and arc exist",
             "PETRI_NET_UNLIMITED": "Petri Net unlimited",
@@ -147,6 +149,9 @@
             "VALIDATION_VALID_MAXIMAL": "The process net is valid and maximal.",
             "VALIDATION_VALID_WITH_INFOS": "The process net is valid.",
             "VALIDATION_INVALID": "The process net is invalid.",
+            "SWITCHED_STATE_SUCCESSFULLY": "Petri Net marking was successfully switched to corresponding state.",
+            "STATENODE_ARC_EXISTING": "StateNode and arc already exist, state of RG was updated.",
+            "PETRI_NET_UNLIMITED": "Petri Net is unlimited."
             "SWITCHED_STATE_SUCCESSFULLY": "Petri Net marking was successfully switched to corresponding state.",
             "STATENODE_EXISTING": "StateNode already exists, new arc created.",
             "STATENODE_ARC_EXISTING": "StateNode and arc already exist, state of RG was updated.",
