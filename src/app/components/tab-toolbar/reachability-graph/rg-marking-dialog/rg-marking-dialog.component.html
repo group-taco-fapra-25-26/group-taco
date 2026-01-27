@@ -1,19 +1,19 @@
 <div class="marking-container">
     @for (item of entry.startMarking | keyvalue; track item.key) {
-        <div class="marking-entry">
-            <span>{{ item.key }}: {{ item.value }}</span>
-            <div class="button-container">
+                                <div class="marking-entry">
+                                    <span>{{ item.key }}: {{ item.value }}</span>
+                                    <div class="button-container">
                 <button mat-icon-button (click)="incrementMarking(entry, item.key)" class="marking-button">
-                    <mat-icon>add</mat-icon>
-                </button>
-                <button
-                    mat-icon-button
-                    (click)="decrementMarking(entry, item.key)"
-                    [disabled]="isDisabled(item.value)"
-                    class="marking-button">
-                    <mat-icon>remove</mat-icon>
-                </button>
-            </div>
-        </div>
-    }
-</div>
+                                            <mat-icon>add</mat-icon>
+                                        </button>
+                                        <button
+                                            mat-icon-button
+                                            (click)="decrementMarking(entry, item.key)"
+                                            [disabled]="isDisabled(item.value)"
+                                            class="marking-button">
+                                            <mat-icon>remove</mat-icon>
+                                        </button>
+                                    </div>
+                                </div>
+                            }
+                        </div>
