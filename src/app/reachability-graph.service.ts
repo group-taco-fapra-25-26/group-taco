@@ -6,6 +6,9 @@ import { Diagram } from './classes/diagram/diagram';
 import { ToasterNotificationService } from './services/toaster-notification.service';
 import { Tab } from './classes/tabs';
 import { PanningService } from './services/panning.service';
+import { MatButtonModule } from '@angular/material/button';
+import { RgMarkingDialogComponent } from './components/tab-toolbar/reachability-graph/rg-marking-dialog/rg-marking-dialog.component';
+import { MatDialog } from '@angular/material/dialog';
 
 @Injectable({
     providedIn: 'root',
@@ -20,6 +23,7 @@ export class ReachabilityGraphService {
     private _notificationService = inject(ToasterNotificationService);
     private _panningService = inject(PanningService);
     private checkedStateNode: StateNode | undefined;
+    readonly dialog = inject(MatDialog);
 
     private currentSourceRgId = 'RG1';
 
@@ -55,30 +59,30 @@ export class ReachabilityGraphService {
 
         this._lastProcessedDiagram = currentNet;
 
+        // if (!this._modeService.isExamMode(Tab.REACHABILITY_GRAPH)) {
+        //AUTOMATISCH StateNode erzeugen
+        //Current marking auslesen
+        this._startMarkingRG = currentNet.startMarking || {};
+        const initialReachabilityLabel: string = Object.values(this._startMarkingRG).join(' ');
+        //x und y Startwert konstant festlegen
+        const initialX = 300;
+        const initialY = 50;
+        //neuen StateNode erzeugen
+        const initialId = 'RG1';
+        this.currentSourceRgId = initialId;
+
+        const initialStateNode = new StateNode(
+            initialId,
+            initialX,
+            initialY,
+            initialReachabilityLabel,
+            this._startMarkingRG,
+        );
+        initialStateNode.isStartingState = true;
+
+        //TO-DO Startmarkierung hervorheben, eingehender Arc aus dem Ursprung
+        // const initialEdge = new FiringEdge('Initial', 'Initial', initialId, 'Initial','Initial');
         if (!this._modeService.isExamMode(Tab.REACHABILITY_GRAPH)) {
-            //AUTOMATISCH StateNode erzeugen
-            //Current marking auslesen
-            this._startMarkingRG = currentNet.startMarking || {};
-            const initialReachabilityLabel: string = Object.values(this._startMarkingRG).join(' ');
-            //x und y Startwert konstant festlegen
-            const initialX = 300;
-            const initialY = 50;
-            //neuen StateNode erzeugen
-            const initialId = 'RG1';
-            this.currentSourceRgId = initialId;
-
-            const initialStateNode = new StateNode(
-                initialId,
-                initialX,
-                initialY,
-                initialReachabilityLabel,
-                this._startMarkingRG,
-            );
-            initialStateNode.isStartingState = true;
-
-            //TO-DO Startmarkierung hervorheben, eingehender Arc aus dem Ursprung
-            // const initialEdge = new FiringEdge('Initial', 'Initial', initialId, 'Initial','Initial');
-
             const newGraph = new ReachabilityGraph();
             newGraph.nodes = [initialStateNode];
             newGraph.edges = [];
@@ -86,21 +90,16 @@ export class ReachabilityGraphService {
 
             console.log('initialReachabilityLabel' + initialReachabilityLabel);
         } else if (this._modeService.isExamMode(Tab.REACHABILITY_GRAPH)) {
-
-// if (element.node instanceof DiagramPlace) {
-//             const currentLabel = element.node.label ?? element.node.displayLabel;
-//             this.promptForLabel('DRAW.PROMPT_EDIT_PLACE_TITLE', currentLabel).then((newLabel) => {
-//                 if (!newLabel || newLabel === currentLabel) return;
-//                 if (this.isLabelTaken(newLabel, element.id)) {
-//                     this.showDuplicateLabelError(newLabel);
-//                     return;
-//                 }
-
-
-
-
-
             //nur im Hintergrund vergleichen, User gibt NodeLabel, also Marking, selbst ein und bekommt Feedback
+            this.openDialog;
+            // if (element.node instanceof DiagramPlace) {
+            //             const currentLabel = element.node.label ?? element.node.displayLabel;
+            //             this.promptForLabel('DRAW.PROMPT_EDIT_PLACE_TITLE', currentLabel).then((newLabel) => {
+            //                 if (!newLabel || newLabel === currentLabel) return;
+            //                 if (this.isLabelTaken(newLabel, element.id)) {
+            //                     this.showDuplicateLabelError(newLabel);
+            //                     return;
+            //                 }
         }
     }
 
@@ -191,12 +190,12 @@ export class ReachabilityGraphService {
 
             //Automatically show new graph in Learn Mode
             if (!this._modeService.isExamMode(Tab.REACHABILITY_GRAPH)) {
-            this._reachabilityGraph.update((graph) => {
-                const newGraph = new ReachabilityGraph();
-                newGraph.nodes = [...graph.nodes, currentStateNode];
-                newGraph.edges = [...graph.edges, currentFiringEdge];
-                return newGraph;
-            });
+                this._reachabilityGraph.update((graph) => {
+                    const newGraph = new ReachabilityGraph();
+                    newGraph.nodes = [...graph.nodes, currentStateNode];
+                    newGraph.edges = [...graph.edges, currentFiringEdge];
+                    return newGraph;
+                });
             }
 
             //add predecessors and successors to StateNodes
@@ -226,13 +225,13 @@ export class ReachabilityGraphService {
 
             //Automatically show new graph in Learn Mode
             if (!this._modeService.isExamMode(Tab.REACHABILITY_GRAPH)) {
-            this._reachabilityGraph.update((graph) => {
-                const newGraph = new ReachabilityGraph();
-                newGraph.nodes = [...graph.nodes];
-                newGraph.edges = [...graph.edges, currentFiringEdge];
-                return newGraph;
-            });
-        }
+                this._reachabilityGraph.update((graph) => {
+                    const newGraph = new ReachabilityGraph();
+                    newGraph.nodes = [...graph.nodes];
+                    newGraph.edges = [...graph.edges, currentFiringEdge];
+                    return newGraph;
+                });
+            }
 
             //add predecessors and successors to StateNodes
             for (const nodeElementIterator of graph.nodes) {
@@ -396,5 +395,9 @@ export class ReachabilityGraphService {
         }
 
         return currentMarkingHigher;
+    }
+
+    openDialog(): void {
+        this.dialog.open(RgMarkingDialogComponent);
     }
 }
