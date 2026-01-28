@@ -102,7 +102,8 @@
             "VALIDATION": "Validation",
             "STATENODE_EXISTING": "StateNode exists",
             "STATENODE_ARC_EXISTING": "StateNode and arc exist",
-            "PETRI_NET_UNLIMITED": "Petri Net unlimited"
+            "PETRI_NET_UNLIMITED": "Petri Net unlimited",
+            "MARKING_INPUT_WRONG": "Marking Input Wrong"
         },
         "BODY": {
             "NO_NET_TO_SAVE": "There is no Petri net to save.",
@@ -125,7 +126,8 @@
             "SWITCHED_STATE_SUCCESSFULLY": "Petri Net marking was successfully switched to corresponding state.",
             "STATENODE_EXISTING": "StateNode already exists, new arc created.",
             "STATENODE_ARC_EXISTING": "StateNode and arc already exist, state of RG was updated.",
-            "PETRI_NET_UNLIMITED": "Petri Net is unlimited."
+            "PETRI_NET_UNLIMITED": "Petri Net is unlimited.",
+            "MARKING_INPUT_WRONG": "The Marking you put in does not match the actual marking of the next Petri Net State."
         },
         "VALIDATION_MESSAGES": {
             "TRANSITION_NO_MATCH": "❌ Transition {{label}} has no matching label in the Petri net.",

@@ -91,7 +91,27 @@ export class ReachabilityGraphService {
             console.log('initialReachabilityLabel' + initialReachabilityLabel);
         } else if (this._modeService.isExamMode(Tab.REACHABILITY_GRAPH)) {
             //nur im Hintergrund vergleichen, User gibt NodeLabel, also Marking, selbst ein und bekommt Feedback
-            this.openDialog;
+            let userMarking:Record<string, number> = this.openDialog();
+
+            if(this.compareUserInputWithTargetState(userMarking, initialStateNode)){
+            const newGraph = new ReachabilityGraph();
+            newGraph.nodes = [initialStateNode];
+            newGraph.edges = [];
+            this._reachabilityGraph.set(newGraph);
+            } else {
+                this._notificationService.showInfo(
+                'TOASTER.HEADER.MARKING_INPUT_WRONG',
+                'TOASTER.BODY.MARKING_INPUT_WRONG',
+            );
+            //TODO ERNEUTE USEREINGABE FORDERN
+            //TODO Methode ggf. auslagern, damit neue Eingabe möglich?
+            //erst nach Dialog endgültig festlegen
+            //WIE GENAU NEU STARTEN OHNE ENDLOSSCHLEIFE?
+            }
+
+            //TO-DO Define Marking Type
+
+
             // if (element.node instanceof DiagramPlace) {
             //             const currentLabel = element.node.label ?? element.node.displayLabel;
             //             this.promptForLabel('DRAW.PROMPT_EDIT_PLACE_TITLE', currentLabel).then((newLabel) => {
@@ -397,7 +417,36 @@ export class ReachabilityGraphService {
         return currentMarkingHigher;
     }
 
-    openDialog(): void {
-        this.dialog.open(RgMarkingDialogComponent);
+
+    /**Compares User input of type marking with Marking of the next StateNode 
+     * created from firing a transition. 
+     * Used in Exam Mode to determine if user can define marking correctly.
+     * @param userInputMarking Marking inputted by user with dialog. Target: Should contain the "next" marking after firing.
+     * @param nextStateNode StateNode after firing, only saved in model before this method, visualized after successful comparison.
+     * 
+     */
+
+    compareUserInputWithTargetState (userInputMarking: Record<string, number>, nextStateNode: StateNode):boolean{
+        let comparison =true;
+        const userMarking = Object.values(userInputMarking);
+        const actualTargetMarking = Object.values(nextStateNode.rGMarking);
+
+        for (let i = 0; i < userMarking.length; i++) {
+            if (actualTargetMarking[i] != userMarking[i]) { comparison = false;
+            }
+        }
+        return comparison;
+    }
+
+
+    openDialog(): Record<string, number> {
+        // this.dialog.open(RgMarkingDialogComponent);
+        //TODO CHANGE INITIALIZATION AFTER DIALOG IS FINISHED!!!
+
+        let xxx: Record<string, number> = this?._reachabilityGraph().nodes[0].rGMarking;
+        return xxx;
+
+
+
     }
 }
