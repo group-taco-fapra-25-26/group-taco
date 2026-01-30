@@ -1,30 +1,52 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { AppMode } from '../classes/app-mode';
+import { Tab } from '../classes/tabs';
 import { ToasterNotificationService } from './toaster-notification.service';
 
 @Injectable({ providedIn: 'root' })
 export class ModeService {
     private _toasterService = inject(ToasterNotificationService);
-    private _modeSignal = signal<AppMode>(AppMode.LEARN);
+    private _tabModeSignals = new Map<
+        Tab,
+        { mode: ReturnType<typeof signal<AppMode>>; isExamMode: ReturnType<typeof computed<boolean>> }
+    >();
 
-    /**
-     * Exposes the current application mode as a read-only signal.
-     */
-    readonly currentMode = this._modeSignal.asReadonly();
+    constructor() {
+        const tabs: Tab[] = [Tab.DRAW, Tab.PLAY, Tab.REACHABILITY_GRAPH, Tab.PROCESS_NET];
+        tabs.forEach((tab) => {
+            this._tabModeSignals.set(tab, {
+                mode: signal<AppMode>(AppMode.LEARN),
+                isExamMode: computed(() => this.getModeSignal(tab)!() === AppMode.EXAM),
+            });
+        });
+    }
 
-    /**
-     * Computed signal that indicates whether the application is in EXAM mode.
-     */
-    readonly isExamMode = computed(() => this._modeSignal() === AppMode.EXAM);
+    getModeSignal(tab: Tab): ReturnType<typeof signal<AppMode>> | undefined {
+        return this._tabModeSignals.get(tab)?.mode;
+    }
 
-    /**
-     * Toggles the application mode between LEARN and EXAM.
-     */
-    toggleMode(): void {
-        this._modeSignal.update((current) => (current === AppMode.LEARN ? AppMode.EXAM : AppMode.LEARN));
+    getIsExamModeSignal(tab: Tab): ReturnType<typeof computed<boolean>> | undefined {
+        return this._tabModeSignals.get(tab)?.isExamMode;
+    }
+
+    getMode(tab: Tab): AppMode {
+        return this._tabModeSignals.get(tab)?.mode() || AppMode.LEARN;
+    }
+
+    isExamMode(tab: Tab): boolean {
+        return this.getMode(tab) === AppMode.EXAM;
+    }
+
+    toggleMode(tab: Tab): void {
+        const tabSignals = this._tabModeSignals.get(tab);
+        if (!tabSignals) return;
+
+        const newMode = tabSignals.mode() === AppMode.LEARN ? AppMode.EXAM : AppMode.LEARN;
+        tabSignals.mode.set(newMode);
+
         this._toasterService.showInfo(
             'TOASTER.HEADER.MODE_SWITCHED',
-            this.isExamMode() ? 'TOASTER.BODY.MODE_SWITCHED_EXAM' : 'TOASTER.BODY.MODE_SWITCHED_LEARN',
+            newMode === AppMode.EXAM ? 'TOASTER.BODY.MODE_SWITCHED_EXAM' : 'TOASTER.BODY.MODE_SWITCHED_LEARN',
         );
     }
 }

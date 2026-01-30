@@ -82,12 +82,6 @@ export class SourcePetriNetService {
         this._isDirty$.next(true);
     }
 
-    public consumeChangeTriggeredByFiring(): boolean {
-        const wasFiring = this._lastChangeTriggeredByFiring;
-        this._lastChangeTriggeredByFiring = false;
-        return wasFiring;
-    }
-
     /**
      * Sets the current source text and petri net as clean (no unsaved changes).
      * @param newText

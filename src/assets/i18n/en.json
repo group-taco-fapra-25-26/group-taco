@@ -6,6 +6,15 @@
     "TAB_PLAY": "Play",
     "TAB_REACHABILITY": "Reachability Graph",
     "TAB_PROCESS": "Process Net",
+    "REACHABILITY_GRAPH": {
+        "TOGGLE_VIEW": "Toggle View Mode",
+        "ACTION_BUILD": "Build Graph",
+        "INSTRUCTION_BUILD": "Fire enabled transitions in the Petri net to explore the reachability graph step by step.",
+        "ACTION_MOVE": "Move Node",
+        "INSTRUCTION_MOVE": "Left-click and drag state nodes to customize the layout.",
+        "ACTION_RESET": "Jump to State",
+        "INSTRUCTION_RESET": "Double-click a state node to reset the Petri net to this marking."
+    },
     "TOGGLE_MODE": "Toggle Mode",
     "SWITCH_TO_LEARNING_MODE": "Switch to Learning Mode",
     "SWITCH_TO_EXAM_MODE": "Switch to Exam Mode",
@@ -90,7 +99,9 @@
             "PARSER_ERROR": "Parser error",
             "PROCESSING_ERROR": "Processing error",
             "START_POSITION": "Start position",
-            "VALIDATION": "Validation"
+            "VALIDATION": "Validation",
+            "STATENODE_ARC_EXISTING": "StateNode and arc exist",
+            "PETRI_NET_UNLIMITED": "Petri Net unlimited"
         },
         "BODY": {
             "NO_NET_TO_SAVE": "There is no Petri net to save.",
@@ -110,7 +121,9 @@
             "VALIDATION_VALID_MAXIMAL": "The process net is valid and maximal.",
             "VALIDATION_VALID_WITH_INFOS": "The process net is valid.",
             "VALIDATION_INVALID": "The process net is invalid.",
-            "SWITCHED_STATE_SUCCESSFULLY": "Petri Net marking was successfully switched to corresponding state."
+            "SWITCHED_STATE_SUCCESSFULLY": "Petri Net marking was successfully switched to corresponding state.",
+            "STATENODE_ARC_EXISTING": "StateNode and arc already exist, state of RG was updated.",
+            "PETRI_NET_UNLIMITED": "Petri Net is unlimited."
         },
         "VALIDATION_MESSAGES": {
             "TRANSITION_NO_MATCH": "❌ Transition {{label}} has no matching label in the Petri net.",

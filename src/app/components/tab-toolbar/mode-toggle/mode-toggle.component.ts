@@ -1,5 +1,6 @@
 import { Component, effect, inject } from '@angular/core';
 import { ModeService } from '../../../services/mode.service';
+import { TabStateService } from '../../../services/tab-state.service';
 import { MatIcon, MatIconRegistry } from '@angular/material/icon';
 import { DomSanitizer } from '@angular/platform-browser';
 import { MatTooltip } from '@angular/material/tooltip';
@@ -17,6 +18,7 @@ import { MatSlider, MatSliderThumb } from '@angular/material/slider';
 })
 export class ModeToggleComponent {
     private _modeService = inject(ModeService);
+    private _tabStateService = inject(TabStateService);
     private _matIconRegistry = inject(MatIconRegistry);
     private _domSanitizer = inject(DomSanitizer);
 
@@ -33,20 +35,22 @@ export class ModeToggleComponent {
         );
 
         effect(() => {
-            this.sliderValue = this._modeService.isExamMode() ? 1 : 0;
+            const currentTab = this._tabStateService.currentTab();
+            this.sliderValue = this._modeService.isExamMode(currentTab) ? 1 : 0;
         });
     }
 
     protected onSliderChange() {
+        const currentTab = this._tabStateService.currentTab();
         if (this.sliderValue > 0.5) {
             this.sliderValue = 1;
-            if (!this._modeService.isExamMode()) {
-                this._modeService.toggleMode();
+            if (!this._modeService.isExamMode(currentTab)) {
+                this._modeService.toggleMode(currentTab);
             }
         } else {
             this.sliderValue = 0;
-            if (this._modeService.isExamMode()) {
-                this._modeService.toggleMode();
+            if (this._modeService.isExamMode(currentTab)) {
+                this._modeService.toggleMode(currentTab);
             }
         }
     }
@@ -56,6 +60,7 @@ export class ModeToggleComponent {
     }
 
     protected modeText(): string {
-        return this._modeService.isExamMode() ? 'SWITCH_TO_LEARNING_MODE' : 'SWITCH_TO_EXAM_MODE';
+        const currentTab = this._tabStateService.currentTab();
+        return this._modeService.isExamMode(currentTab) ? 'SWITCH_TO_LEARNING_MODE' : 'SWITCH_TO_EXAM_MODE';
     }
 }

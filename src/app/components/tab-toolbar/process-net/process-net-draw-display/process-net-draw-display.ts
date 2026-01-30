@@ -11,12 +11,11 @@ import {
     signal,
     ViewChild,
 } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
 import { SvgNodeComponent } from '../../../display/svg-node/svg-node.component';
 import { DiagramNode, SHAPE } from '../../../../classes/diagram/diagram-node';
-import { DiagramPlace, DiagramPlaceLabelPlacement } from '../../../../classes/diagram/diagram-place';
-import { DiagramTransition, DiagramTransitionOptions } from '../../../../classes/diagram/diagram-transition';
 import { Diagram } from '../../../../classes/diagram/diagram';
+import { DiagramPlace } from '../../../../classes/diagram/diagram-place';
+import { DiagramTransition } from '../../../../classes/diagram/diagram-transition';
 import { DisplayService } from '../../../../services/display.service';
 import {
     type PetriNet,
@@ -30,11 +29,10 @@ import { TOAST_POSITIONS, ToastList } from '../../../../classes/toast';
 import { TranslateModule } from '@ngx-translate/core';
 import { GRAPH_FILENAMES, GRAPH_IDS, PLACE_RADIUS, TRANSITION_SIZE } from '../../../display/display.constants';
 import { ModeService } from '../../../../services/mode.service';
-import { AppMode } from '../../../../classes/app-mode';
 import { TabStateService } from '../../../../services/tab-state.service';
 import { Tab } from '../../../../classes/tabs';
-import { SourcePetriNetService } from '../../../../services/source-petri-net.service';
-import { ProcessNetFiringEvent, ProcessNetFiringService } from '../../../../services/process-net-firing.service';
+import { ProcessNetFiringService } from '../../../../services/process-net-firing.service';
+import { Connection, DrawnElement, ProcessNetStateService } from '../../../../services/process-net-state.service';
 import { Subscription } from 'rxjs';
 import {
     DrawToolbarAction,
@@ -42,18 +40,7 @@ import {
     DrawToolbarInstruction,
 } from '../../../draw-toolbar/draw-toolbar.component';
 import { ImageExportService } from '../../../../services/image-export.service';
-
-interface DrawnElement {
-    node: DiagramNode;
-    id: string;
-}
-
-interface Connection {
-    id: string;
-    aId: string; // source element id (first clicked)
-    bId: string; // target element id (second clicked)
-    weight: number; // arc weight, >= 1
-}
+import { SourcePetriNetService } from '../../../../services/source-petri-net.service';
 
 interface GlobalDragData {
     elementType: 'place' | 'transition';
@@ -80,10 +67,14 @@ declare global {
 })
 export class ProcessNetDrawDisplayComponent implements OnInit, OnDestroy, AfterViewInit {
     @ViewChild('drawingArea') drawingArea!: ElementRef<SVGGraphicsElement>;
-    readonly drawnElements = signal<DrawnElement[]>([]);
+    private firingService = inject(ProcessNetFiringService);
+    private stateService = inject(ProcessNetStateService);
+
+    // Bind to service state
+    readonly drawnElements = this.stateService.drawnElements;
+    readonly connections = this.stateService.connections;
+
     readonly isDragOver = signal<boolean>(false);
-    // Connections between nodes (directed: from aId -> bId)
-    readonly connections = signal<Connection[]>([]);
     // Derived lines with coordinates for rendering
     readonly connectionLines = computed(() => {
         return this.connections()
@@ -128,10 +119,6 @@ export class ProcessNetDrawDisplayComponent implements OnInit, OnDestroy, AfterV
         { label: 'PROCESS_NET.INSTRUCTION_VALIDATE', text: 'PROCESS_NET.INSTRUCTION_VALIDATE_TOAST' },
     ]);
 
-    private elementIdCounter = 0;
-    private connectionIdCounter = 0;
-    private bLabelCounter = 0;
-    private eLabelCounter = 0;
     private draggedElement: DrawnElement | null = null;
     private dragOffset = { x: 0, y: 0 };
     private svgElement: SVGSVGElement | null = null;
@@ -145,32 +132,22 @@ export class ProcessNetDrawDisplayComponent implements OnInit, OnDestroy, AfterV
     private panningService = inject(PanningService);
     private modeService = inject(ModeService);
     private sourcePetriNetService = inject(SourcePetriNetService);
-    private diagramSignal = toSignal(this.displayService.diagram$, { initialValue: undefined });
     private tabStateService = inject(TabStateService);
-    private firingService = inject(ProcessNetFiringService);
-    private firingSub?: ReturnType<typeof this.firingService.events$.subscribe>;
-    private autoFiringCount = 0;
-    private firingChangeVersion = signal(0);
-    private lastProcessedFiringVersion = 0;
-    private displaySub?: Subscription;
-    private sourceSub?: Subscription;
     private downloadSub?: Subscription;
 
     readonly viewBox = this.panningService.viewBoxAsString;
     readonly viewBoxObj = this.panningService.viewBox;
-    private modeChange = effect(() => {
+
+    private initEffect = effect(() => {
         if (this.tabStateService.currentTab() !== Tab.PROCESS_NET) {
             return;
         }
-        const diagram = this.diagramSignal();
-        if (!diagram) return;
-        const firingVersion = this.firingChangeVersion();
-        const isNewFiringChange = firingVersion > this.lastProcessedFiringVersion;
-        this.lastProcessedFiringVersion = firingVersion;
-        if (isNewFiringChange && this.modeService.currentMode() === AppMode.LEARN) {
-            return;
+
+        this.stateService.updateViewBox(this.viewBoxObj());
+
+        if (this.drawnElements().length === 0 && !this.modeService.isExamMode(Tab.PROCESS_NET)) {
+            this.onCreateStartPosition();
         }
-        this.clearDrawing();
     });
 
     // Dimensions consistent with SvgNodeComponent
@@ -190,19 +167,7 @@ export class ProcessNetDrawDisplayComponent implements OnInit, OnDestroy, AfterV
             // Add mousedown listener with capture phase to intercept before child elements
             canvas.addEventListener('mousedown', this.handleCanvasMouseDown, true);
         }
-        this.firingSub = this.firingService.events$.subscribe((event) => this.addFiringToDrawing(event));
-        this.displaySub = this.displayService.diagram$.subscribe(() => {
-            const triggeredByFiring = this.displayService.consumeTriggeredByFiring();
-            if (triggeredByFiring) {
-                this.firingChangeVersion.update((v) => v + 1);
-            }
-        });
-        this.sourceSub = this.sourcePetriNetService.sourceNet$.subscribe(() => {
-            const triggeredByFiring = this.sourcePetriNetService.consumeChangeTriggeredByFiring();
-            if (triggeredByFiring) {
-                this.firingChangeVersion.update((v) => v + 1);
-            }
-        });
+
         this.downloadSub = this.displayService.downloadRequest$.subscribe(({ format, target }) => {
             if (target && target !== GRAPH_IDS.PROCESS_NET) {
                 return;
@@ -229,9 +194,6 @@ export class ProcessNetDrawDisplayComponent implements OnInit, OnDestroy, AfterV
             canvas.removeEventListener('customDrop', this.customDropListener);
             canvas.removeEventListener('mousedown', this.handleCanvasMouseDown, true);
         }
-        this.firingSub?.unsubscribe();
-        this.displaySub?.unsubscribe();
-        this.sourceSub?.unsubscribe();
         this.downloadSub?.unsubscribe();
     }
 
@@ -272,16 +234,17 @@ export class ProcessNetDrawDisplayComponent implements OnInit, OnDestroy, AfterV
 
         let newNode: DiagramNode;
         // Always create a unique ID for the drawing area, based on the source element
-        const uniqueId = `drawn-${detail.elementId}-${++this.elementIdCounter}`;
+        // Use service to generate ID
+        const uniqueId = this.stateService.generateElementId(`drawn-${detail.elementId}`);
         const elementLabel = detail.elementLabel || detail.elementId;
         const elementTokens = detail.elementTokens ?? 0;
 
         if (detail.elementType === 'place') {
-            newNode = this.buildPlace(uniqueId, detail.elementId, elementTokens, {
+            newNode = this.stateService.buildPlace(uniqueId, detail.elementId, elementTokens, {
                 isStartPlace: this.shouldMarkAsStart(detail.elementId),
             });
         } else if (detail.elementType === 'transition') {
-            newNode = this.buildTransition(uniqueId, elementLabel);
+            newNode = this.stateService.buildTransition(uniqueId, elementLabel);
         } else {
             return;
         }
@@ -294,7 +257,7 @@ export class ProcessNetDrawDisplayComponent implements OnInit, OnDestroy, AfterV
             id: uniqueId,
         };
 
-        this.drawnElements.update((elements) => [...elements, newElement]);
+        this.stateService.addDrawnElement(newElement);
     }
 
     onDragOver(event: DragEvent) {
@@ -323,16 +286,16 @@ export class ProcessNetDrawDisplayComponent implements OnInit, OnDestroy, AfterV
 
             let newNode: DiagramNode;
             // Always create a unique ID for the drawing area
-            const uniqueId = `drawn-${dragData.elementId || 'element'}-${++this.elementIdCounter}`;
+            const uniqueId = this.stateService.generateElementId(`drawn-${dragData.elementId || 'element'}`);
             const elementLabel = dragData.elementLabel || dragData.elementId;
             const elementTokens = dragData.elementTokens ?? 0;
 
             if (dragData.elementType === 'place') {
-                newNode = this.buildPlace(uniqueId, dragData.elementId, elementTokens, {
+                newNode = this.stateService.buildPlace(uniqueId, dragData.elementId, elementTokens, {
                     isStartPlace: this.shouldMarkAsStart(dragData.elementId),
                 });
             } else if (dragData.elementType === 'transition') {
-                newNode = this.buildTransition(uniqueId, elementLabel);
+                newNode = this.stateService.buildTransition(uniqueId, elementLabel);
             } else {
                 return;
             }
@@ -345,7 +308,7 @@ export class ProcessNetDrawDisplayComponent implements OnInit, OnDestroy, AfterV
                 id: uniqueId,
             };
 
-            this.drawnElements.update((elements) => [...elements, newElement]);
+            this.stateService.addDrawnElement(newElement);
 
             // Clear the global drag data
             delete window.__dragData;
@@ -364,12 +327,12 @@ export class ProcessNetDrawDisplayComponent implements OnInit, OnDestroy, AfterV
         }
 
         let newNode: DiagramNode;
-        const uniqueId = `drawn-element-${++this.elementIdCounter}`;
+        const uniqueId = this.stateService.generateElementId('drawn-element');
 
         if (elementType === 'place') {
-            newNode = this.buildPlace(uniqueId, undefined, 0);
+            newNode = this.stateService.buildPlace(uniqueId, undefined, 0);
         } else if (elementType === 'transition') {
-            newNode = this.buildTransition(uniqueId, uniqueId);
+            newNode = this.stateService.buildTransition(uniqueId, uniqueId);
         } else {
             return;
         }
@@ -382,7 +345,7 @@ export class ProcessNetDrawDisplayComponent implements OnInit, OnDestroy, AfterV
             id: uniqueId,
         };
 
-        this.drawnElements.update((elements) => [...elements, newElement]);
+        this.stateService.addDrawnElement(newElement);
     }
 
     onElementMouseDown(event: MouseEvent, element: DrawnElement) {
@@ -450,7 +413,7 @@ export class ProcessNetDrawDisplayComponent implements OnInit, OnDestroy, AfterV
         // Only connect if exactly one is place and one is transition
         if ((firstIsPlace && secondIsTransition) || (firstIsTransition && secondIsPlace)) {
             // Remove any existing connection between these two nodes (either direction)
-            this.connections.update((cs) =>
+            this.stateService.updateConnections((cs) =>
                 cs.filter(
                     (c) =>
                         !((c.aId === first.id && c.bId === second.id) || (c.aId === second.id && c.bId === first.id)),
@@ -458,12 +421,12 @@ export class ProcessNetDrawDisplayComponent implements OnInit, OnDestroy, AfterV
             );
             // Add new directed connection first -> second
             const newConn: Connection = {
-                id: `conn-${++this.connectionIdCounter}`,
+                id: this.stateService.generateConnectionId('conn'),
                 aId: first.id,
                 bId: second.id,
                 weight: 1,
             };
-            this.connections.update((cs) => [...cs, newConn]);
+            this.stateService.addConnection(newConn);
             // Clear selection after connecting
             this.selectedElementId.set(null);
         } else {
@@ -520,7 +483,7 @@ export class ProcessNetDrawDisplayComponent implements OnInit, OnDestroy, AfterV
             const newY = svgPoint.y - this.dragOffset.y;
 
             let updatedElement: DrawnElement | null = null;
-            this.drawnElements.update((elements) =>
+            this.stateService.updateDrawnElements((elements) =>
                 elements.map((el) => {
                     if (el.id !== this.draggedElement?.id) return el;
 
@@ -529,7 +492,7 @@ export class ProcessNetDrawDisplayComponent implements OnInit, OnDestroy, AfterV
                     if (el.node instanceof DiagramPlace) {
                         const tokens = (el.node as DiagramPlace).tokenCount() ?? 0;
                         const originalLabel = el.node.label ?? el.node.displayLabel;
-                        newNode = this.buildPlace(el.node.id, originalLabel, tokens, {
+                        newNode = this.stateService.buildPlace(el.node.id, originalLabel, tokens, {
                             innerLabel: el.node.innerLabel,
                             hideTokens: el.node.hideTokens,
                             labelPlacement: el.node.labelPlacement,
@@ -537,9 +500,7 @@ export class ProcessNetDrawDisplayComponent implements OnInit, OnDestroy, AfterV
                         });
                     } else if (el.node instanceof DiagramTransition) {
                         const label = (el.node as DiagramTransition).displayLabel ?? el.node.id;
-                        newNode = this.buildTransition(el.node.id, label, {
-                            innerLabel: el.node.innerLabel,
-                        });
+                        newNode = this.stateService.buildTransition(el.node.id, label, el.node.innerLabel);
                     } else {
                         // Fallback: keep same reference (should not happen)
                         newNode = el.node;
@@ -631,33 +592,23 @@ export class ProcessNetDrawDisplayComponent implements OnInit, OnDestroy, AfterV
     }
 
     clearDrawing() {
-        this.drawnElements.set([]);
-        this.connections.set([]);
         this.selectedElementId.set(null);
-        this.elementIdCounter = 0;
-        this.connectionIdCounter = 0;
-        this.bLabelCounter = 0;
-        this.eLabelCounter = 0;
-        this.lastProcessedFiringVersion = this.firingChangeVersion();
 
         const diagram = this.displayService.diagram;
         if (diagram instanceof Diagram) {
             diagram.resetMarking();
         }
 
-        if (this.modeService.currentMode() === AppMode.LEARN) {
+        this.firingService.clear();
+
+        if (!this.modeService.isExamMode(Tab.PROCESS_NET)) {
             this.onCreateStartPosition();
         }
-
-        // reset the auto firing count
-        this.autoFiringCount = 0;
     }
 
     deleteElement(element: DrawnElement) {
-        // Remove the element
-        this.drawnElements.update((elements) => elements.filter((e) => e.id !== element.id));
-        // Remove any connections referencing this element
-        this.connections.update((cs) => cs.filter((c) => c.aId !== element.id && c.bId !== element.id));
+        this.stateService.removeDrawnElement(element.id);
+
         // Clear selection if it was this element
         if (this.selectedElementId() === element.id) {
             this.selectedElementId.set(null);
@@ -665,7 +616,7 @@ export class ProcessNetDrawDisplayComponent implements OnInit, OnDestroy, AfterV
     }
 
     private deleteConnection(connectionId: string) {
-        this.connections.update((cs) => cs.filter((c) => c.id !== connectionId));
+        this.stateService.removeConnection(connectionId);
     }
 
     // Suppress browser context menu on the drawing canvas (right click still used for interactions)
@@ -675,7 +626,7 @@ export class ProcessNetDrawDisplayComponent implements OnInit, OnDestroy, AfterV
 
     // Trigger validation of the drawn process net against the loaded Petri net
     onValidate() {
-        const base = this.sourcePetriNetService.getCurrentSourceNet();
+        const base = this.sourcePetriNetService.getCurrentSourceNet() as Diagram | undefined;
         if (!base) {
             this.toaster.showError('TOASTER.HEADER.VALIDATION', 'TOASTER.BODY.VALIDATION_ERROR', {
                 duration: 0,
@@ -753,97 +704,30 @@ export class ProcessNetDrawDisplayComponent implements OnInit, OnDestroy, AfterV
 
     onCreateStartPosition() {
         const diagram = this.displayService.diagram;
-        if (!diagram) {
-            this.toaster.showError('TOASTER.HEADER.START_POSITION', 'TOASTER.BODY.LOAD_NET_FIRST', {
-                duration: 0,
-                toastPosition: TOAST_POSITIONS.TOP_CENTER,
-            });
-            return;
-        }
-
-        const nodes = diagram.getNodes();
-        const markedPlaces = nodes.filter((node) => node.shape === SHAPE.CIRCLE && node.tokenCount() > 0);
-        if (markedPlaces.length === 0) {
-            this.toaster.showInfo('TOASTER.HEADER.START_POSITION', 'TOASTER.BODY.NO_MARKED_PLACES_FOUND', {
-                duration: 0,
-                toastPosition: TOAST_POSITIONS.TOP_CENTER,
-            });
-            return;
-        }
-
-        const tokenInstances = markedPlaces.flatMap((place) =>
-            Array.from({ length: Math.max(0, Math.floor(place.tokenCount())) }, () => place),
-        );
-        if (tokenInstances.length === 0) {
-            this.toaster.showInfo('TOASTER.HEADER.START_POSITION', 'TOASTER.BODY.NO_MARKED_PLACES_FOUND', {
-                duration: 0,
-                toastPosition: TOAST_POSITIONS.TOP_CENTER,
-            });
+        if (!diagram || !(diagram instanceof Diagram)) {
             return;
         }
 
         this.panningService.resetViewBox(this.drawingArea);
 
-        const viewBox = this.panningService.INITIAL_VIEWBOX;
-        const padding = 40;
-        const availableHeight = viewBox.height - padding * 2;
-        const minSpacing = this.PLACE_RADIUS * 2 + 20;
-        const spacing = tokenInstances.length > 0 ? Math.max(availableHeight / tokenInstances.length, minSpacing) : 0;
+        const count = this.stateService.createStartPositions(diagram, this.panningService.INITIAL_VIEWBOX);
 
-        const newElements: DrawnElement[] = [];
-        const startX = viewBox.minX + viewBox.width * 0.25;
-        tokenInstances.forEach((place, index) => {
-            const innerLabel = this.getNextInnerLabel();
-            const uniqueId = `start-${innerLabel}-${place.id}-${index}`;
-            const newPlace = this.buildPlace(uniqueId, place.displayLabel, 0, {
-                innerLabel,
-                hideTokens: true,
-                labelPlacement: 'below',
-                isStartPlace: true,
-            });
-            newPlace.x = startX;
-            newPlace.y = viewBox.minY + padding + spacing * index + spacing / 2;
-            newElements.push({ id: uniqueId, node: newPlace });
-        });
+        if (count === 0) {
+            const nodes = diagram.getNodes();
+            const markedPlaces = nodes.filter((node) => node.shape.toLowerCase() === 'circle' && node.tokenCount() > 0);
+            if (markedPlaces.length === 0) {
+                this.toaster.showInfo('TOASTER.HEADER.START_POSITION', 'TOASTER.BODY.NO_MARKED_PLACES_FOUND', {
+                    duration: 0,
+                    toastPosition: TOAST_POSITIONS.TOP_CENTER,
+                });
+            }
+            return;
+        }
 
-        this.drawnElements.set(newElements);
         this.toaster.showSuccess('TOASTER.HEADER.START_POSITION', 'TOASTER.BODY.START_PLACES_CREATED', {
-            duration: 0,
             toastPosition: TOAST_POSITIONS.TOP_CENTER,
-            messageParams: { count: newElements.length },
+            messageParams: { count },
         });
-    }
-
-    private getNextInnerLabel(): string {
-        return `b${++this.bLabelCounter}`;
-    }
-
-    private getNextTransitionInnerLabel(): string {
-        return `e${++this.eLabelCounter}`;
-    }
-
-    private buildPlace(
-        id: string,
-        label?: string,
-        initialTokens = 0,
-        options?: {
-            innerLabel?: string;
-            hideTokens?: boolean;
-            labelPlacement?: DiagramPlaceLabelPlacement;
-            isStartPlace?: boolean;
-        },
-    ): DiagramPlace {
-        return new DiagramPlace(id, initialTokens, label, {
-            innerLabel: options?.innerLabel ?? this.getNextInnerLabel(),
-            hideTokens: options?.hideTokens ?? true,
-            labelPlacement: options?.labelPlacement ?? 'below',
-            isStartPlace: options?.isStartPlace ?? false,
-        });
-    }
-
-    private buildTransition(id: string, label: string, options?: DiagramTransitionOptions): DiagramTransition {
-        const innerLabel = options?.innerLabel ?? this.getNextTransitionInnerLabel();
-        return new DiagramTransition(id, label, [], [], [], [], { innerLabel });
     }
 
     private isMarkedPlaceId(placeId: string): boolean {
@@ -878,132 +762,5 @@ export class ProcessNetDrawDisplayComponent implements OnInit, OnDestroy, AfterV
             return false;
         }
         return this.getCurrentStartPlaceCount(placeId) < this.getRequiredStartPlaceCount(placeId);
-    }
-
-    private addFiringToDrawing(event: ProcessNetFiringEvent) {
-        if (this.tabStateService.currentTab() !== Tab.PROCESS_NET) {
-            return;
-        }
-        const viewBox = this.viewBoxObj();
-        const verticalSpacing = 180;
-        const rowIndex = this.autoFiringCount;
-        const baseY = viewBox.minY + 120 + rowIndex * verticalSpacing;
-        const baseX = viewBox.minX + viewBox.width * 0.6;
-        const transition = this.buildTransition(this.generateElementId('fire-transition'), event.transitionLabel);
-        transition.x = baseX;
-        transition.y = baseY;
-        const transitionElement: DrawnElement = { node: transition, id: transition.id };
-
-        const laneSpacing = 60;
-        const inputBaseY = baseY - ((event.inputs.length - 1) * laneSpacing) / 2;
-        const totalOutputNodes = event.outputs.reduce((sum, flow) => sum + flow.weight, 0) || 1;
-        const outputBaseY = baseY - ((totalOutputNodes - 1) * laneSpacing) / 2;
-        let outputOffset = 0;
-
-        const newElements: DrawnElement[] = [];
-        const usedPlaces = new Set<string>();
-        this.connections().forEach((connection) => usedPlaces.add(connection.aId));
-
-        const inputElements = event.inputs.map((flow, idx) =>
-            this.resolvePlaceForFlow(
-                flow.placeLabel,
-                baseX - 160,
-                inputBaseY + idx * laneSpacing,
-                newElements,
-                flow.weight,
-                usedPlaces,
-            ),
-        );
-
-        const outputElements = event.outputs.flatMap((flow) => {
-            const created: { id: string; weight: number }[] = [];
-            for (let i = 0; i < flow.weight; i++) {
-                const place = this.buildPlace(this.generateElementId('fire-place'), flow.placeLabel, 0, {
-                    hideTokens: true,
-                    innerLabel: this.getNextInnerLabel(),
-                });
-                place.x = baseX + 160;
-                place.y = outputBaseY + outputOffset * laneSpacing;
-                outputOffset++;
-                const element: DrawnElement = { node: place, id: place.id };
-                newElements.push(element);
-                created.push({ id: element.id, weight: 1 });
-            }
-            return created;
-        });
-
-        newElements.push(transitionElement);
-        if (newElements.length) {
-            this.drawnElements.update((elements) => [...elements, ...newElements]);
-        }
-
-        const newConnections: Connection[] = [];
-        inputElements.forEach((input) => {
-            newConnections.push({
-                id: this.generateConnectionId('fire-in'),
-                aId: input.id,
-                bId: transitionElement.id,
-                weight: input.weight,
-            });
-        });
-        outputElements.forEach((output) => {
-            newConnections.push({
-                id: this.generateConnectionId('fire-out'),
-                aId: transitionElement.id,
-                bId: output.id,
-                weight: 1,
-            });
-        });
-        if (newConnections.length) {
-            this.connections.update((connections) => [...connections, ...newConnections]);
-        }
-        this.autoFiringCount++;
-        this.lastProcessedFiringVersion = this.firingChangeVersion();
-    }
-
-    private resolvePlaceForFlow(
-        label: string,
-        defaultX: number,
-        defaultY: number,
-        createdElements: DrawnElement[],
-        weight: number,
-        usedPlaces: Set<string>,
-    ): { id: string; weight: number } {
-        const existing = this.drawnElements().find((el) => {
-            if (!(el.node instanceof DiagramPlace)) return false;
-            if (usedPlaces.has(el.id)) return false;
-            const nodeLabel = el.node.label ?? el.node.displayLabel;
-            return nodeLabel === label;
-        });
-        if (existing) {
-            usedPlaces.add(existing.id);
-            return { id: existing.id, weight };
-        }
-        const place = this.buildPlace(this.generateElementId('fire-place'), label, 0, {
-            hideTokens: true,
-            innerLabel: this.getNextInnerLabel(),
-        });
-        place.x = defaultX;
-        place.y = defaultY;
-        const element: DrawnElement = { node: place, id: place.id };
-        createdElements.push(element);
-        usedPlaces.add(element.id);
-        return { id: element.id, weight };
-    }
-
-    private findPlaceByLabel(label: string): DrawnElement | undefined {
-        return this.drawnElements().find((el) => {
-            if (!(el.node instanceof DiagramPlace)) return false;
-            const nodeLabel = el.node.label ?? el.node.displayLabel;
-            return nodeLabel === label;
-        });
-    }
-
-    private generateElementId(prefix: string): string {
-        return `${prefix}-${++this.elementIdCounter}`;
-    }
-
-    private generateConnectionId(prefix: string): string {
-        return `${prefix}-${++this.connectionIdCounter}`;
     }
 }
