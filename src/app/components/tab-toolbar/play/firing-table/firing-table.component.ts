@@ -51,7 +51,6 @@ export class FiringTableComponent implements OnInit, OnDestroy {
     private readonly _MAX_TRANSITIONS_DEFAULT: number = 50;
     private readonly _MAX_SEQUENCES_DEFAULT: number = 250;
 
-    private _lastFiringSequence = '';
     private _diagram: Diagram | undefined;
     @Input() firingEntries: FiringEntry[] = [];
 
@@ -91,8 +90,7 @@ export class FiringTableComponent implements OnInit, OnDestroy {
         this._playService.currentFiringEntry = entry;
         if (this.modeService.isExamMode(Tab.PLAY)) entry.isValid = undefined;
         else {
-            if (entry.firingSequence.trim() === this._lastFiringSequence.trim()) return;
-            this._lastFiringSequence = entry.firingSequence;
+            if (entry.firingSequence.trim() === this._playService.currentFiringSequence.trim()) return;
             await this._playValidationService.validateInput(this._diagram, entry);
         }
     }

@@ -19,6 +19,7 @@ export class PlayService {
     private _startMarking: Record<string, number> = {};
     private _currentMarking = signal<Record<string, number>>({ ...this._startMarking });
     private _currentFiringEntry: FiringEntry | undefined;
+    private _currentFiringSequence = '';
     private _idCounter = 0;
 
     firingEntries = signal<FiringEntry[]>([]);
@@ -35,6 +36,10 @@ export class PlayService {
 
     set currentFiringEntry(entry: FiringEntry | undefined) {
         this._currentFiringEntry = entry;
+    }
+
+    get currentFiringSequence(): string {
+        return this._currentFiringSequence;
     }
 
     /**
@@ -66,6 +71,7 @@ export class PlayService {
         const endMarkingCopy: Record<string, number> = { ...entry.endMarking };
         if (this._currentFiringEntry) this._currentFiringEntry.endMarking = { ...diagram.marking };
         diagram.resetMarking();
+        this._currentFiringSequence = entry.firingSequence;
         this._currentFiringEntry = entry;
         entry.endMarking = diagram.marking;
         entry.isValid = true;
@@ -161,7 +167,7 @@ export class PlayService {
             );
         }
         if (updateSequence) this.updateFiringEntry(node.label, false);
-        if (isSimulation) entry.isValid = false;
+        if (!this._isExamMode() || isSimulation) entry.isValid = false;
         return false;
     }
 
@@ -192,6 +198,7 @@ export class PlayService {
         setTimeout(() => {
             document.getElementById('firing-sequence-input')?.focus();
         }, 0);
+        this._currentFiringSequence = '';
     }
 
     /**
@@ -250,6 +257,7 @@ export class PlayService {
                   : ' ';
         if (entry.firingSequence.length === 0) entry.firingSequence = label;
         else entry.firingSequence = entry.firingSequence.replace(/[\s,;]+$/, '') + delimiter + label;
+        this._currentFiringSequence = entry.firingSequence;
         entry.transitionCount += 1;
         if (this._isExamMode()) entry.isValid = undefined;
         if (updateEndMarking) entry.endMarking = { ...this._currentMarking() };
