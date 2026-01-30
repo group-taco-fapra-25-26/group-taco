@@ -21,8 +21,17 @@ export const GRAPH_IDS = {
     PROCESS_NET: 'process-net',
 } as const;
 
-export const GRAPH_FILENAMES = {
-    [GRAPH_IDS.PETRI_NET]: 'petri-netz',
-    [GRAPH_IDS.REACHABILITY]: 'erreichbarkeitsgraph',
-    [GRAPH_IDS.PROCESS_NET]: 'prozessnetz',
+export type GraphId = (typeof GRAPH_IDS)[keyof typeof GRAPH_IDS];
+
+export const GRAPH_FILENAMES: Record<GraphId, string> = {
+    [GRAPH_IDS.PETRI_NET]: 'petri-net',
+    [GRAPH_IDS.REACHABILITY]: 'reachability-graph',
+    [GRAPH_IDS.PROCESS_NET]: 'process-net',
+};
+
+export const VIEW_MODES = {
+    SIMPLE: 'simple',
+    DESCRIPTIVE: 'descriptive',
 } as const;
+
+export type ViewMode = (typeof VIEW_MODES)[keyof typeof VIEW_MODES];

@@ -6,6 +6,15 @@
     "TAB_PLAY": "Schalten",
     "TAB_REACHABILITY": "Erreichbarkeitsgraph",
     "TAB_PROCESS": "Prozessnetz",
+    "REACHABILITY_GRAPH": {
+        "TOGGLE_VIEW": "Ansichtsmodus umschalten",
+        "ACTION_BUILD": "Graph aufbauen",
+        "INSTRUCTION_BUILD": "Schalte aktive Transitionen im Petri-Netz, um den Erreichbarkeitsgraphen schrittweise zu erkunden.",
+        "ACTION_MOVE": "Knoten verschieben",
+        "INSTRUCTION_MOVE": "Linksklick und Ziehen, um Zustandsknoten frei anzuordnen.",
+        "ACTION_RESET": "Zu Zustand springen",
+        "INSTRUCTION_RESET": "Doppelklick auf einen Zustandsknoten, um das Petri-Netz auf diese Markierung zurückzusetzen."
+    },
     "TOGGLE_MODE": "Modus umschalten",
     "SWITCH_TO_LEARNING_MODE": "Wechsel zu Lernmodus",
     "SWITCH_TO_EXAM_MODE": "Wechsel zu Prüfungsmodus",
@@ -90,7 +99,10 @@
             "PARSER_ERROR": "Parserfehler",
             "PROCESSING_ERROR": "Verarbeitungsfehler",
             "START_POSITION": "Startposition",
-            "VALIDATION": "Validierung"
+            "VALIDATION": "Validierung",
+            "STATENODE_EXISTING": "Zustandsknoten vorhanden",
+            "STATENODE_ARC_EXISTING": "Zustandsknoten und Verbindung vorhanden",
+            "PETRI_NET_UNLIMITED": "Petrinetz unbeschränkt"
         },
         "BODY": {
             "NO_NET_TO_SAVE": "Es ist kein Petri-Netz zum Speichern vorhanden.",
@@ -110,7 +122,10 @@
             "VALIDATION_VALID_MAXIMAL": "Das Prozessnetz ist gültig und maximal.",
             "VALIDATION_VALID_WITH_INFOS": "Das Prozessnetz ist gültig.",
             "VALIDATION_INVALID": "Das Prozessnetz ist ungültig.",
-            "SWITCHED_STATE_SUCCESSFULLY": "Die Markierung des Petrinetzes wurde erfolgreich angepasst."
+            "SWITCHED_STATE_SUCCESSFULLY": "Die Markierung des Petrinetzes wurde erfolgreich angepasst.",
+            "STATENODE_EXISTING": "Der Zustandsknoten existiert bereits, neue Verbindung wurde erstellt.",
+            "STATENODE_ARC_EXISTING": "Der Zustandsknoten und die Verbindung existieren bereits, EG-Status wurde angepasst.",
+            "PETRI_NET_UNLIMITED": "Das Petrinetz ist unbeschränkt."
         },
         "VALIDATION_MESSAGES": {
             "TRANSITION_NO_MATCH": "❌ Transition {{label}} hat keine passende Beschriftung im Petri-Netz.",
