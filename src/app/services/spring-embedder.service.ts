@@ -138,6 +138,14 @@ export class SpringEmbedderService {
         };
     }
 
+    /**
+     * Calculates the central gravity force pulling a node towards the center of the layout.
+     * @param node
+     *            the current node
+     * @param center
+     *          the center coordinates
+     * @return the gravity force vector
+     */
     private _calculateCentralGravityForce(node: DiagramNode, center: Coords): Coords {
         return {
             x: (center.x - node.x) * this.GRAVITY_CONSTANT,
