@@ -3,15 +3,19 @@ import { FiringEdge, ReachabilityGraph, StateNode } from './classes/reachability
 import { ModeService } from './services/mode.service';
 import { SourcePetriNetService } from './services/source-petri-net.service';
 import { Diagram } from './classes/diagram/diagram';
+import { DiagramTransition } from './classes/diagram/diagram-transition';
+import { DiagramPlace } from './classes/diagram/diagram-place';
 import { ToasterNotificationService } from './services/toaster-notification.service';
 import { Tab } from './classes/tabs';
 import { PanningService } from './services/panning.service';
+import { ToastList } from './classes/toast';
 
 @Injectable({
     providedIn: 'root',
 })
 export class ReachabilityGraphService {
     private _reachabilityGraph: WritableSignal<ReachabilityGraph> = signal(new ReachabilityGraph());
+    private _completeReachabilityGraph: ReachabilityGraph = new ReachabilityGraph();
     private _modeService: ModeService = inject(ModeService);
     private _sourceNetService = inject(SourcePetriNetService);
     private _startMarkingRG: Record<string, number> = {};
@@ -54,6 +58,7 @@ export class ReachabilityGraphService {
         }
 
         this._lastProcessedDiagram = currentNet;
+        this._completeReachabilityGraph = this.calculateCompleteReachabilityGraph();
 
         if (!this._modeService.isExamMode(Tab.REACHABILITY_GRAPH)) {
             //AUTOMATISCH StateNode erzeugen
@@ -193,6 +198,12 @@ export class ReachabilityGraphService {
             }
             //check for infinity after addition of each new StateNode
             this.checkForInfinity(currentStateNode);
+            if (this._reachabilityGraph().isUnlimited) {
+                this._notificationService.showInfo(
+                    'TOASTER.HEADER.PETRI_NET_UNLIMITED',
+                    'TOASTER.BODY.PETRI_NET_UNLIMITED',
+                );
+            }
         }
 
         if (markingExists && !connectionExists) {
@@ -248,15 +259,13 @@ export class ReachabilityGraphService {
      * Changes state of the PetriNet to the State of a ReachabilityGraph StateNode, meaning the marking is adjusted.
      * Triggered by clicking a StateNode in the RG.
      * Uses the "saved" Marking of the reachability graph model where each StateNode saves it's corresponding marking.
-     * @param node: The clicked StateNode
+     * @param node The clicked StateNode
      */
     switchPnStateToClickedState(node: StateNode) {
         console.log('ChangeStateMethod started.');
         console.log('StateNode ID' + node.id);
         console.log('Label' + node.label);
-        if (node.rGMarking) {
-            console.log('Marking' + node.rGMarking);
-        }
+        console.log('Marking' + node.rGMarking);
 
         if (!this._sourceNetService.getCurrentSourceNet()) {
             this._notificationService.showError('TOASTER.HEADER.READ_ERROR', 'TOASTER.BODY.LOAD_NET_FIRST');
@@ -287,25 +296,26 @@ export class ReachabilityGraphService {
      * Uses recursive method as well as comparison method for markings
      * checkForInfinity initializes the recursion
      */
-    checkForInfinity(node: StateNode) {
+    checkForInfinity(node: StateNode, graph?: ReachabilityGraph) {
+        const targetGraph = graph ?? this._reachabilityGraph();
         console.log('CheckForInfinity');
-        for (const rgStateNode of this._reachabilityGraph().nodes) {
+        for (const rgStateNode of targetGraph.nodes) {
             rgStateNode.nodeVisitedStateForLimitCheck = false;
         }
 
-        for (const rgEdge of this._reachabilityGraph().edges) {
+        for (const rgEdge of targetGraph.edges) {
             rgEdge.isPartOfUnlimitedPath = false;
         }
 
         this.checkedStateNode = node;
-        this.recursiveCheckForInfinity(node);
+        this.recursiveCheckForInfinity(node, targetGraph);
     }
 
     /**
      * Helper method for recursive check of method checkForInfinity
      */
-    recursiveCheckForInfinity(node: StateNode) {
-        console.log('Recursive CheckForInfinity');
+    recursiveCheckForInfinity(node: StateNode, graph: ReachabilityGraph) {
+        console.log('Recursive CheckforInfinity');
         node.nodeVisitedStateForLimitCheck = true;
         let areTokensGettingBigger = false;
         if (this.checkedStateNode) {
@@ -324,29 +334,21 @@ export class ReachabilityGraphService {
                     if (
                         this.checkedStateNode.tokenSum > checkPredecessor.tokenSum &&
                         areTokensGettingBigger &&
-                        !this._reachabilityGraph().isUnlimited
+                        !graph.isUnlimited
                     ) {
                         console.log('Unbeschränkt');
-                        this._notificationService.showInfo(
-                            'TOASTER.HEADER.PETRI_NET_UNLIMITED',
-                            'TOASTER.BODY.PETRI_NET_UNLIMITED',
-                        );
-                        this._reachabilityGraph().isUnlimited = true;
+                        graph.isUnlimited = true;
                         checkPredecessor.isMorMStrich = true;
                         //TODO unbeschraenkteMarkierungM = direkterVorgaengerMarkierung;
                         this.checkedStateNode.isMorMStrich = true;
                         //TODO unbeschraenkteMarkierungMStrich = egUnbeschraenktheitsPruefMarkierung;
                         if (checkPredecessor.isStartingState) {
-                            this._reachabilityGraph().breakLoop = true;
+                            graph.breakLoop = true;
                             return;
                         }
                         return;
                     } else {
-                        if (checkPredecessor.isStartingState) {
-                            this._reachabilityGraph().breakLoop = true;
-                            return;
-                        }
-                        this.recursiveCheckForInfinity(checkPredecessor);
+                        this.recursiveCheckForInfinity(checkPredecessor, graph);
                     }
                 }
             }
@@ -374,5 +376,231 @@ export class ReachabilityGraphService {
         }
 
         return currentMarkingHigher;
+    }
+
+    /**
+     * Calculates the complete Reachability Graph for the current source Petri net.
+     * Follows Algorithm 2.2.4 (Calculation of the Reachability Graph).
+     * Stops if the graph becomes too large or unlimited.
+     *
+     * @returns The calculated Reachability Graph.
+     */
+    calculateCompleteReachabilityGraph(): ReachabilityGraph {
+        const diagram = this._sourceNetService.getCurrentSourceNet();
+        if (!diagram) {
+            return new ReachabilityGraph();
+        }
+
+        const { graph, Q, processedNodeIds, nodeByLabel, counters } = this.initializeGraphCalculation(diagram);
+
+        while (Q.length > 0) {
+            if (this.shouldStopCalculation(graph)) {
+                break;
+            }
+
+            const m = Q.shift()!;
+
+            // Q <- Q \ M is implicitly handled here by skipping if already processed
+            if (processedNodeIds.has(m.id)) {
+                continue;
+            }
+
+            const enabledTransitions = this.getEnabledTransitions(diagram, m.rGMarking);
+
+            //FOR EACH t ∈ T DO
+            for (const transition of enabledTransitions) {
+                const nextMarking = this.computeNextMarking(m.rGMarking, transition);
+                const m_prime = this.getOrCreateNextNode(graph, nodeByLabel, diagram.places, nextMarking, counters);
+
+                // Q <- Q U {m'}
+                if (!Q.includes(m_prime)) {
+                    Q.push(m_prime);
+                }
+
+                this.processEdge(graph, m, m_prime, transition, counters);
+
+                if (graph.isUnlimited) break;
+            }
+
+            if (graph.isUnlimited || graph.breakLoop) {
+                graph.isUnlimited = true;
+                break;
+            }
+
+            // M <- M U {m}
+            processedNodeIds.add(m.id);
+        }
+
+        this._completeReachabilityGraph = graph;
+        return graph;
+    }
+
+    private initializeGraphCalculation(diagram: Diagram) {
+        const graph = new ReachabilityGraph();
+        const startMarking = diagram.startMarking;
+        const places = diagram.places;
+        const startLabel = places.map((p) => startMarking[p.id] ?? 0).join(' ');
+
+        const startNode = new StateNode('RG1', 300, 50, startLabel, startMarking);
+        startNode.isStartingState = true;
+
+        graph.nodes.push(startNode);
+
+        return {
+            graph,
+            Q: [startNode],
+            processedNodeIds: new Set<string>(),
+            nodeByLabel: new Map<string, StateNode>([[startLabel, startNode]]),
+            counters: { nodeId: 1, edgeId: 0 },
+        };
+    }
+
+    private shouldStopCalculation(graph: ReachabilityGraph): boolean {
+        if (graph.nodes.length > 2000) {
+            graph.isUnlimited = true;
+            return true;
+        }
+        return graph.isUnlimited || graph.breakLoop;
+    }
+
+    private getEnabledTransitions(diagram: Diagram, marking: Record<string, number>): DiagramTransition[] {
+        return diagram.transitions.filter((t) => {
+            return t.getInputFlow().every((flow) => {
+                const tokens = marking[flow.place.id] || 0;
+                return tokens >= flow.weight;
+            });
+        });
+    }
+
+    private computeNextMarking(
+        currentMarking: Record<string, number>,
+        transition: DiagramTransition,
+    ): Record<string, number> {
+        const nextMarking = { ...currentMarking };
+        transition.getInputFlow().forEach((flow) => {
+            nextMarking[flow.place.id] -= flow.weight;
+        });
+        transition.getOutputFlow().forEach((flow) => {
+            nextMarking[flow.place.id] = (nextMarking[flow.place.id] || 0) + flow.weight;
+        });
+        return nextMarking;
+    }
+
+    private getOrCreateNextNode(
+        graph: ReachabilityGraph,
+        nodeByLabel: Map<string, StateNode>,
+        places: DiagramPlace[],
+        nextMarking: Record<string, number>,
+        counters: { nodeId: number },
+    ): StateNode {
+        const nextLabel = places.map((p) => nextMarking[p.id] ?? 0).join(' ');
+        let m_prime = nodeByLabel.get(nextLabel);
+
+        if (!m_prime) {
+            counters.nodeId++;
+            m_prime = new StateNode(`RG${counters.nodeId}`, 300, 50, nextLabel, nextMarking);
+            graph.nodes.push(m_prime);
+            nodeByLabel.set(nextLabel, m_prime);
+        }
+        return m_prime;
+    }
+
+    private processEdge(
+        graph: ReachabilityGraph,
+        source: StateNode,
+        target: StateNode,
+        transition: DiagramTransition,
+        counters: { edgeId: number },
+    ): void {
+        const edgeExists = graph.edges.some(
+            (e) => e.source === source.id && e.target === target.id && e.displayLabel === transition.label,
+        );
+
+        if (!edgeExists) {
+            counters.edgeId++;
+            const edge = new FiringEdge(`Edge${counters.edgeId}`, source.id, target.id, transition.label, '');
+            graph.edges.push(edge);
+            target.predecessors.push(source);
+            source.successors.push(target);
+
+            this.checkForInfinity(target, graph);
+        }
+    }
+
+    /**
+     * Clears the current Reachability Graph and resets the last processed diagram as well as the marking.
+     */
+    clear() {
+        this._reachabilityGraph.set(new ReachabilityGraph());
+        this._lastProcessedDiagram?.resetMarking();
+        this._lastProcessedDiagram = null;
+        this.initializeReachabilityGraphFirstStateNode();
+    }
+
+    /**
+     * Checks if the current Reachability Graph is complete compared to the calculated one.
+     * Uses ToasterNotificationService to inform the user.
+     */
+    checkReachabilityGraphCompleteness(): void {
+        const completeGraph = this._completeReachabilityGraph;
+
+        if (completeGraph.isUnlimited) {
+            this._notificationService.showInfo(
+                'TOASTER.HEADER.PETRI_NET_UNLIMITED',
+                'TOASTER.BODY.PETRI_NET_UNLIMITED',
+            );
+            return;
+        }
+
+        const userGraph = this._reachabilityGraph();
+        const missingReachableEdges: { source: StateNode; target: StateNode; edge: FiringEdge }[] = [];
+
+        for (const cEdge of completeGraph.edges) {
+            const cSource = completeGraph.nodes.find((n) => n.id === cEdge.source);
+            const cTarget = completeGraph.nodes.find((n) => n.id === cEdge.target);
+
+            if (!cSource || !cTarget) continue;
+
+            const uSource = userGraph.nodes.find((n) => n.label === cSource.label);
+
+            if (!uSource) continue;
+
+            const uTarget = userGraph.nodes.find((n) => n.label === cTarget.label);
+
+            let edgeExists = false;
+            if (uTarget) {
+                edgeExists = userGraph.edges.some(
+                    (uEdge) =>
+                        uEdge.source === uSource.id &&
+                        uEdge.target === uTarget.id &&
+                        uEdge.displayLabel === cEdge.displayLabel,
+                );
+            }
+
+            if (!edgeExists) {
+                missingReachableEdges.push({ source: cSource, target: cTarget, edge: cEdge });
+            }
+        }
+
+        if (missingReachableEdges.length > 0) {
+            const list: ToastList[] = missingReachableEdges.slice(0, 5).map((item) => {
+                return {
+                    message: `${item.source.displayLabel} -[${item.edge.displayLabel}]-> ${item.target.displayLabel}`,
+                };
+            });
+
+            if (missingReachableEdges.length > 5) {
+                list.push({ message: '...' });
+            }
+
+            this._notificationService.showError(
+                'TOASTER.HEADER.RG_CHECK_INCOMPLETE',
+                'TOASTER.BODY.RG_CHECK_MISSING_EDGES_LIST',
+                { list },
+            );
+            return;
+        }
+
+        this._notificationService.showSuccess('TOASTER.HEADER.RG_CHECK_SUCCESS', 'TOASTER.BODY.RG_CHECK_SUCCESS');
     }
 }

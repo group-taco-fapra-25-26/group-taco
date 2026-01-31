@@ -9,6 +9,7 @@ export interface DrawToolbarAction {
     icon: string;
     tooltip: string;
     color?: 'primary' | 'accent' | 'warn';
+    isActive?: boolean;
     action: () => void;
 }
 

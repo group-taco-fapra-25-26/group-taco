@@ -107,7 +107,10 @@ export class PetriNetLoaderService {
                     this._panningService.nudgeViewBox(0, -80);
                     this._panningService.expandViewBox(1.1);
                 }
-                if (this._tabStateService.currentTab() === Tab.PROCESS_NET) {
+                if (
+                    this._tabStateService.currentTab() === Tab.PROCESS_NET &&
+                    !this._modeService.isExamMode(Tab.PROCESS_NET)
+                ) {
                     this._processNetSateService.createStartPositions(parsedNet, this._panningService.INITIAL_VIEWBOX);
                 }
                 this._toasterService.showSuccess('TOASTER.HEADER.SUCCESS', 'TOASTER.BODY.NET_LOADED_SUCCESSFULLY');
