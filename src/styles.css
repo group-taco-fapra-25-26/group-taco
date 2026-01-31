@@ -163,9 +163,3 @@ body {
         flex-direction: column;
     }
 }
-
-.wide-tooltip {
-    .mdc-tooltip__surface {
-        max-width: unset;
-    }
-}
