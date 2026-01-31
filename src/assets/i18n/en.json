@@ -46,7 +46,6 @@
         "VALIDATE": "Validate",
         "PLACE": "+ Place",
         "TRANSITION": "+ Transition",
-        "CONTROLS": "Drag and drop to create new places and transitions. Right click a transition and a place to create a connection between them. Scroll up or down on a connection to change its weight or on a place to change its marking. Middle click removes a place, transition or connection. Double click a transition or place to rename it.",
         "TOAST_SUCCESS_BODY": "Tuple processed successfully",
         "TOAST_SUCCESS_HEADER": "Net loaded",
         "TOAST_VALIDATION_HEADER": "Correct Drawing",
@@ -73,7 +72,21 @@
         "PROMPT_EDIT_TRANSITION_TITLE": "Edit transition label",
         "EDIT_LABEL": "Label",
         "TOAST_DUPLICATE_LABEL_HEADER": "Duplicate label",
-        "TOAST_DUPLICATE_LABEL_BODY": "The label '{{label}}' is already used. Please choose a unique label."
+        "TOAST_DUPLICATE_LABEL_BODY": "The label '{{label}}' is already used. Please choose a unique label.",
+        "INSTRUCTION": {
+            "ACTION_DRAG_DROP": "Drag & Drop",
+            "DRAG_DROP": "Drag elements from the palette to the canvas to create your Petri net.",
+            "MOVE": "Move",
+            "LEFT_CLICK_MOVE": "Left-click and drag to move elements around the canvas and from the palette to the canvas.",
+            "CONNECT": "Connect",
+            "RIGHT_CLICK_CONNECT": "Right-click a place or transition, then right-click the opposite type to create a connection.",
+            "DELETE": "Delete",
+            "MIDDLE_CLICK_DELETE": "Middle-click an element or connection to delete it.",
+            "EDIT_LABEL": "Edit Label",
+            "DOUBLE_CLICK_EDIT_LABEL": "Double-click an element to edit its label.",
+            "SCROLL": "Scroll",
+            "SCROLL_CHANGE_TOKENS_WEIGHT": "Use the mouse wheel to change the number of tokens (places) or the weight (connection)."
+        }
     },
     "PLAY": {
         "FIRING_TABLE": "Firing Table",
@@ -86,7 +99,8 @@
         "MAX_TRANSITION_COUNT": "max. transition count",
         "MAX_SEQUENCE_COUNT": "max. sequence count"
     },
-    "HEADER_SUBTITLE": "Fachpraktikum Programmiersysteme WiSe25/26 by Marie G., Florian M., Ben L. and Alexander K.",
+    "HEADER_SUBTITLE": "Fachpraktikum Programmiersysteme WiSe25/26 by",
+    "HEADER_SUBTITLE_NAMES": "Marie G., Alexander K., Ben L. & Florian M.",
     "TOASTER": {
         "HEADER": {
             "SAVE_IMPOSSIBLE": "Save impossible",

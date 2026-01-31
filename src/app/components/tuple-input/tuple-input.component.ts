@@ -11,6 +11,8 @@ import { ToasterNotificationService } from '../../services/toaster-notification.
 import { TranslateModule } from '@ngx-translate/core';
 import { SpringEmbedderService } from '../../services/spring-embedder.service';
 import { DisplayService } from '../../services/display.service';
+import { DiagramNode } from '../../classes/diagram/diagram-node';
+import { applyParallelOffsetsToArcs } from '../../services/arc-parallel-offset.util';
 
 @Component({
     selector: 'app-tuple-input',
@@ -39,6 +41,10 @@ export class TupleInputComponent {
             this._springEmbedderService.calculateLayout().catch((error) => console.error(error));
             this._toaster.showSuccess('TUPLE_INPUT.TOAST_SUCCESS_HEADER', 'TUPLE_INPUT.TOAST_SUCCESS_BODY');
             this._dialogRef.close();
+            // Build node map and apply parallel offsets to arcs
+            const nodeMap = new Map<string, DiagramNode>();
+            diagram.allNodes.forEach((node: DiagramNode) => nodeMap.set(node.id, node));
+            applyParallelOffsetsToArcs(diagram.arcs, nodeMap);
         } else {
             this._toaster.showError('TUPLE_INPUT.TOAST_ERROR_HEADER', 'TUPLE_INPUT.TOAST_ERROR_BODY');
         }

@@ -73,7 +73,21 @@
         "PROMPT_EDIT_TRANSITION_TITLE": "Transitionsbeschriftung bearbeiten",
         "EDIT_LABEL": "Beschriftung",
         "TOAST_DUPLICATE_LABEL_HEADER": "Doppelte Beschriftung",
-        "TOAST_DUPLICATE_LABEL_BODY": "Die Beschriftung '{{label}}' wird bereits verwendet. Bitte wähle eine eindeutige Beschriftung."
+        "TOAST_DUPLICATE_LABEL_BODY": "Die Beschriftung '{{label}}' wird bereits verwendet. Bitte wähle eine eindeutige Beschriftung.",
+        "INSTRUCTION": {
+            "ACTION_DRAG_DROP": "Ziehen & Ablegen",
+            "DRAG_DROP": "Ziehen Sie Elemente aus der linken Palette ins Zeichenfeld, um Ihr Petri-Netz zu erstellen.",
+            "MOVE": "Verschieben",
+            "LEFT_CLICK_MOVE": "Linksklick und Ziehen, um Elemente auf der Leinwand und aus der Palette auf die Leinwand zu verschieben.",
+            "CONNECT": "Verbinden",
+            "RIGHT_CLICK_CONNECT": "Rechtsklick auf eine Stelle oder Transition, dann Rechtsklick auf den entgegengesetzten Typ, um eine Verbindung zu erstellen.",
+            "DELETE": "Löschen",
+            "MIDDLE_CLICK_DELETE": "Mittelklick auf ein Element oder eine Verbindung zum Löschen.",
+            "EDIT_LABEL": "Beschriftung bearbeiten",
+            "DOUBLE_CLICK_EDIT_LABEL": "Doppelklick auf ein Element, um seine Beschriftung zu bearbeiten.",
+            "SCROLL": "Scrollen",
+            "SCROLL_CHANGE_TOKENS_WEIGHT": "Verwenden Sie das Mausrad, um die Anzahl der Marken (Stellen) oder das Gewicht (Verbindung) zu ändern."
+        }
     },
     "PLAY": {
         "FIRING_TABLE": "Schalttabelle",
@@ -86,7 +100,8 @@
         "MAX_TRANSITION_COUNT": "max. Anzahl Transitionen",
         "MAX_SEQUENCE_COUNT": "max. Anzahl Sequenzen"
     },
-    "HEADER_SUBTITLE": "Fachpraktikum Programmiersysteme WiSe25/26 von Marie G., Florian M., Ben L. und Alexander K.",
+    "HEADER_SUBTITLE": "Fachpraktikum Programmiersysteme WiSe25/26 von",
+    "HEADER_SUBTITLE_NAMES": "Marie G., Alexander K., Ben L. & Florian M.",
     "TOASTER": {
         "HEADER": {
             "SAVE_IMPOSSIBLE": "Speichern nicht möglich",

@@ -62,11 +62,12 @@
             </g>
         }
     </svg>
-    <app-draw-toolbar
-        [headerTitle]="'PROCESS_NET.DRAWING_AREA_HEADER'"
-        [helpTooltip]="'PROCESS_NET.HELP_TOOLTIP'"
-        [actions]="toolbarActions()"
-        [instructions]="toolbarInstructions()" />
-
+    <div class="instruction-panel">
+        <app-draw-toolbar
+            [headerTitle]="'PROCESS_NET.DRAWING_AREA_HEADER'"
+            [helpTooltip]="'PROCESS_NET.HELP_TOOLTIP'"
+            [actions]="toolbarActions()"
+            [instructions]="toolbarInstructions()" />
+    </div> 
     <app-rg-marking-dialog></app-rg-marking-dialog>
 </div>

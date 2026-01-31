@@ -136,7 +136,7 @@ export class DisplayComponent implements OnInit, OnDestroy {
     }
 
     public startPan(event: MouseEvent): void {
-        this._panningService.startPan(event, this.diagram(), this.drawingArea);
+        this._panningService.startPan(event, this.drawingArea);
     }
 
     public pan(event: MouseEvent): void {
@@ -148,6 +148,6 @@ export class DisplayComponent implements OnInit, OnDestroy {
     }
 
     public onWheel(event: WheelEvent): void {
-        this._panningService.zoom(event, this.drawingArea, this.diagram());
+        this._panningService.zoom(event, this.drawingArea);
     }
 }

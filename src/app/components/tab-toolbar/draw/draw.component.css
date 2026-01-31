@@ -1,24 +1,45 @@
 .draw-layout {
     display: grid;
-    grid-template-columns: 200px 1fr;
-    gap: 12px;
-    align-items: start;
+    grid-template-columns: auto 1fr;
+    grid-template-rows: 1fr auto;
+    column-gap: 12px;
+    row-gap: 4px;
+    height: 750px;
+    width: 100%;
+    box-sizing: border-box;
+    overflow-x: hidden;
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 12px 12px 5px 12px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+:host {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow-x: hidden;
 }
 
 .palette {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    padding: 10px;
+    gap: 4px;
+    padding: 6px 6px 8px 6px;
     border: 1px solid #d0d0d0;
     border-radius: 6px;
     background: #fafafa;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    width: fit-content;
+    min-width: 0;
+    max-width: 100%;
+    align-self: start;
 }
 
 .palette h3 {
-    margin: 0 0 4px;
-    font-size: 16px;
+    margin: 0 0 2px;
+    font-size: 18px;
     color: #333;
 }
 
@@ -43,14 +64,20 @@
 }
 
 .hint {
-    margin: 4px 0 0;
     font-size: 12px;
     color: #555;
 }
 
 .canvas-container {
     width: 100%;
+    height: 100%;
+    min-height: 0;
     position: relative;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    overflow-x: hidden;
+    padding-bottom: 5px;
 }
 
 .inline-tuple-input {
@@ -98,12 +125,16 @@
 
 .drawing-canvas {
     width: 100%;
-    height: 600px;
+    height: 100%;
+    min-height: 300px;
+    flex: 1 1 auto;
     border: 1px dashed #bdbdbd;
     background-color: white;
     border-radius: 6px;
     box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.05);
     transition: all 0.2s ease;
+    box-sizing: border-box;
+    overflow-x: hidden;
 }
 
 .drawing-canvas:hover {
@@ -263,4 +294,11 @@ svg text {
 
 .inline-tuple-input button {
     height: fit-content;
+}
+
+.draw-toolbar-fullwidth {
+    grid-column: 1 / -1;
+    width: 100%;
+    box-sizing: border-box;
+    margin-top: 0;
 }

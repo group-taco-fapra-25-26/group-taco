@@ -12,6 +12,8 @@ import { Tab } from '../classes/tabs';
 import { SerializationService } from './serialization.service';
 import { ProcessNetStateService } from './process-net-state.service';
 import { PanningService } from './panning.service';
+import { DiagramNode } from '../classes/diagram/diagram-node';
+import { applyParallelOffsetsToArcs } from './arc-parallel-offset.util';
 
 @Injectable({
     providedIn: 'root',
@@ -100,10 +102,19 @@ export class PetriNetLoaderService {
                 this._sourcePetriNetService.loadNewNet(parsedNet, content);
                 this._tabStateService.setAllLastMarkings(parsedNet.marking);
                 this._displayService.display(parsedNet, { triggeredByFiring: false });
+                this._panningService.fitViewToGraph(parsedNet);
+                if (inDrawTab) {
+                    this._panningService.nudgeViewBox(0, -80);
+                    this._panningService.expandViewBox(1.1);
+                }
                 if (this._tabStateService.currentTab() === Tab.PROCESS_NET) {
                     this._processNetSateService.createStartPositions(parsedNet, this._panningService.INITIAL_VIEWBOX);
                 }
                 this._toasterService.showSuccess('TOASTER.HEADER.SUCCESS', 'TOASTER.BODY.NET_LOADED_SUCCESSFULLY');
+                // Build node map and apply parallel offsets to arcs
+                const nodeMap = new Map<string, DiagramNode>();
+                parsedNet.allNodes.forEach((node: DiagramNode) => nodeMap.set(node.id, node));
+                applyParallelOffsetsToArcs(parsedNet.arcs, nodeMap);
             } else {
                 this._toasterService.showWarning('TOASTER.HEADER.PARSER_ERROR', 'TOASTER.BODY.FILE_NOT_INTERPRETABLE');
             }

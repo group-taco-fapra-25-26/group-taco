@@ -119,3 +119,47 @@ body {
         color: #d32f2f;
     }
 }
+
+/* --- Shared Graph Layout (Reachability & Process Net) --- */
+.drawing-area-container {
+    margin-top: 0; /* parent handles spacing */
+    border: none; /* panel border handled by parent */
+    padding: 0; /* panel padding handled by parent */
+    box-sizing: border-box;
+    background-color: transparent; /* panel background handled by parent */
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    display: flex;
+    flex-direction: column;
+    height: 600px;
+    overflow: visible;
+}
+
+.graph-display-layout {
+    display: flex;
+    flex-direction: row;
+    gap: 1rem;
+}
+
+.graph-display-layout > * {
+    flex: 1 1 0;
+    min-width: 0;
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 12px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.graph-display-layout svg {
+    display: block;
+    width: 100%;
+}
+
+@media (max-width: 900px) {
+    .graph-display-layout {
+        flex-direction: column;
+    }
+}

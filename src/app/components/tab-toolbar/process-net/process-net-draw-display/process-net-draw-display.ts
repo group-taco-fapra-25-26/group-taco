@@ -453,7 +453,7 @@ export class ProcessNetDrawDisplayComponent implements OnInit, OnDestroy, AfterV
         if (isOnElement) {
             return;
         }
-        this.panningService.startPan(event, this.displayService.diagram, this.drawingArea);
+        this.panningService.startPan(event, this.drawingArea);
     }
 
     onCanvasPan(event: MouseEvent) {
@@ -466,7 +466,7 @@ export class ProcessNetDrawDisplayComponent implements OnInit, OnDestroy, AfterV
     }
 
     onCanvasWheel(event: WheelEvent) {
-        this.panningService.zoom(event, this.drawingArea, this.displayService.diagram);
+        this.panningService.zoom(event, this.drawingArea);
     }
 
     private onDocumentMouseMove = (event: MouseEvent) => {
