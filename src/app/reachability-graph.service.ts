@@ -60,7 +60,6 @@ export class ReachabilityGraphService {
         this._lastProcessedDiagram = currentNet;
 
         // if (!this._modeService.isExamMode(Tab.REACHABILITY_GRAPH)) {
-        //AUTOMATISCH StateNode erzeugen
         //Current marking auslesen
         this._startMarkingRG = currentNet.startMarking || {};
         const initialReachabilityLabel: string = Object.values(this._startMarkingRG).join(' ');
@@ -70,7 +69,7 @@ export class ReachabilityGraphService {
         //neuen StateNode erzeugen
         const initialId = 'RG1';
         this.currentSourceRgId = initialId;
-
+        
         const initialStateNode = new StateNode(
             initialId,
             initialX,
@@ -79,10 +78,11 @@ export class ReachabilityGraphService {
             this._startMarkingRG,
         );
         initialStateNode.isStartingState = true;
-
+        
         //TO-DO Startmarkierung hervorheben, eingehender Arc aus dem Ursprung
         // const initialEdge = new FiringEdge('Initial', 'Initial', initialId, 'Initial','Initial');
         if (!this._modeService.isExamMode(Tab.REACHABILITY_GRAPH)) {
+            //AUTOMATISCH StateNode erzeugen
             const newGraph = new ReachabilityGraph();
             newGraph.nodes = [initialStateNode];
             newGraph.edges = [];
@@ -91,9 +91,11 @@ export class ReachabilityGraphService {
             console.log('initialReachabilityLabel' + initialReachabilityLabel);
         } else if (this._modeService.isExamMode(Tab.REACHABILITY_GRAPH)) {
             //nur im Hintergrund vergleichen, User gibt NodeLabel, also Marking, selbst ein und bekommt Feedback
-            let userMarking:Record<string, number> = this.openDialog();
+            // let userMarking:Record<string, number> = this.getCorrectUserMarking(initialStateNode);
+            let correctUserMarking = this.getCorrectUserMarking(initialStateNode);
 
-            if(this.compareUserInputWithTargetState(userMarking, initialStateNode)){
+            // if(this.compareUserInputWithTargetState(userMarking, initialStateNode)){
+            if(correctUserMarking){
             const newGraph = new ReachabilityGraph();
             newGraph.nodes = [initialStateNode];
             newGraph.edges = [];
@@ -103,23 +105,14 @@ export class ReachabilityGraphService {
                 'TOASTER.HEADER.MARKING_INPUT_WRONG',
                 'TOASTER.BODY.MARKING_INPUT_WRONG',
             );
-            //TODO ERNEUTE USEREINGABE FORDERN
-            //TODO Methode ggf. auslagern, damit neue Eingabe möglich?
-            //erst nach Dialog endgültig festlegen
-            //WIE GENAU NEU STARTEN OHNE ENDLOSSCHLEIFE?
+            
+        
             }
 
             //TO-DO Define Marking Type
 
 
-            // if (element.node instanceof DiagramPlace) {
-            //             const currentLabel = element.node.label ?? element.node.displayLabel;
-            //             this.promptForLabel('DRAW.PROMPT_EDIT_PLACE_TITLE', currentLabel).then((newLabel) => {
-            //                 if (!newLabel || newLabel === currentLabel) return;
-            //                 if (this.isLabelTaken(newLabel, element.id)) {
-            //                     this.showDuplicateLabelError(newLabel);
-            //                     return;
-            //                 }
+           
         }
     }
 
@@ -439,14 +432,22 @@ export class ReachabilityGraphService {
     }
 
 
-    openDialog(): Record<string, number> {
+    getCorrectUserMarking(node:StateNode): boolean {
+        let isUserMarkingCorrect=false;
         // this.dialog.open(RgMarkingDialogComponent);
         //TODO CHANGE INITIALIZATION AFTER DIALOG IS FINISHED!!!
+//nach jeder Eingabe, die nicht korrekt ist, user erneut auffordern
+//ebenfalls auto-complete button
 
-        let xxx: Record<string, number> = this?._reachabilityGraph().nodes[0].rGMarking;
-        return xxx;
-
-
+        // this.compareUserInputWithTargetState(userMarking, node)
+        
+        //if user aborts, auto-fill the correct marking
+        //set this method return value true, then display correct StateNode in calling mehtod
+        let autoFill: Record<string, number> = node.rGMarking;
+        if(autoFill){
+            isUserMarkingCorrect=true;
+        }
+        return isUserMarkingCorrect
 
     }
 }
