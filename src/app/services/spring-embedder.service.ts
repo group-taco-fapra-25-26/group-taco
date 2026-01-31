@@ -1,6 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { DiagramNode } from '../classes/diagram/diagram-node';
 import { SourcePetriNetService } from './source-petri-net.service';
+import { PanningService } from './panning.service';
 import { DiagramArc } from '../classes/diagram/diagram-arc';
 import { Coords } from '../classes/json-petri-net';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -11,14 +12,16 @@ import { applyParallelOffsetsToArcs, DEFAULT_PARALLEL_OFFSET } from './arc-paral
 })
 export class SpringEmbedderService {
     private _sourceNetService = inject(SourcePetriNetService);
+    private _panningService = inject(PanningService);
     public isOptimalLayoutCalculated = toSignal(this._sourceNetService.optimalLayoutCalculated$);
 
     private readonly LENGTH_CONSTANT = 150;
     private readonly STIFFNESS_CONSTANT = 0.2;
     private readonly REPULSION_CONSTANT = 15000;
+    private readonly GRAVITY_CONSTANT = 0.0025;
     private readonly PARALLEL_OFFSET = DEFAULT_PARALLEL_OFFSET;
 
-    private readonly MAX_ITERATIONS = 100000;
+    private readonly MAX_ITERATIONS = 1000;
     private readonly MIN_MOVEMENT = 0.1;
 
     /**
@@ -46,8 +49,14 @@ export class SpringEmbedderService {
             neighborMap.set(node.id, neighbors);
         });
 
+        const viewBox = this._panningService.viewBox();
+        const center = {
+            x: viewBox.minX + viewBox.width / 2,
+            y: viewBox.minY + viewBox.height / 2,
+        };
+
         for (let i = 0; i < this.MAX_ITERATIONS; i++) {
-            if (this._calculateNewPosition(nodes, neighborMap) < this.MIN_MOVEMENT) {
+            if (this._calculateNewPosition(nodes, neighborMap, center) < this.MIN_MOVEMENT) {
                 this._sourceNetService.optimalLayoutCalculated();
                 break;
             }
@@ -57,8 +66,13 @@ export class SpringEmbedderService {
         this._sourceNetService.updateEditedNet(diagram);
     }
 
-    private _calculateNewPosition(nodes: DiagramNode[], neighborMap: Map<string, DiagramNode[]>): number {
+    private _calculateNewPosition(
+        nodes: DiagramNode[],
+        neighborMap: Map<string, DiagramNode[]>,
+        center: Coords,
+    ): number {
         let totalMovement = 0;
+
         nodes.forEach((node: DiagramNode) => {
             const force: Coords = { x: 0, y: 0 };
 
@@ -74,6 +88,10 @@ export class SpringEmbedderService {
                 force.x -= electricalForce.x;
                 force.y -= electricalForce.y;
             });
+
+            const gravityForce = this._calculateCentralGravityForce(node, center);
+            force.x += gravityForce.x;
+            force.y += gravityForce.y;
 
             node.x += force.x;
             node.y += force.y;
@@ -117,6 +135,21 @@ export class SpringEmbedderService {
         return {
             x: this.STIFFNESS_CONSTANT * lengthDiff * directionX,
             y: this.STIFFNESS_CONSTANT * lengthDiff * directionY,
+        };
+    }
+
+    /**
+     * Calculates the central gravity force pulling a node towards the center of the layout.
+     * @param node
+     *            the current node
+     * @param center
+     *          the center coordinates
+     * @return the gravity force vector
+     */
+    private _calculateCentralGravityForce(node: DiagramNode, center: Coords): Coords {
+        return {
+            x: (center.x - node.x) * this.GRAVITY_CONSTANT,
+            y: (center.y - node.y) * this.GRAVITY_CONSTANT,
         };
     }
 
