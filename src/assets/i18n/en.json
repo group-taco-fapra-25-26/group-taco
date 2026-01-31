@@ -8,6 +8,7 @@
     "TAB_PROCESS": "Process Net",
     "REACHABILITY_GRAPH": {
         "TOGGLE_VIEW": "Toggle View Mode",
+        "BUTTON_VALIDATE_NET": "Validate Reachability Graph",
         "ACTION_BUILD": "Build Graph",
         "INSTRUCTION_BUILD": "Fire enabled transitions in the Petri net to explore the reachability graph step by step.",
         "ACTION_MOVE": "Move Node",

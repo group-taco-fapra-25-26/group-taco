@@ -8,6 +8,7 @@
     "TAB_PROCESS": "Prozessnetz",
     "REACHABILITY_GRAPH": {
         "TOGGLE_VIEW": "Ansichtsmodus umschalten",
+        "BUTTON_VALIDATE_NET": "Erreichbarkeitsgraph validieren",
         "ACTION_BUILD": "Graph aufbauen",
         "INSTRUCTION_BUILD": "Schalte aktive Transitionen im Petri-Netz, um den Erreichbarkeitsgraphen schrittweise zu erkunden.",
         "ACTION_MOVE": "Knoten verschieben",
