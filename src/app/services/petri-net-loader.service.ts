@@ -15,6 +15,7 @@ import { PanningService } from './panning.service';
 import { DiagramNode } from '../classes/diagram/diagram-node';
 import { applyParallelOffsetsToArcs } from './arc-parallel-offset.util';
 
+
 @Injectable({
     providedIn: 'root',
 })
@@ -107,13 +108,14 @@ export class PetriNetLoaderService {
                     this._panningService.nudgeViewBox(0, -80);
                     this._panningService.expandViewBox(1.1);
                 }
-                if (
-                    this._tabStateService.currentTab() === Tab.PROCESS_NET &&
-                    !this._modeService.isExamMode(Tab.PROCESS_NET)
-                ) {
+                if (this._tabStateService.currentTab() === Tab.PROCESS_NET) {
                     this._processNetSateService.createStartPositions(parsedNet, this._panningService.INITIAL_VIEWBOX);
                 }
                 this._toasterService.showSuccess('TOASTER.HEADER.SUCCESS', 'TOASTER.BODY.NET_LOADED_SUCCESSFULLY');
+                // Build node map and apply parallel offsets to arcs
+                const nodeMap = new Map<string, DiagramNode>();
+                parsedNet.allNodes.forEach((node: DiagramNode) => nodeMap.set(node.id, node));
+                applyParallelOffsetsToArcs(parsedNet.arcs, nodeMap);
                 // Build node map and apply parallel offsets to arcs
                 const nodeMap = new Map<string, DiagramNode>();
                 parsedNet.allNodes.forEach((node: DiagramNode) => nodeMap.set(node.id, node));
