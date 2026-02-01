@@ -1,4 +1,4 @@
-import { Component, computed, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal } from '@angular/core';
 import { SvgStateNodeComponent } from '../../../display/svg-state-node/svg-state-node.component';
 import { SvgStateArcComponent } from '../../../display/svg-state-arc/svg-state-arc.component';
 import { PanningService } from 'src/app/services/panning.service';
@@ -11,6 +11,8 @@ import {
 } from '../../../draw-toolbar/draw-toolbar.component';
 import { DisplayableNode } from '../../../../classes/displayable-graph.interface';
 import { StateNode } from '../../../../classes/reachability-graph.model';
+import { ModeService } from '../../../../services/mode.service';
+import { Tab } from '../../../../classes/tabs';
 
 @Component({
     selector: 'app-reachability-graph-draw-display',
@@ -24,7 +26,19 @@ import { StateNode } from '../../../../classes/reachability-graph.model';
 export class ReachabilityGraphDrawDisplayComponent extends DisplayComponent {
     protected override graphId = GRAPH_IDS.REACHABILITY;
     readonly reachabilityGraphDiagram = this._reachabilityGraphService.reachabilityGraphSignal;
-    readonly viewMode = signal<ViewMode>(VIEW_MODES.SIMPLE);
+    readonly isEmpty = computed(() => this.reachabilityGraphDiagram().nodes.length === 0);
+    readonly viewMode = signal<ViewMode>(VIEW_MODES.DESCRIPTIVE);
+    readonly modeService = inject(ModeService);
+
+    constructor() {
+        super();
+        effect(() => {
+            const isExamSignal = this.modeService.getIsExamModeSignal(Tab.REACHABILITY_GRAPH);
+            if (isExamSignal && isExamSignal()) {
+                this.viewMode.set(VIEW_MODES.SIMPLE);
+            }
+        });
+    }
 
     private draggedNode: DisplayableNode | null = null;
     private dragOffset = { x: 0, y: 0 };
@@ -137,6 +151,7 @@ export class ReachabilityGraphDrawDisplayComponent extends DisplayComponent {
         {
             icon: 'swap_horiz',
             tooltip: 'REACHABILITY_GRAPH.TOGGLE_VIEW',
+            isActive: !this.isEmpty(),
             color: 'accent',
             action: () => this.toggleViewMode(),
         },
@@ -158,11 +173,11 @@ export class ReachabilityGraphDrawDisplayComponent extends DisplayComponent {
     ]);
 
     private clearDrawing() {
-        //TODO: implement clearing the reachability graph drawing
+        this._reachabilityGraphService.clear();
     }
 
     private onValidate() {
-        //TODO: implement validation/ of the reachability graph or remove it if not needed
+        this._reachabilityGraphService.checkReachabilityGraphCompleteness();
     }
 
     private toggleViewMode() {

@@ -8,6 +8,7 @@
     "TAB_PROCESS": "Prozessnetz",
     "REACHABILITY_GRAPH": {
         "TOGGLE_VIEW": "Ansichtsmodus umschalten",
+        "BUTTON_VALIDATE_NET": "Erreichbarkeitsgraph validieren",
         "ACTION_BUILD": "Graph aufbauen",
         "INSTRUCTION_BUILD": "Schalte aktive Transitionen im Petri-Netz, um den Erreichbarkeitsgraphen schrittweise zu erkunden.",
         "ACTION_MOVE": "Knoten verschieben",
@@ -131,7 +132,9 @@
             "VALIDATION": "Validierung",
             "STATENODE_EXISTING": "Zustandsknoten vorhanden",
             "STATENODE_ARC_EXISTING": "Zustandsknoten und Verbindung vorhanden",
-            "PETRI_NET_UNLIMITED": "Petrinetz unbeschränkt"
+            "PETRI_NET_UNLIMITED": "Petrinetz unbeschränkt",
+            "RG_CHECK_SUCCESS": "Erreichbarkeitsgraph vollständig",
+            "RG_CHECK_INCOMPLETE": "Unvollständiger Graph"
         },
         "BODY": {
             "NO_NET_TO_SAVE": "Es ist kein Petri-Netz zum Speichern vorhanden.",
@@ -162,7 +165,10 @@
             "SWITCHED_STATE_SUCCESSFULLY": "Die Markierung des Petrinetzes wurde erfolgreich angepasst.",
             "STATENODE_EXISTING": "Der Zustandsknoten existiert bereits, neue Verbindung wurde erstellt.",
             "STATENODE_ARC_EXISTING": "Der Zustandsknoten und die Verbindung existieren bereits, EG-Status wurde angepasst.",
-            "PETRI_NET_UNLIMITED": "Das Petrinetz ist unbeschränkt."
+            "PETRI_NET_UNLIMITED": "Das Petrinetz ist unbeschränkt.",
+            "RG_CHECK_SUCCESS": "Der erstellte Erreichbarkeitsgraph ist vollständig und korrekt.",
+            "RG_CHECK_MISSING_EDGES": "Fehlende Transitionen: {{edges}}",
+            "RG_CHECK_MISSING_EDGES_LIST": "Die folgenden Transitionen fehlen:"
         },
         "VALIDATION_MESSAGES": {
             "TRANSITION_NO_MATCH": "❌ Transition {{label}} hat keine passende Beschriftung im Petri-Netz.",
