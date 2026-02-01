@@ -21,6 +21,7 @@ export class ReachabilityGraphService {
     private _startMarkingRG: Record<string, number> = {};
     private _currentMarkingRG = signal<Record<string, number>>(this._startMarkingRG);
     private _lastProcessedDiagram: Diagram | null = null;
+    private _cachedCompleteGraphDiagram: Diagram | null = null;
     private _notificationService = inject(ToasterNotificationService);
     private _panningService = inject(PanningService);
     private checkedStateNode: StateNode | undefined;
@@ -58,7 +59,6 @@ export class ReachabilityGraphService {
         }
 
         this._lastProcessedDiagram = currentNet;
-        this._completeReachabilityGraph = this.calculateCompleteReachabilityGraph();
 
         if (!this._modeService.isExamMode(Tab.REACHABILITY_GRAPH)) {
             //AUTOMATISCH StateNode erzeugen
@@ -348,6 +348,10 @@ export class ReachabilityGraphService {
                         }
                         return;
                     } else {
+                        if (checkPredecessor.isStartingState) {
+                            this._reachabilityGraph().breakLoop = true;
+                            return;
+                        }
                         this.recursiveCheckForInfinity(checkPredecessor, graph);
                     }
                 }
@@ -391,6 +395,10 @@ export class ReachabilityGraphService {
             return new ReachabilityGraph();
         }
 
+        if (this._cachedCompleteGraphDiagram === diagram) {
+            return this._completeReachabilityGraph;
+        }
+
         const { graph, Q, processedNodeIds, nodeByLabel, counters } = this.initializeGraphCalculation(diagram);
 
         while (Q.length > 0) {
@@ -407,7 +415,7 @@ export class ReachabilityGraphService {
 
             const enabledTransitions = this.getEnabledTransitions(diagram, m.rGMarking);
 
-            //FOR EACH t ∈ T DO
+            //FOR EACH t ∈ T DO && IF m --[t]--> m' THEN
             for (const transition of enabledTransitions) {
                 const nextMarking = this.computeNextMarking(m.rGMarking, transition);
                 const m_prime = this.getOrCreateNextNode(graph, nodeByLabel, diagram.places, nextMarking, counters);
@@ -422,8 +430,7 @@ export class ReachabilityGraphService {
                 if (graph.isUnlimited) break;
             }
 
-            if (graph.isUnlimited || graph.breakLoop) {
-                graph.isUnlimited = true;
+            if (graph.isUnlimited) {
                 break;
             }
 
@@ -431,6 +438,7 @@ export class ReachabilityGraphService {
             processedNodeIds.add(m.id);
         }
 
+        this._cachedCompleteGraphDiagram = diagram;
         this._completeReachabilityGraph = graph;
         return graph;
     }
@@ -478,7 +486,8 @@ export class ReachabilityGraphService {
     ): Record<string, number> {
         const nextMarking = { ...currentMarking };
         transition.getInputFlow().forEach((flow) => {
-            nextMarking[flow.place.id] -= flow.weight;
+            const currentTokens = nextMarking[flow.place.id] ?? 0;
+            nextMarking[flow.place.id] = currentTokens - flow.weight;
         });
         transition.getOutputFlow().forEach((flow) => {
             nextMarking[flow.place.id] = (nextMarking[flow.place.id] || 0) + flow.weight;
@@ -542,6 +551,7 @@ export class ReachabilityGraphService {
      * Uses ToasterNotificationService to inform the user.
      */
     checkReachabilityGraphCompleteness(): void {
+        this._completeReachabilityGraph = this.calculateCompleteReachabilityGraph();
         const completeGraph = this._completeReachabilityGraph;
 
         if (completeGraph.isUnlimited) {

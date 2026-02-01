@@ -145,8 +145,6 @@
             "STATENODE_ARC_EXISTING": "Der Zustandsknoten und die Verbindung existieren bereits, EG-Status wurde angepasst.",
             "PETRI_NET_UNLIMITED": "Das Petrinetz ist unbeschränkt.",
             "RG_CHECK_SUCCESS": "Der erstellte Erreichbarkeitsgraph ist vollständig und korrekt.",
-            "RG_CHECK_MISSING_NODES": "Fehlende Zustände: {{nodes}}",
-            "RG_CHECK_MISSING_NODES_LIST": "Die folgenden Zustände fehlen:",
             "RG_CHECK_MISSING_EDGES": "Fehlende Transitionen: {{edges}}",
             "RG_CHECK_MISSING_EDGES_LIST": "Die folgenden Transitionen fehlen:"
         },

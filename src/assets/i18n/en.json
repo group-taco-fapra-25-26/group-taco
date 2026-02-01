@@ -142,8 +142,6 @@
             "STATENODE_ARC_EXISTING": "StateNode and arc already exist, state of RG was updated.",
             "PETRI_NET_UNLIMITED": "Petri Net is unlimited.",
             "RG_CHECK_SUCCESS": "The created reachability graph is complete and correct.",
-            "RG_CHECK_MISSING_NODES": "Missing states: {{nodes}}",
-            "RG_CHECK_MISSING_NODES_LIST": "The following states are missing:",
             "RG_CHECK_MISSING_EDGES": "Missing transitions: {{edges}}",
             "RG_CHECK_MISSING_EDGES_LIST": "The following transitions are missing:"
         },
