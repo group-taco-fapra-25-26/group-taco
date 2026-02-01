@@ -17,6 +17,13 @@
         "INSTRUCTION_RESET": "Doppelklick auf einen Zustandsknoten, um das Petri-Netz auf diese Markierung zurückzusetzen."
     },
     "TOGGLE_MODE": "Modus umschalten",
+    "CONFIRM_DIALOG": {
+        "TITLE": "Modus wechseln",
+        "MESSAGE_DRAW": "Möchten Sie die aktuelle Zeichnung behalten?",
+        "MESSAGE_DEFAULT": "Möchten Sie den aktuellen Inhalt behalten?",
+        "KEEP": "Behalten",
+        "DISCARD": "Verwerfen"
+    },
     "SWITCH_TO_LEARNING_MODE": "Wechsel zu Lernmodus",
     "SWITCH_TO_EXAM_MODE": "Wechsel zu Prüfungsmodus",
     "EXAM_MODE": "Prüfungsmodus",

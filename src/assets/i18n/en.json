@@ -17,6 +17,13 @@
         "INSTRUCTION_RESET": "Double-click a state node to reset the Petri net to this marking."
     },
     "TOGGLE_MODE": "Toggle Mode",
+    "CONFIRM_DIALOG": {
+        "TITLE": "Switch Mode",
+        "MESSAGE_DRAW": "Do you want to keep the current drawing?",
+        "MESSAGE_DEFAULT": "Do you want to keep the current content?",
+        "KEEP": "Keep",
+        "DISCARD": "Discard"
+    },
     "SWITCH_TO_LEARNING_MODE": "Switch to Learning Mode",
     "SWITCH_TO_EXAM_MODE": "Switch to Exam Mode",
     "EXAM_MODE": "Exam Mode",
