@@ -15,26 +15,7 @@
         "ACTION_RESET": "Zu Zustand springen",
         "INSTRUCTION_RESET": "Doppelklick auf einen Zustandsknoten, um das Petri-Netz auf diese Markierung zurückzusetzen."
     },
-    "REACHABILITY_GRAPH": {
-        "TOGGLE_VIEW": "Ansichtsmodus umschalten",
-        "BUTTON_VALIDATE_NET": "Erreichbarkeitsgraph validieren",
-        "ACTION_BUILD": "Graph aufbauen",
-        "INSTRUCTION_BUILD": "Schalte aktive Transitionen im Petri-Netz, um den Erreichbarkeitsgraphen schrittweise zu erkunden.",
-        "ACTION_MOVE": "Knoten verschieben",
-        "INSTRUCTION_MOVE": "Linksklick und Ziehen, um Zustandsknoten frei anzuordnen.",
-        "ACTION_RESET": "Zu Zustand springen",
-        "INSTRUCTION_RESET": "Doppelklick auf einen Zustandsknoten, um das Petri-Netz auf diese Markierung zurückzusetzen."
-    },
-    "REACHABILITY_GRAPH": {
-        "TOGGLE_VIEW": "Ansichtsmodus umschalten",
-        "BUTTON_VALIDATE_NET": "Erreichbarkeitsgraph validieren",
-        "ACTION_BUILD": "Graph aufbauen",
-        "INSTRUCTION_BUILD": "Schalte aktive Transitionen im Petri-Netz, um den Erreichbarkeitsgraphen schrittweise zu erkunden.",
-        "ACTION_MOVE": "Knoten verschieben",
-        "INSTRUCTION_MOVE": "Linksklick und Ziehen, um Zustandsknoten frei anzuordnen.",
-        "ACTION_RESET": "Zu Zustand springen",
-        "INSTRUCTION_RESET": "Doppelklick auf einen Zustandsknoten, um das Petri-Netz auf diese Markierung zurückzusetzen."
-    },
+
     "TOGGLE_MODE": "Modus umschalten",
     "CONFIRM_DIALOG": {
         "TITLE": "Modus wechseln",
@@ -171,8 +152,7 @@
             "STATENODE_EXISTING": "Der Zustandsknoten existiert bereits, neue Verbindung wurde erstellt.",
             "STATENODE_ARC_EXISTING": "Der Zustandsknoten und die Verbindung existieren bereits, EG-Status wurde angepasst.",
             "PETRI_NET_UNLIMITED": "Das Petrinetz ist unbeschränkt.",
-            "MARKING_INPUT_WRONG": "Die eingegebene Markierung entspricht nicht der Zielmarkierung, die das Petrinetz nach dem Schalten erreicht."
-            "PETRI_NET_UNLIMITED": "Das Petrinetz ist unbeschränkt.",
+            "MARKING_INPUT_WRONG": "Die eingegebene Markierung entspricht nicht der Zielmarkierung, die das Petrinetz nach dem Schalten erreicht.",
             "RG_CHECK_SUCCESS": "Der erstellte Erreichbarkeitsgraph ist vollständig und korrekt.",
             "RG_CHECK_MISSING_EDGES": "Fehlende Transitionen: {{edges}}",
             "RG_CHECK_MISSING_EDGES_LIST": "Die folgenden Transitionen fehlen:"

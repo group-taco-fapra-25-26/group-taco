@@ -11,7 +11,6 @@ import { PanningService } from './services/panning.service';
 import { MatButtonModule } from '@angular/material/button';
 import { RgMarkingDialogComponent } from './components/tab-toolbar/reachability-graph/rg-marking-dialog/rg-marking-dialog.component';
 import { MatDialog } from '@angular/material/dialog';
-import { PanningService } from './services/panning.service';
 import { ToastList } from './classes/toast';
 
 @Injectable({
@@ -30,8 +29,6 @@ export class ReachabilityGraphService {
     private _panningService = inject(PanningService);
     private checkedStateNode: StateNode | undefined;
     readonly dialog = inject(MatDialog);
-    private _panningService = inject(PanningService);
-    private checkedStateNode: StateNode | undefined;
 
     private currentSourceRgId = 'RG1';
 
@@ -77,7 +74,7 @@ export class ReachabilityGraphService {
         //neuen StateNode erzeugen
         const initialId = 'RG1';
         this.currentSourceRgId = initialId;
-        
+
         const initialStateNode = new StateNode(
             initialId,
             initialX,
@@ -86,13 +83,8 @@ export class ReachabilityGraphService {
             this._startMarkingRG,
         );
         initialStateNode.isStartingState = true;
-                    initialStateNode.isStartingState = true;
+        initialStateNode.isStartingState = true;
 
-            //TO-DO Startmarkierung hervorheben, eingehender Arc aus dem Ursprung
-            // const initialEdge = new FiringEdge('Initial', 'Initial', initialId, 'Initial','Initial');
-
-        //TO-DO Startmarkierung hervorheben, eingehender Arc aus dem Ursprung
-        // const initialEdge = new FiringEdge('Initial', 'Initial', initialId, 'Initial','Initial');
         if (!this._modeService.isExamMode(Tab.REACHABILITY_GRAPH)) {
             //AUTOMATISCH StateNode erzeugen
             const newGraph = new ReachabilityGraph();
@@ -103,28 +95,22 @@ export class ReachabilityGraphService {
             console.log('initialReachabilityLabel' + initialReachabilityLabel);
         } else if (this._modeService.isExamMode(Tab.REACHABILITY_GRAPH)) {
             //nur im Hintergrund vergleichen, User gibt NodeLabel, also Marking, selbst ein und bekommt Feedback
-            // let userMarking:Record<string, number> = this.getCorrectUserMarking(initialStateNode);
-            let correctUserMarking = this.getCorrectUserMarking(initialStateNode);
+            let userMarkingCorrect = this.getCorrectUserMarking(initialStateNode);
 
-            // if(this.compareUserInputWithTargetState(userMarking, initialStateNode)){
-            if(correctUserMarking){
-            const newGraph = new ReachabilityGraph();
-            newGraph.nodes = [initialStateNode];
-            newGraph.edges = [];
-            this._reachabilityGraph.set(newGraph);
+            //UserMarking will always be ccorrect at this point
+            //TO-DO check if additional checks are necessary
+            if (userMarkingCorrect) {
+                const newGraph = new ReachabilityGraph();
+                newGraph.nodes = [initialStateNode];
+                newGraph.edges = [];
+                this._reachabilityGraph.set(newGraph);
             } else {
+                //TODO delete else condition?
                 this._notificationService.showInfo(
-                'TOASTER.HEADER.MARKING_INPUT_WRONG',
-                'TOASTER.BODY.MARKING_INPUT_WRONG',
-            );
-            
-        
+                    'TOASTER.HEADER.MARKING_INPUT_WRONG',
+                    'TOASTER.BODY.MARKING_INPUT_WRONG',
+                );
             }
-
-            //TO-DO Define Marking Type
-
-
-           
         }
     }
 
@@ -221,6 +207,26 @@ export class ReachabilityGraphService {
                     newGraph.edges = [...graph.edges, currentFiringEdge];
                     return newGraph;
                 });
+            } else if (this._modeService.isExamMode(Tab.REACHABILITY_GRAPH)) {
+                //nur im Hintergrund vergleichen, User gibt NodeLabel, also Marking, selbst ein und bekommt Feedback
+                let userMarkingCorrect = this.getCorrectUserMarking(currentStateNode);
+
+                //UserMarking will always be ccorrect at this point
+                //TO-DO check if additional checks are necessary
+                if (userMarkingCorrect) {
+                    this._reachabilityGraph.update((graph) => {
+                        const newGraph = new ReachabilityGraph();
+                        newGraph.nodes = [...graph.nodes, currentStateNode];
+                        newGraph.edges = [...graph.edges, currentFiringEdge];
+                        return newGraph;
+                    });
+                } else {
+                    //TODO delete else condition?
+                    this._notificationService.showInfo(
+                        'TOASTER.HEADER.MARKING_INPUT_WRONG',
+                        'TOASTER.BODY.MARKING_INPUT_WRONG',
+                    );
+                }
             }
 
             //add predecessors and successors to StateNodes
@@ -255,14 +261,15 @@ export class ReachabilityGraphService {
             );
 
             //Automatically show new graph in Learn Mode
-            if (!this._modeService.isExamMode(Tab.REACHABILITY_GRAPH)) {
-                this._reachabilityGraph.update((graph) => {
-                    const newGraph = new ReachabilityGraph();
-                    newGraph.nodes = [...graph.nodes];
-                    newGraph.edges = [...graph.edges, currentFiringEdge];
-                    return newGraph;
-                });
-            }
+            //Also show new graph in Exam mode if StateNode already exists to prevent confusion
+            // if (!this._modeService.isExamMode(Tab.REACHABILITY_GRAPH)) {
+            this._reachabilityGraph.update((graph) => {
+                const newGraph = new ReachabilityGraph();
+                newGraph.nodes = [...graph.nodes];
+                newGraph.edges = [...graph.edges, currentFiringEdge];
+                return newGraph;
+            });
+            // }
 
             //add predecessors and successors to StateNodes
             for (const nodeElementIterator of graph.nodes) {
@@ -423,45 +430,56 @@ export class ReachabilityGraphService {
         return currentMarkingHigher;
     }
 
-
-    /**Compares User input of type marking with Marking of the next StateNode 
-     * created from firing a transition. 
+    /**Compares User input of type marking with Marking of the next StateNode
+     * created from firing a transition.
      * Used in Exam Mode to determine if user can define marking correctly.
      * @param userInputMarking Marking inputted by user with dialog. Target: Should contain the "next" marking after firing.
      * @param nextStateNode StateNode after firing, only saved in model before this method, visualized after successful comparison.
-     * 
+     *
      */
 
-    compareUserInputWithTargetState (userInputMarking: Record<string, number>, nextStateNode: StateNode):boolean{
-        let comparison =true;
+    compareUserInputWithTargetState(userInputMarking: Record<string, number>, nextStateNode: StateNode): boolean {
+        let comparison = true;
         const userMarking = Object.values(userInputMarking);
         const actualTargetMarking = Object.values(nextStateNode.rGMarking);
 
         for (let i = 0; i < userMarking.length; i++) {
-            if (actualTargetMarking[i] != userMarking[i]) { comparison = false;
+            if (actualTargetMarking[i] != userMarking[i]) {
+                comparison = false;
             }
         }
         return comparison;
     }
 
-
-    getCorrectUserMarking(node:StateNode): boolean {
-        let isUserMarkingCorrect=false;
-        // this.dialog.open(RgMarkingDialogComponent);
+    /**
+     * Opens up a dialog where user can input a marking, handles checking of the UserMarking and
+     * returns a boolean true if the marking is correct
+     * Also offers possibility to Auto-Fill correct marking depending on the chosen App Mode and User choice.
+     * Calls compareUserInputWithTargetState method
+     * CHOOSES AUTO-FILL IN CASE USER ABORTS TO PREVENT THE PROGRAM FROM CRASHING
+     * @param node The node for which the marking is checked; determined by the calling method
+     * @returns true if user gets correct marking or gives up
+     */
+    getCorrectUserMarking(node: StateNode): boolean {
+        let isUserMarkingCorrect = false;
         //TODO CHANGE INITIALIZATION AFTER DIALOG IS FINISHED!!!
-//nach jeder Eingabe, die nicht korrekt ist, user erneut auffordern
-//ebenfalls auto-complete button
+        let userInputtedMarking: Record<string, number> = node.rGMarking;
 
-        // this.compareUserInputWithTargetState(userMarking, node)
-        
+        this.compareUserInputWithTargetState(userInputtedMarking, node);
+        this.dialog.open(RgMarkingDialogComponent);
+
+        //nach jeder Eingabe, die nicht korrekt ist, user erneut auffordern
+        //ebenfalls auto-complete button
+
         //if user aborts, auto-fill the correct marking
         //set this method return value true, then display correct StateNode in calling mehtod
-        let autoFill: Record<string, number> = node.rGMarking;
-        if(autoFill){
-            isUserMarkingCorrect=true;
-        }
-        return isUserMarkingCorrect
+        //TODO Add condition in dialogue
 
+        let autoFill = true;
+        if (autoFill) {
+            isUserMarkingCorrect = true;
+        }
+        return isUserMarkingCorrect;
     }
 
     /**

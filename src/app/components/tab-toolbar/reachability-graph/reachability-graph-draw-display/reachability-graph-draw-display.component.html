@@ -54,6 +54,7 @@
                     (mousedown)="onNodeMouseDown($event, node)"
                     (dblclick)="stateNodeClicked(node)" />
             </g>
+        }
         @for (node of reachabilityGraphDiagram().nodes; track node.id) {
             <g class="node-wrapper" [attr.data-node-id]="node.id">
                 <g appSvgStateNode [stateNode]="node" [viewMode]="viewMode()" />
@@ -71,13 +72,14 @@
                     (dblclick)="stateNodeClicked(node)" />
             </g>
         }
+        />
     </svg>
+
     <div class="instruction-panel">
         <app-draw-toolbar
             [headerTitle]="'PROCESS_NET.DRAWING_AREA_HEADER'"
             [helpTooltip]="'PROCESS_NET.HELP_TOOLTIP'"
             [actions]="toolbarActions()"
             [instructions]="toolbarInstructions()" />
-    </div> 
-    <app-rg-marking-dialog></app-rg-marking-dialog>
+    </div>
 </div>
