@@ -9,6 +9,7 @@ import { MatIconButton } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
 import { MatSliderModule } from '@angular/material/slider';
 import { MatExpansionModule, MatExpansionPanel } from '@angular/material/expansion';
+import { MatTooltip } from '@angular/material/tooltip';
 import { filter, Subscription, take, tap } from 'rxjs';
 
 import { ModeService } from '../../../../services/mode.service';
@@ -18,7 +19,6 @@ import { PlayValidationService } from '../../../../services/play-validation.serv
 import { Tab } from '../../../../classes/tabs';
 import { Diagram } from '../../../../classes/diagram/diagram';
 import { FiringEntry } from '../../../../classes/firing-entry';
-import { MatTooltip } from '@angular/material/tooltip';
 
 @Component({
     selector: 'app-firing-table',

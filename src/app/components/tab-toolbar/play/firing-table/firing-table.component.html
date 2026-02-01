@@ -107,8 +107,16 @@
                                         <mat-icon class="play-icon">play_circle</mat-icon>
                                     </button>
                                 } @else if (entry.isValid === false) {
-                                    <button mat-icon-button class="invalid-sequence-button">
+                                    <button mat-icon-button class="invalid-sequence-button"
+                                                matTooltip="Tooltip test">
                                         <mat-icon color="warn">cancel</mat-icon>
+                                        <div class="info-icon-container">
+                                            <mat-icon
+                                                color="primary"
+                                                class="info-icon">
+                                                info_outline
+                                            </mat-icon>
+                                        </div>
                                     </button>
                                 }
                             </td>
@@ -137,15 +145,13 @@
                             </td>
                             <td class="transition-count-td">{{ entry.transitionCount }}</td>
                             <td class="delete-button-td">
-                                @if (entry.isClosed) {
-                                    <button
-                                        mat-icon-button
-                                        color="warn"
-                                        (click)="onDeleteEntry(entry.id)"
-                                        class="delete-entry-button">
-                                        <mat-icon>delete</mat-icon>
-                                    </button>
-                                }
+                                <button
+                                    mat-icon-button
+                                    color="warn"
+                                    (click)="onDeleteEntry(entry.id)"
+                                    class="delete-entry-button">
+                                    <mat-icon>delete</mat-icon>
+                                </button>
                             </td>
                         </tr>
                     }
