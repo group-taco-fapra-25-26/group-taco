@@ -73,6 +73,7 @@ export class ProcessNetDrawDisplayComponent implements OnInit, OnDestroy, AfterV
     // Bind to service state
     readonly drawnElements = this.stateService.drawnElements;
     readonly connections = this.stateService.connections;
+    readonly isDisabled = computed(() => this.drawnElements().length === 0);
 
     readonly isDragOver = signal<boolean>(false);
     // Derived lines with coordinates for rendering
@@ -100,12 +101,14 @@ export class ProcessNetDrawDisplayComponent implements OnInit, OnDestroy, AfterV
             icon: 'delete',
             tooltip: 'PROCESS_NET.BUTTON_CLEAR_DRAWING',
             color: 'warn',
+            isActive: !this.isDisabled(),
             action: () => this.clearDrawing(),
         },
         {
             icon: 'checklist',
             tooltip: 'PROCESS_NET.BUTTON_VALIDATE_NET',
             color: 'primary',
+            isActive: !this.isDisabled(),
             action: () => this.onValidate(),
         },
     ]);

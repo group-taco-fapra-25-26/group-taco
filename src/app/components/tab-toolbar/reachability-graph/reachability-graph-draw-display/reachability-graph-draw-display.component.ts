@@ -1,6 +1,4 @@
-import { Component, computed, signal } from '@angular/core';
-import { SvgStateNodeComponent } from '../../../display/svg-state-node/svg-state-node.component';
-import { SvgStateArcComponent } from '../../../display/svg-state-arc/svg-state-arc.component';
+import { Component, computed, effect, inject, signal } from '@angular/core';
 import { SvgStateNodeComponent } from '../../../display/svg-state-node/svg-state-node.component';
 import { SvgStateArcComponent } from '../../../display/svg-state-arc/svg-state-arc.component';
 import { PanningService } from 'src/app/services/panning.service';
@@ -14,6 +12,8 @@ import {
 } from '../../../draw-toolbar/draw-toolbar.component';
 import { DisplayableNode } from '../../../../classes/displayable-graph.interface';
 import { StateNode } from '../../../../classes/reachability-graph.model';
+import { ModeService } from '../../../../services/mode.service';
+import { Tab } from '../../../../classes/tabs';
 
 @Component({
     selector: 'app-reachability-graph-draw-display',
@@ -26,96 +26,19 @@ import { StateNode } from '../../../../classes/reachability-graph.model';
 export class ReachabilityGraphDrawDisplayComponent extends DisplayComponent {
     protected override graphId = GRAPH_IDS.REACHABILITY;
     readonly reachabilityGraphDiagram = this._reachabilityGraphService.reachabilityGraphSignal;
-    readonly viewMode = signal<ViewMode>(VIEW_MODES.SIMPLE);
+    readonly isEmpty = computed(() => this.reachabilityGraphDiagram().nodes.length === 0);
+    readonly viewMode = signal<ViewMode>(VIEW_MODES.DESCRIPTIVE);
+    readonly modeService = inject(ModeService);
 
-    private draggedNode: DisplayableNode | null = null;
-    private dragOffset = { x: 0, y: 0 };
-    private isDraggingNode = false;
-
-    calculateWidth(node: StateNode) {
-        if (this.viewMode() === VIEW_MODES.SIMPLE) {
-            return 40;
-        }
-        return node.displayLabel.length * 8;
-    }
-
-    onNodeMouseDown(event: MouseEvent, node: DisplayableNode) {
-        // Only start dragging for left mouse button
-        if (event.button !== 0) {
-            return;
-        }
-
-        // Stop the event from reaching other handlers
-        event.stopImmediatePropagation();
-        event.preventDefault();
-
-        this.isDraggingNode = true;
-        this.draggedNode = node;
-
-        const svgPoint = this.getSvgCoordinates(event);
-        if (svgPoint) {
-            this.dragOffset.x = svgPoint.x - node.x;
-            this.dragOffset.y = svgPoint.y - node.y;
-        }
-    }
-
-    override startPan(event: MouseEvent): void {
-        if (this.isDraggingNode) return;
-        super.startPan(event);
-    }
-
-    override pan(event: MouseEvent): void {
-        if (this.isDraggingNode) {
-            // Handle node dragging
-            if (!this.draggedNode) return;
-
-            const svgPoint = this.getSvgCoordinates(event);
-            if (svgPoint) {
-                const newX = svgPoint.x - this.dragOffset.x;
-                const newY = svgPoint.y - this.dragOffset.y;
-
-                // Update node position using signals
-                this.draggedNode.x = newX;
-                this.draggedNode.y = newY;
+    constructor() {
+        super();
+        effect(() => {
+            const isExamSignal = this.modeService.getIsExamModeSignal(Tab.REACHABILITY_GRAPH);
+            if (isExamSignal && isExamSignal()) {
+                this.viewMode.set(VIEW_MODES.SIMPLE);
             }
-            return;
-        }
-        super.pan(event);
+        });
     }
-
-    override endPan(): void {
-        if (this.isDraggingNode) {
-            // End node dragging
-            this.draggedNode = null;
-            this.isDraggingNode = false;
-            return;
-        }
-        super.endPan();
-    }
-
-    /**
-     * Converts mouse event client coordinates to SVG coordinates,
-     * taking into account the viewBox transformation.
-     * @param event The mouse event
-     */
-    private getSvgCoordinates(event: MouseEvent): { x: number; y: number } | null {
-        const svg = this.drawingArea?.nativeElement;
-        if (!svg) return null;
-
-        const clientRect = svg.getBoundingClientRect();
-        const viewBox = this.viewBoxObj();
-
-        // Calculate position relative to SVG element (0-1 range)
-        const relX = (event.clientX - clientRect.left) / clientRect.width;
-        const relY = (event.clientY - clientRect.top) / clientRect.height;
-
-        // Map to viewBox coordinates
-        const x = viewBox.minX + relX * viewBox.width;
-        const y = viewBox.minY + relY * viewBox.height;
-
-        return { x, y };
-    }
-    readonly viewMode = signal<ViewMode>(VIEW_MODES.SIMPLE);
 
     private draggedNode: DisplayableNode | null = null;
     private dragOffset = { x: 0, y: 0 };
@@ -215,23 +138,27 @@ export class ReachabilityGraphDrawDisplayComponent extends DisplayComponent {
             icon: 'delete',
             tooltip: 'PROCESS_NET.BUTTON_CLEAR_DRAWING',
             color: 'warn',
+            isActive: !this.isEmpty(),
             action: () => this.clearDrawing(),
         },
         {
             icon: 'checklist',
-            tooltip: 'PROCESS_NET.BUTTON_VALIDATE_NET',
+            tooltip: 'REACHABILITY_GRAPH.BUTTON_VALIDATE_NET',
+            isActive: !this.isEmpty(),
             color: 'primary',
             action: () => this.onValidate(),
         },
         {
             icon: 'swap_horiz',
             tooltip: 'REACHABILITY_GRAPH.TOGGLE_VIEW',
+            isActive: !this.isEmpty(),
             color: 'accent',
             action: () => this.toggleViewMode(),
         },
         {
             icon: 'swap_horiz',
             tooltip: 'REACHABILITY_GRAPH.TOGGLE_VIEW',
+            isActive: !this.isEmpty(),
             color: 'accent',
             action: () => this.toggleViewMode(),
         },
@@ -261,21 +188,11 @@ export class ReachabilityGraphDrawDisplayComponent extends DisplayComponent {
     ]);
 
     private clearDrawing() {
-        //TODO: implement clearing the reachability graph drawing
-        //TODO: implement clearing the reachability graph drawing
+        this._reachabilityGraphService.clear();
     }
 
     private onValidate() {
-        //TODO: implement validation/ of the reachability graph or remove it if not needed
-    }
-
-    private toggleViewMode() {
-        this.viewMode.update((mode) => (mode === VIEW_MODES.SIMPLE ? VIEW_MODES.DESCRIPTIVE : VIEW_MODES.SIMPLE));
-    }
-
-    protected computePosition(node: StateNode) {
-        return node.x - this.calculateWidth(node) / 2;
-        //TODO: implement validation/ of the reachability graph or remove it if not needed
+        this._reachabilityGraphService.checkReachabilityGraphCompleteness();
     }
 
     private toggleViewMode() {

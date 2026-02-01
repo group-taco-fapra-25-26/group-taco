@@ -8,6 +8,7 @@
     "TAB_PROCESS": "Process Net",
     "REACHABILITY_GRAPH": {
         "TOGGLE_VIEW": "Toggle View Mode",
+        "BUTTON_VALIDATE_NET": "Validate Reachability Graph",
         "ACTION_BUILD": "Build Graph",
         "INSTRUCTION_BUILD": "Fire enabled transitions in the Petri net to explore the reachability graph step by step.",
         "ACTION_MOVE": "Move Node",
@@ -16,6 +17,13 @@
         "INSTRUCTION_RESET": "Double-click a state node to reset the Petri net to this marking."
     },
     "TOGGLE_MODE": "Toggle Mode",
+    "CONFIRM_DIALOG": {
+        "TITLE": "Switch Mode",
+        "MESSAGE_DRAW": "Do you want to keep the current drawing?",
+        "MESSAGE_DEFAULT": "Do you want to keep the current content?",
+        "KEEP": "Keep",
+        "DISCARD": "Discard"
+    },
     "SWITCH_TO_LEARNING_MODE": "Switch to Learning Mode",
     "SWITCH_TO_EXAM_MODE": "Switch to Exam Mode",
     "EXAM_MODE": "Exam Mode",
@@ -118,6 +126,9 @@
             "STATENODE_ARC_EXISTING": "StateNode and arc exist",
             "PETRI_NET_UNLIMITED": "Petri Net unlimited",
             "MARKING_INPUT_WRONG": "Marking Input Wrong"
+            "PETRI_NET_UNLIMITED": "Petri Net unlimited",
+            "RG_CHECK_SUCCESS": "Reachability Graph Complete",
+            "RG_CHECK_INCOMPLETE": "Incomplete Graph"
         },
         "BODY": {
             "NO_NET_TO_SAVE": "There is no Petri net to save.",
@@ -142,6 +153,10 @@
             "STATENODE_ARC_EXISTING": "StateNode and arc already exist, state of RG was updated.",
             "PETRI_NET_UNLIMITED": "Petri Net is unlimited.",
             "MARKING_INPUT_WRONG": "The Marking you put in does not match the actual marking of the next Petri Net State."
+            "PETRI_NET_UNLIMITED": "Petri Net is unlimited.",
+            "RG_CHECK_SUCCESS": "The created reachability graph is complete and correct.",
+            "RG_CHECK_MISSING_EDGES": "Missing transitions: {{edges}}",
+            "RG_CHECK_MISSING_EDGES_LIST": "The following transitions are missing:"
         },
         "VALIDATION_MESSAGES": {
             "TRANSITION_NO_MATCH": "❌ Transition {{label}} has no matching label in the Petri net.",

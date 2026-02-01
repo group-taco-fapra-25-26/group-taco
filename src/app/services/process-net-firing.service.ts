@@ -8,6 +8,7 @@ import { PlayService } from './play.service';
 import { SourcePetriNetService } from './source-petri-net.service';
 import { ModeService } from './mode.service';
 import { Tab } from '../classes/tabs';
+import { DisplayService } from './display.service';
 
 export interface ProcessNetFiringFlow {
     placeId: string;
@@ -29,6 +30,7 @@ export class ProcessNetFiringService {
     private _toaster = inject(ToasterNotificationService);
     private _stateService = inject(ProcessNetStateService);
     private _modeService = inject(ModeService);
+    private _displayService = inject(DisplayService);
 
     private autoFiringCount = 0;
     private _playService = inject(PlayService);
@@ -73,6 +75,9 @@ export class ProcessNetFiringService {
     clear() {
         this.autoFiringCount = 0;
         this._stateService.clear();
+        if (this._displayService.diagram instanceof Diagram) {
+            this._displayService.diagram.resetMarking();
+        }
     }
 
     private addFiringGraph(event: ProcessNetFiringEvent): void {
