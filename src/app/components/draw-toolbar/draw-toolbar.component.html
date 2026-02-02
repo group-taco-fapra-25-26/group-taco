@@ -8,6 +8,7 @@
             @for (action of actions(); track action.tooltip) {
                 <button
                     matIconButton
+                    [disabled]="!action.isActive"
                     [color]="action.color ?? 'primary'"
                     [matTooltip]="action.tooltip | translate"
                     (click)="action.action(); $event.stopPropagation()">

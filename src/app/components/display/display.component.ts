@@ -36,7 +36,7 @@ export class DisplayComponent implements OnInit, OnDestroy {
     protected _tabStateService = inject(TabStateService);
     private _imageExportService = inject(ImageExportService);
     private _loaderService = inject(PetriNetLoaderService);
-    private _sourcePetriNetService = inject(SourcePetriNetService);
+    protected _sourcePetriNetService = inject(SourcePetriNetService);
     private _playService = inject(PlayService);
     private _elementRef = inject(ElementRef);
     protected _reachabilityGraphService = inject(ReachabilityGraphService);

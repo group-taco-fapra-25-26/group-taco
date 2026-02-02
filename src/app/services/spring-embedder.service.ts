@@ -1,11 +1,10 @@
 import { inject, Injectable } from '@angular/core';
-import { DiagramNode } from '../classes/diagram/diagram-node';
 import { SourcePetriNetService } from './source-petri-net.service';
 import { PanningService } from './panning.service';
-import { DiagramArc } from '../classes/diagram/diagram-arc';
 import { Coords } from '../classes/json-petri-net';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { applyParallelOffsetsToArcs, DEFAULT_PARALLEL_OFFSET } from './arc-parallel-offset.util';
+import { DisplayableEdge, DisplayableGraph, DisplayableNode } from '../classes/displayable-graph.interface';
 
 @Injectable({
     providedIn: 'root',
@@ -28,23 +27,33 @@ export class SpringEmbedderService {
      * Calculates the layout of the current source Petri net using the spring embedder algorithm.
      * Based on Peter Eades idea from "A heuristic for graph drawing" (1984).
      */
-    public async calculateLayout(): Promise<void> {
-        const diagram = this._sourceNetService.getCurrentSourceNet();
-        if (!diagram) return;
-        const nodes: DiagramNode[] = diagram.allNodes;
-        const arcs: DiagramArc[] = diagram.arcs;
+    public async calculateLayout(diagram?: DisplayableGraph): Promise<void> {
+        let nodes: DisplayableNode[];
+        let arcs: DisplayableEdge[];
+        let isSourceNet = false;
 
-        arcs.forEach((arc: DiagramArc) => (arc.bendPoints = []));
+        if (diagram) {
+            nodes = diagram.getNodes();
+            arcs = diagram.getEdges();
+        } else {
+            const diagram = this._sourceNetService.getCurrentSourceNet();
+            if (!diagram) return;
+            nodes = diagram.allNodes;
+            arcs = diagram.arcs;
+            isSourceNet = true;
+        }
 
-        const neighborMap: Map<string, DiagramNode[]> = new Map<string, DiagramNode[]>();
-        nodes.forEach((node: DiagramNode) => {
-            const neighbors: DiagramNode[] = arcs
-                .filter((arc: DiagramArc): boolean => arc.source === node.id || arc.target === node.id)
-                .map(
-                    (arc: DiagramArc): DiagramNode =>
-                        arc.source === node.id
-                            ? nodes.find((n: DiagramNode): boolean => n.id === arc.target)!
-                            : nodes.find((n: DiagramNode): boolean => n.id === arc.source)!,
+        this._sourceNetService.resetOptimalLayoutCalculated();
+        arcs.forEach((arc) => (arc.bendPoints = []));
+
+        const neighborMap: Map<string, DisplayableNode[]> = new Map<string, DisplayableNode[]>();
+        nodes.forEach((node) => {
+            const neighbors: DisplayableNode[] = arcs
+                .filter((arc) => arc.source === node.id || arc.target === node.id)
+                .map((arc) =>
+                    arc.source === node.id
+                        ? nodes.find((n) => n.id === arc.target)!
+                        : nodes.find((n) => n.id === arc.source)!,
                 );
             neighborMap.set(node.id, neighbors);
         });
@@ -56,42 +65,50 @@ export class SpringEmbedderService {
         };
 
         for (let i = 0; i < this.MAX_ITERATIONS; i++) {
-            if (this._calculateNewPosition(nodes, neighborMap, center) < this.MIN_MOVEMENT) {
+            if (this._calculateNewPosition(nodes, neighborMap, center, isSourceNet) < this.MIN_MOVEMENT) {
                 this._sourceNetService.optimalLayoutCalculated();
                 break;
             }
             await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
         }
         this._separateParallelArcs(arcs, nodes);
-        this._sourceNetService.updateEditedNet(diagram);
+        if (isSourceNet) {
+            const diagram = this._sourceNetService.getCurrentSourceNet();
+            if (diagram) {
+                this._sourceNetService.updateEditedNet(diagram);
+            }
+        }
     }
 
     private _calculateNewPosition(
-        nodes: DiagramNode[],
-        neighborMap: Map<string, DiagramNode[]>,
+        nodes: DisplayableNode[],
+        neighborMap: Map<string, DisplayableNode[]>,
         center: Coords,
+        isSourceNet: boolean,
     ): number {
         let totalMovement = 0;
 
-        nodes.forEach((node: DiagramNode) => {
+        nodes.forEach((node) => {
             const force: Coords = { x: 0, y: 0 };
 
-            neighborMap.get(node.id)?.forEach((neighbor: DiagramNode) => {
+            neighborMap.get(node.id)?.forEach((neighbor) => {
                 const mechanicalForce: Coords = this._calculateMechanicalForces(node, neighbor);
                 force.x += mechanicalForce.x;
                 force.y += mechanicalForce.y;
             });
 
-            nodes.forEach((other: DiagramNode) => {
+            nodes.forEach((other) => {
                 if (node.id === other.id) return;
                 const electricalForce = this._calculateElectricalForces(node, other);
                 force.x -= electricalForce.x;
                 force.y -= electricalForce.y;
             });
 
-            const gravityForce = this._calculateCentralGravityForce(node, center);
-            force.x += gravityForce.x;
-            force.y += gravityForce.y;
+            if (isSourceNet) {
+                const gravityForce = this._calculateCentralGravityForce(node, center);
+                force.x += gravityForce.x;
+                force.y += gravityForce.y;
+            }
 
             node.x += force.x;
             node.y += force.y;
@@ -110,7 +127,7 @@ export class SpringEmbedderService {
      *               the second diagram node
      * @return the distance between the two nodes
      */
-    private _calculateDistance(nodeA: DiagramNode, nodeB: DiagramNode): number {
+    private _calculateDistance(nodeA: DisplayableNode, nodeB: DisplayableNode): number {
         const dx = nodeA.x - nodeB.x;
         const dy = nodeA.y - nodeB.y;
         return Math.sqrt(dx * dx + dy * dy);
@@ -124,7 +141,7 @@ export class SpringEmbedderService {
      *              the neighboring node
      * @return the mechanical force vector
      */
-    private _calculateMechanicalForces(node: DiagramNode, neighbor: DiagramNode): Coords {
+    private _calculateMechanicalForces(node: DisplayableNode, neighbor: DisplayableNode): Coords {
         const distance = this._calculateDistance(node, neighbor);
         if (distance < 0.1) {
             return this.setRandomPosition();
@@ -146,7 +163,7 @@ export class SpringEmbedderService {
      *          the center coordinates
      * @return the gravity force vector
      */
-    private _calculateCentralGravityForce(node: DiagramNode, center: Coords): Coords {
+    private _calculateCentralGravityForce(node: DisplayableNode, center: Coords): Coords {
         return {
             x: (center.x - node.x) * this.GRAVITY_CONSTANT,
             y: (center.y - node.y) * this.GRAVITY_CONSTANT,
@@ -168,7 +185,7 @@ export class SpringEmbedderService {
      *            the other node
      * @return the repulsion force vector
      */
-    private _calculateElectricalForces(node: DiagramNode, other: DiagramNode): Coords {
+    private _calculateElectricalForces(node: DisplayableNode, other: DisplayableNode): Coords {
         const distance = this._calculateDistance(node, other);
         if (distance < 0.1) {
             return this.setRandomPosition();
@@ -182,7 +199,7 @@ export class SpringEmbedderService {
         };
     }
 
-    private _separateParallelArcs(arcs: DiagramArc[], nodes: DiagramNode[]): void {
+    private _separateParallelArcs(arcs: DisplayableEdge[], nodes: DisplayableNode[]): void {
         applyParallelOffsetsToArcs(arcs, nodes, this.PARALLEL_OFFSET);
     }
 }
