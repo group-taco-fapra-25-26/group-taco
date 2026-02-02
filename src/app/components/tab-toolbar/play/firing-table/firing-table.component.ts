@@ -44,24 +44,23 @@ import { ToastList } from '../../../../classes/toast';
 export class FiringTableComponent implements OnInit, OnDestroy {
     private _sub?: Subscription;
 
-    protected modeService = inject(ModeService);
-    protected playValidationService = inject(PlayValidationService);
+    modeService = inject(ModeService);
+    playValidationService = inject(PlayValidationService);
     private _notificationService = inject(ToasterNotificationService);
     private _displayService = inject(DisplayService);
     private _playService = inject(PlayService);
 
+    @Input() firingEntries: FiringEntry[] = [];
+    isSequencePlaying = false;
     private readonly _TRANSITION_TIME: number = 1000;
+    private _diagram: Diagram | undefined;
+
+    // Attributes used for the "Find Sequences" functionality
+    isFindSequencesFormVisible = false;
     private readonly _MAX_TRANSITIONS_DEFAULT: number = 50;
     private readonly _MAX_SEQUENCES_DEFAULT: number = 250;
-
-    private _diagram: Diagram | undefined;
-    @Input() firingEntries: FiringEntry[] = [];
-
-    protected isSequencePlaying = false;
-    protected isFindSequencesFormVisible = false;
-    protected maxTransitionCount: number = this._MAX_TRANSITIONS_DEFAULT;
-    protected maxSequenceCount: number = this._MAX_SEQUENCES_DEFAULT;
-    protected buttonColor = 'basic';
+    maxTransitionCount: number = this._MAX_TRANSITIONS_DEFAULT;
+    maxSequenceCount: number = this._MAX_SEQUENCES_DEFAULT;
 
     ngOnInit(): void {
         this._sub = this._displayService.diagram$
@@ -101,10 +100,17 @@ export class FiringTableComponent implements OnInit, OnDestroy {
         this._playService.currentFiringSequence = entry.firingSequence;
     }
 
+    /**
+     * Deletes a firing entry by its ID.
+     * @param id - The ID of the entry to delete.
+     */
     onDeleteEntry(id: number): void {
         this._playService.deleteFiringEntry(id);
     }
 
+    /**
+     * Deletes all firing entries and resets the diagram marking.
+     */
     onDeleteAllEntries(): void {
         this._playService.clearFiringEntries();
         this._displayService.diagram$
@@ -117,10 +123,17 @@ export class FiringTableComponent implements OnInit, OnDestroy {
             });
     }
 
+    /**
+     * Creates a new firing entry.
+     */
     onNewEntry(): void {
         if (this._diagram) this._playService.startNewFiringSequence(this._diagram);
     }
 
+    /**
+     * Plays the firing sequence in the diagram.
+     * @param entry - The firing entry to play.
+     */
     async onPlaySequence(entry: FiringEntry): Promise<void> {
         if (this._diagram) {
             this.isSequencePlaying = true;
@@ -129,10 +142,17 @@ export class FiringTableComponent implements OnInit, OnDestroy {
         }
     }
 
+    /**
+     * Stops the currently playing firing sequence.
+     * @param entry - The firing entry to stop.
+     */
     onStopPlaySequence(entry: FiringEntry): void {
         entry.isPlaying = false;
     }
 
+    /**
+     * Validates all firing sequences and shows a notification with the results.
+     */
     async onValidateSequences(): Promise<void> {
         if (!this._diagram) return;
         const invalidSequences: ToastList[] = [];
@@ -154,6 +174,9 @@ export class FiringTableComponent implements OnInit, OnDestroy {
             );
     }
 
+    /**
+     * Finds firing sequences based on the current Petri net and user-defined limits.
+     */
     onFindSequences(): void {
         if (!this._diagram) return;
         this._playService.clearFiringEntries();
@@ -169,38 +192,67 @@ export class FiringTableComponent implements OnInit, OnDestroy {
         );
     }
 
+    /**
+     * Toggles the visibility of the "Find Sequences" form.
+     */
     toggleFindSequencesForm(): void {
         if (!this._diagram) return;
         this.isFindSequencesFormVisible = !this.isFindSequencesFormVisible;
-        this.buttonColor = this.isFindSequencesFormVisible ? 'primary' : 'basic';
     }
 
+    /**
+     * Checks if buttons should be disabled (e.g., when no Petri net is loaded or a sequence is playing).
+     * @returns true if buttons should be disabled, false otherwise.
+     */
     isButtonDisabled(): boolean {
         return !this._diagram || this.isSequencePlaying;
     }
 
+    /**
+     * Updates the maximum transition count based on user input.
+     * @param event - The input event containing the new value.
+     */
     onMaxTransitionCountChange(event: Event): void {
         const inputElement = event.target as HTMLInputElement;
         this.maxTransitionCount = Number(inputElement.value);
     }
 
+    /**
+     * Updates the maximum sequence count based on user input.
+     * @param event - The input event containing the new value.
+     */
     onMaxSequenceCountChange(event: Event): void {
         const inputElement = event.target as HTMLInputElement;
         this.maxSequenceCount = Number(inputElement.value);
     }
 
+    /**
+     * Adds a new firing entry when the "Add" button is clicked.
+     * @param panel - The expansion panel containing the button.
+     * @param event - The click event.
+     */
     onAddButton(panel: MatExpansionPanel, event: Event): void {
         event.stopPropagation();
         if (!panel.expanded) panel.open();
         this.onNewEntry();
     }
 
+    /**
+     * Validates all sequences when the "Validate" button is clicked.
+     * @param panel - The expansion panel containing the button.
+     * @param event - The click event.
+     */
     onValidateButton(panel: MatExpansionPanel, event: Event): void {
         event.stopPropagation();
         if (!panel.expanded) panel.open();
         this.onValidateSequences().catch(console.error);
     }
 
+    /**
+     * Finds sequences when the "Find" button is clicked.
+     * @param panel - The expansion panel containing the button.
+     * @param event - The click event.
+     */
     onFindButton(panel: MatExpansionPanel, event: Event): void {
         event.stopPropagation();
         if (!panel.expanded) panel.open();

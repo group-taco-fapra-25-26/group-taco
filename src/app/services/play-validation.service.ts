@@ -16,11 +16,10 @@ export class PlayValidationService {
     private _translate = inject(TranslateService);
 
     /**
-     * Finds valid firing sequences in a Petri net diagram beginning at its start marking,
-     * respecting a maximum sequence length.
-     * @param diagram The Petri net diagram for which firing sequences are to be found.
-     * @param maxTransitions The maximum number of transitions in the firing sequences.
-     * @param maxSequencesCount The maximum number of firing sequences to find.
+     * Finds valid firing sequences in a Petri net diagram beginning at its start marking.
+     * @param diagram  - The Petri net diagram for which firing sequences are to be found.
+     * @param maxTransitions - The maximum number of transitions in the firing sequences.
+     * @param maxSequencesCount - The maximum number of firing sequences to find.
      */
     findSequences(diagram: Diagram, maxTransitions: number, maxSequencesCount: number): void {
         const visitedSequences = new Map<number, Set<string>>();
@@ -70,10 +69,8 @@ export class PlayValidationService {
 
     /**
      * Validates a firing entry input.
-     * @param diagram
-     *          The diagram on which the firing entry is to be validated.
-     * @param entry
-     *          The firing entry to be validated.
+     * @param diagram - The diagram on which the firing entry is to be validated.
+     * @param entry - The firing entry to be validated.
      * @returns A promise that resolves when the validation is complete.
      */
     async validateInput(diagram: Diagram, entry: FiringEntry): Promise<void> {
@@ -83,16 +80,16 @@ export class PlayValidationService {
 
     /**
      * Checks if all labels correspond to existing transitions in the diagram.
-     * @param diagram
-     *          The diagram for which the sequence is to be checked.
-     * @param entry
-     *          The firing entry to be validated.
+     * @param diagram - The diagram for which the sequence is to be checked.
+     * @param entry - The firing entry to be validated.
      * @returns true if all labels correnspond to existing transitions, false otherwise.
      */
     private hasOnlyValidTransitions(diagram: Diagram, entry: FiringEntry): boolean {
         const possibleTransitions: string[] = diagram.getTransitionLabels();
         const labels = entry.labels;
+
         if (labels.length === 0) return true;
+
         if (possibleTransitions.length === 0 && labels.length > 0) {
             if (!this._modeService.isExamMode(Tab.PLAY))
                 this._notificationService.showWarning(
@@ -100,34 +97,49 @@ export class PlayValidationService {
                     'TOASTER.BODY.TRANSITION_NOT_PRESENT',
                     { messageParams: { label: labels[0] } },
                 );
-            entry.setValidity(false, ['PLAY.NOT_PRESENT', labels, labels]);
+            entry.setValidity(false, {
+                type: 'PLAY.NOT_PRESENT',
+                invalidLabel: labels[0],
+                visitedLabels: labels,
+            });
             return false;
         }
         entry.setValidity(true, null);
         const visitedLabels: string[] = [];
+
         for (const label of labels) {
             visitedLabels.push(label);
-            const match = possibleTransitions.includes(label);
+            const exactMatch = possibleTransitions.includes(label);
+            const partialMatch = possibleTransitions.some((transition) => transition.startsWith(label));
 
-            if (match) {
+            if (exactMatch) {
                 continue;
             } else {
-                if (!this._modeService.isExamMode(Tab.PLAY))
+                if (!this._modeService.isExamMode(Tab.PLAY) && !partialMatch)
                     this._notificationService.showWarning(
                         'TOASTER.HEADER.TRANSITION_NOT_PRESENT',
                         'TOASTER.BODY.TRANSITION_NOT_PRESENT',
                         { messageParams: { label: label } },
                     );
-                entry.setValidity(false, ['PLAY.NOT_PRESENT', [label], visitedLabels]);
+                entry.setValidity(false, {
+                    type: 'PLAY.NOT_PRESENT',
+                    invalidLabel: label,
+                    visitedLabels: visitedLabels,
+                });
                 break;
             }
         }
         return entry.isValid === true;
     }
 
-    getErrorMessage(entry: FiringEntry): string | null {
-        if (!entry.error) return null;
-        const [errorType, faultyLabels, visitedLabels] = [...entry.error];
-        return `Transition ${faultyLabels.join(', ')} ${this._translate.instant(errorType)}: [ ${visitedLabels.join(' ')} <--- ... ]`;
+    /**
+     * Generates a user-friendly error message for an invalid firing sequence.
+     * @param entry - The firing entry containing the error details.
+     * @returns A formatted error message string.
+     */
+    getErrorMessage(entry: FiringEntry): string {
+        const error = entry.error;
+        if (!error) return '';
+        return `Transition ${error.invalidLabel} ${this._translate.instant(error.type)}: [ ${error.visitedLabels.join(' ')} <--- ... ]`;
     }
 }
