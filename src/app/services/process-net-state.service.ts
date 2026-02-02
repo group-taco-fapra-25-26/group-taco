@@ -151,7 +151,7 @@ export class ProcessNetStateService {
         const padding = 40;
         const availableHeight = baseViewBox.height - padding * 2;
         const PLACE_RADIUS = 25;
-        const minSpacing = PLACE_RADIUS * 2 + 20;
+        const minSpacing = PLACE_RADIUS * 2 + 30;
         const spacing = tokenInstances.length > 0 ? Math.max(availableHeight / tokenInstances.length, minSpacing) : 0;
 
         const newElements: DrawnElement[] = [];
