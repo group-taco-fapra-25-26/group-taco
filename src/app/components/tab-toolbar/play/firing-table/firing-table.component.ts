@@ -83,20 +83,21 @@ export class FiringTableComponent implements OnInit, OnDestroy {
     }
 
     /**
-     * Handles input changes for a firing sequence and validates the input if not in exam mode.
-     * Updates the last recorded firing sequence and triggers validation.
-     * @param entry - The firing entry containing the firing sequence to validate.
-     * @returns A Promise that resolves when the validation is complete.
+     * Handles changes to a firing sequence and triggers validation based on the current mode.
+     *
+     * - In **learning mode**, the input is validated immediately.
+     * - In **exam mode**, the validity of the entry is set to `undefined` to increase difficulty.
+     *
+     * @param entry - The firing entry whose sequence was changed.
+     * @returns A Promise that resolves when validation or processing is complete.
      */
     async onInputChange(entry: FiringEntry): Promise<void> {
         if (!this._diagram) return;
         entry.transitionCount = entry.labels.length;
         this._playService.currentFiringEntry = entry;
+        if (entry.firingSequence.trim() === this._playService.currentFiringSequence.trim()) return;
         if (this.modeService.isExamMode(Tab.PLAY)) entry.setValidity(undefined, null);
-        else {
-            if (entry.firingSequence.trim() === this._playService.currentFiringSequence.trim()) return;
-            await this.playValidationService.validateInput(this._diagram, entry);
-        }
+        else await this.playValidationService.validateInput(this._diagram, entry);
         this._playService.currentFiringSequence = entry.firingSequence;
     }
 
