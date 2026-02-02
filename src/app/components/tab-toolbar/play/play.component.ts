@@ -33,7 +33,7 @@ export class PlayComponent implements OnInit, OnDestroy {
                 }),
                 filter((diagram) => !!diagram && diagram instanceof Diagram),
                 tap((diagram: Diagram) => {
-                    this._playService.resetFiringEntries();
+                    this._playService.clearFiringEntries();
                     this._playService.startMarking = diagram.startMarking;
                 }),
                 switchMap((diagram: Diagram) => diagram.currentMarking$),

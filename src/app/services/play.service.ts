@@ -49,7 +49,7 @@ export class PlayService {
     /**
      * Clears all firing entries in the firing sequence table and deletes the last marking.
      */
-    resetFiringEntries(): void {
+    clearFiringEntries(): void {
         this.firingEntries.set([]);
         this._currentFiringEntry = undefined;
     }
