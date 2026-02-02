@@ -118,7 +118,6 @@ export class PlayService {
                 const successfullyFired: boolean = this.processTransitionClicked(
                     diagram,
                     node,
-                    false,
                     true,
                     displayFiring,
                     true,
@@ -171,9 +170,7 @@ export class PlayService {
      *          The diagram containing the transition.
      * @param node
      *          The transition node to be fired.
-     * @param updateSequence
-     *          Whether the firing sequence should be updated when firing, false when validating a sequence.
-     * @param notify
+     * @param showNotification
      *          Whether notifications (e.g., transition not activated) should be displayed.
      * @param displayFiring
      *          Whether the color of the firing transition should be animated while firing.
@@ -184,8 +181,7 @@ export class PlayService {
     processTransitionClicked(
         diagram: Diagram,
         node: DiagramTransition,
-        updateSequence: boolean,
-        notify: boolean,
+        showNotification: boolean,
         displayFiring: boolean,
         isSimulation: boolean,
     ): boolean {
@@ -198,14 +194,14 @@ export class PlayService {
             this._currentMarking.set({ ...diagram.marking });
             entry.endMarking = { ...diagram.marking };
             entry.setValidity(true, null);
-            if (updateSequence) {
+            if (!isSimulation) {
                 this._sourceNetService.updateEditedNet(diagram, { triggeredByFiring: true });
                 this.updateFiringEntry(node.label, true);
             }
         } else {
             const isValid = !this._isExamMode() || isSimulation ? false : undefined;
-            if (updateSequence) this.updateFiringEntry(node.label, false);
-            if (notify && !this._isExamMode()) {
+            if (!isSimulation) this.updateFiringEntry(node.label, false);
+            if (showNotification && !this._isExamMode()) {
                 this._notificationService.showWarning(
                     'TOASTER.HEADER.TRANSITION_NOT_ACTIVATED',
                     'TOASTER.BODY.TRANSITION_NOT_ACTIVATED',
