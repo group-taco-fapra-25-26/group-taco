@@ -51,7 +51,7 @@
                 </button>
                 <button
                     matIconButton
-                    [disabled]="isButtonDisabled()"
+                    [disabled]="isButtonDisabled() || firingEntries.length === 0"
                     color="primary"
                     [matTooltip]="'PLAY.VALIDATE_SEQUENCES' | translate"
                     (click)="onValidateButton(firingPanel, $event)">
