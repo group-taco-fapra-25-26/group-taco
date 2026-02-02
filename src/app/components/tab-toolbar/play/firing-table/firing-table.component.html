@@ -83,7 +83,7 @@
                                 color="warn"
                                 (click)="onDeleteAllEntries()"
                                 class="delete-all-entries-button"
-                                [disabled]="isSequencePlaying">
+                                [disabled]="isSequencePlaying || firingEntries.length === 0">
                                 <mat-icon>delete_sweep</mat-icon>
                             </button>
                         </th>

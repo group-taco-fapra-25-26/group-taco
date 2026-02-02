@@ -105,7 +105,7 @@ export class FiringTableComponent implements OnInit, OnDestroy {
     }
 
     onDeleteAllEntries(): void {
-        this._playService.resetFiringEntries();
+        this._playService.clearFiringEntries();
         this._displayService.diagram$
             .pipe(
                 take(1),
@@ -134,29 +134,38 @@ export class FiringTableComponent implements OnInit, OnDestroy {
 
     async onValidateSequences(): Promise<void> {
         if (!this._diagram) return;
-        const invalidSequences: ToastList[] = []
+        const invalidSequences: ToastList[] = [];
         for (const entry of this.firingEntries) {
             this._playService.currentFiringEntry = entry;
             await this.playValidationService.validateInput(this._diagram, entry);
-            if (!entry.isValid) invalidSequences.push({message: entry.firingSequence});
+            if (!entry.isValid) invalidSequences.push({ message: entry.firingSequence });
         }
-        if (invalidSequences.length === 0) this._notificationService.showSuccess(
-            'TOASTER.HEADER.VALIDATION_COMPLETED',
-            'TOASTER.BODY.VALID_SEQUENCES'
-        )
-        else this._notificationService.showWarning(
-            'TOASTER.HEADER.VALIDATION_COMPLETED',
-            'TOASTER.BODY.INVALID_SEQUENCES',
-            { list: invalidSequences },
-        )
+        if (invalidSequences.length === 0)
+            this._notificationService.showSuccess(
+                'TOASTER.HEADER.VALIDATION_COMPLETED',
+                'TOASTER.BODY.VALID_SEQUENCES',
+            );
+        else
+            this._notificationService.showWarning(
+                'TOASTER.HEADER.VALIDATION_COMPLETED',
+                'TOASTER.BODY.INVALID_SEQUENCES',
+                { list: invalidSequences },
+            );
     }
 
     onFindSequences(): void {
-        if (this._diagram) {
-            this._playService.resetFiringEntries();
-            this.playValidationService.findSequences(this._diagram, this.maxTransitionCount, this.maxSequenceCount);
-            this._diagram.resetMarking();
-        }
+        if (!this._diagram) return;
+        this._playService.clearFiringEntries();
+        this.playValidationService.findSequences(this._diagram, this.maxTransitionCount, this.maxSequenceCount);
+        this._diagram.resetMarking();
+        this._notificationService.showSuccess(
+            'TOASTER.HEADER.SEQUENCE_GENERATION',
+            'TOASTER.BODY.SEQUENCE_GENERATION',
+            {
+                duration: 10000,
+                messageParams: { maxTransitionCount: this.maxTransitionCount, maxSequenceCount: this.maxSequenceCount },
+            },
+        );
     }
 
     toggleFindSequencesForm(): void {
