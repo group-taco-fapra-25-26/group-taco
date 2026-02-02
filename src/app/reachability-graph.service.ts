@@ -28,7 +28,8 @@ export class ReachabilityGraphService {
     private _notificationService = inject(ToasterNotificationService);
     private _panningService = inject(PanningService);
     private checkedStateNode: StateNode | undefined;
-    readonly dialog = inject(MatDialog);
+    readonly _dialog = inject(MatDialog);
+
 
     private currentSourceRgId = 'RG1';
 
@@ -466,7 +467,16 @@ export class ReachabilityGraphService {
         let userInputtedMarking: Record<string, number> = node.rGMarking;
 
         this.compareUserInputWithTargetState(userInputtedMarking, node);
-        this.dialog.open(RgMarkingDialogComponent);
+        this._dialog.open(RgMarkingDialogComponent);
+                if (this.hasDataToDelete(tab)) {
+                    this._dialog.open(ConfirmDialogComponent, {
+                        data: {
+                            title: 'CONFIRM_DIALOG.TITLE',
+                            tab: tab,
+                            message: tab === Tab.DRAW ? 'CONFIRM_DIALOG.MESSAGE_DRAW' : 'CONFIRM_DIALOG.MESSAGE_DEFAULT',
+                        },
+                    });
+                }
 
         //nach jeder Eingabe, die nicht korrekt ist, user erneut auffordern
         //ebenfalls auto-complete button
