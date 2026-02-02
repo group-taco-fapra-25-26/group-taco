@@ -1,7 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { DisplayComponent } from '../../../display/display.component';
 import { SvgNodeComponent } from '../../../display/svg-node/svg-node.component';
 import { SvgArcComponent } from '../../../display/svg-arc/svg-arc.component';
+import { ToasterNotificationService } from '../../../../services/toaster-notification.service';
 
 //Inherited from process-net-display // display-component
 
@@ -12,4 +13,14 @@ import { SvgArcComponent } from '../../../display/svg-arc/svg-arc.component';
     templateUrl: './reachability-graph-display.component.html',
     styleUrl: './reachability-graph-display.component.css',
 })
-export class ReachabilityGraphDisplayComponent extends DisplayComponent {}
+export class ReachabilityGraphDisplayComponent extends DisplayComponent {
+    private _toaster = inject(ToasterNotificationService);
+
+    readonly isDisabled = this._reachabilityGraphService.showingCompleteGraph;
+
+    handleDisabledClick(event: Event) {
+        event.stopPropagation();
+        event.preventDefault();
+        this._toaster.showInfo('TOASTER.HEADER.RG_INFO', 'TOASTER.BODY.SWITCH_BACK_TO_USER_GRAPH');
+    }
+}

@@ -51,6 +51,10 @@ export class SourcePetriNetService {
         this._isOptimalLayoutCalculated$.next(true);
     }
 
+    public resetOptimalLayoutCalculated(): void {
+        this._isOptimalLayoutCalculated$.next(false);
+    }
+
     /**
      * Loads a new petri net as the current source net.
      * Resets the dirty flag to false (no unsaved changes).
