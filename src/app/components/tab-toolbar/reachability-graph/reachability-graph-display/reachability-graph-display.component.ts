@@ -18,7 +18,7 @@ export class ReachabilityGraphDisplayComponent extends DisplayComponent {
 
     readonly isDisabled = this._reachabilityGraphService.showingCompleteGraph;
 
-    handleDisabledClick(event: MouseEvent) {
+    handleDisabledClick(event: Event) {
         event.stopPropagation();
         event.preventDefault();
         this._toaster.showInfo('TOASTER.HEADER.RG_INFO', 'TOASTER.BODY.SWITCH_BACK_TO_USER_GRAPH');

@@ -28,6 +28,11 @@
         }
     </svg>
     @if (isDisabled()) {
-        <div class="disabled-overlay" (click)="handleDisabledClick($event)"></div>
+        <div
+            class="disabled-overlay"
+            (click)="handleDisabledClick($event)"
+            (keydown.enter)="handleDisabledClick($event)"
+            (keydown.space)="handleDisabledClick($event)"
+            tabindex="0"></div>
     }
 </div>

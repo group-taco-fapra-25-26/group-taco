@@ -563,6 +563,7 @@ export class ReachabilityGraphService {
     clear() {
         this._reachabilityGraph.set(new ReachabilityGraph());
         this._completeReachabilityGraph.set(new ReachabilityGraph());
+        this._cachedCompleteGraphDiagram = null;
         this._lastProcessedDiagram?.resetMarking();
         this._lastProcessedDiagram = null;
         this.initializeReachabilityGraphFirstStateNode();
@@ -638,12 +639,8 @@ export class ReachabilityGraphService {
 
     /**
      * Generates the complete Reachability Graph for the current source Petri net.
-     * @returns true if the graph was newly generated, false if it was retrieved from cache.
      */
-    generateReachabilityGraph(): boolean {
-        const diagram = this._sourceNetService.getCurrentSourceNet();
-        const isCached = !!diagram && this._cachedCompleteGraphDiagram === diagram;
-
+    generateReachabilityGraph() {
         const graph = this.calculateCompleteReachabilityGraph();
         if (graph.isUnlimited) {
             this._notificationService.showInfo(
@@ -651,6 +648,5 @@ export class ReachabilityGraphService {
                 'TOASTER.BODY.PETRI_NET_UNLIMITED',
             );
         }
-        return !isCached;
     }
 }

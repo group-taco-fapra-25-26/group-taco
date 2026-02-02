@@ -192,11 +192,11 @@ export class ReachabilityGraphDrawDisplayComponent extends DisplayComponent {
     private onGenerate() {
         this._reachabilityGraphService.setShowingCompleteGraph(!this.showCompleteGraph());
         if (this.showCompleteGraph()) {
-            const wasGenerated = this._reachabilityGraphService.generateReachabilityGraph();
-            if (wasGenerated) {
-                setTimeout(() => {
-                    this._drawPanningService.fitViewToGraph(this.completeReachabilityGraphDiagram());
-                }, this.completeReachabilityGraphDiagram().nodes.length * 250);
+            this._reachabilityGraphService.generateReachabilityGraph();
+            this._drawPanningService.fitViewToGraph(this.completeReachabilityGraphDiagram());
+        } else {
+            if (this.userReachabilityGraphDiagram().nodes.length > 1) {
+                this._drawPanningService.fitViewToGraph(this.userReachabilityGraphDiagram());
             }
         }
     }
