@@ -648,7 +648,7 @@ export class DrawService implements OnDestroy {
         if (!tupleText) {
             this._toaster.showError('TUPLE_INPUT.TOAST_INVALIDATION_HEADER', 'TUPLE_INPUT.TOAST_INVALIDATION_BODY', {
                 duration: 0,
-                toastPosition: TOAST_POSITIONS.TOP_CENTER,
+                toastPosition: TOAST_POSITIONS.TOP_RIGHT,
             });
             return;
         }
@@ -657,7 +657,7 @@ export class DrawService implements OnDestroy {
         if (!parsed) {
             this._toaster.showError('TUPLE_INPUT.TOAST_INVALIDATION_HEADER', 'TUPLE_INPUT.TOAST_INVALIDATION_BODY', {
                 duration: 0,
-                toastPosition: TOAST_POSITIONS.TOP_CENTER,
+                toastPosition: TOAST_POSITIONS.TOP_RIGHT,
             });
             return;
         }
@@ -812,7 +812,7 @@ export class DrawService implements OnDestroy {
         if (errors.length === 0) {
             this._toaster.showSuccess('TUPLE_INPUT.TOAST_VALIDATION_HEADER', 'TUPLE_INPUT.TOAST_VALIDATION_BODY', {
                 duration: 0,
-                toastPosition: TOAST_POSITIONS.TOP_CENTER,
+                toastPosition: TOAST_POSITIONS.TOP_RIGHT,
             });
             return;
         }
@@ -820,7 +820,7 @@ export class DrawService implements OnDestroy {
         const list: ToastList[] = errors.map((message) => ({ message }));
         this._toaster.showError('TUPLE_INPUT.TOAST_INVALIDATION_HEADER', 'TUPLE_INPUT.TOAST_INVALIDATION_BODY', {
             duration: 0,
-            toastPosition: TOAST_POSITIONS.TOP_CENTER,
+            toastPosition: TOAST_POSITIONS.TOP_RIGHT,
             list,
         });
     }
