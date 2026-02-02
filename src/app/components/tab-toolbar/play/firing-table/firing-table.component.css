@@ -154,7 +154,7 @@
     height: 16px;
 }
 
-.play-icon {
+.play-sequence-button:enabled .play-icon {
     color: limegreen;
 }
 

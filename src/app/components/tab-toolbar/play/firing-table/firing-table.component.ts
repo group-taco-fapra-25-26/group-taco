@@ -54,6 +54,7 @@ export class FiringTableComponent implements OnInit, OnDestroy {
     private _diagram: Diagram | undefined;
     @Input() firingEntries: FiringEntry[] = [];
 
+    protected isSequencePlaying = false;
     protected isFindSequencesFormVisible = false;
     protected maxTransitionCount: number = this._MAX_TRANSITIONS_DEFAULT;
     protected maxSequenceCount: number = this._MAX_SEQUENCES_DEFAULT;
@@ -118,7 +119,9 @@ export class FiringTableComponent implements OnInit, OnDestroy {
 
     async onPlaySequence(entry: FiringEntry): Promise<void> {
         if (this._diagram) {
+            this.isSequencePlaying = true;
             await this._playService.playSequence(this._diagram, entry, this._TRANSITION_TIME, true);
+            this.isSequencePlaying = false;
         }
     }
 
@@ -148,8 +151,8 @@ export class FiringTableComponent implements OnInit, OnDestroy {
         this.buttonColor = this.isFindSequencesFormVisible ? 'primary' : 'basic';
     }
 
-    isButtonActive(): boolean {
-        return !this._diagram;
+    isButtonDisabled(): boolean {
+        return !this._diagram || this.isSequencePlaying;
     }
 
     onMaxTransitionCountChange(event: Event): void {

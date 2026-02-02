@@ -43,7 +43,7 @@
             <div class="firing-table-header-actions">
                 <button
                     matIconButton
-                    [disabled]="isButtonActive()"
+                    [disabled]="isButtonDisabled()"
                     color="primary"
                     [matTooltip]="'PLAY.NEW_SEQUENCE' | translate"
                     (click)="onAddButton(firingPanel, $event)">
@@ -51,7 +51,7 @@
                 </button>
                 <button
                     matIconButton
-                    [disabled]="isButtonActive()"
+                    [disabled]="isButtonDisabled()"
                     color="primary"
                     [matTooltip]="'PLAY.VALIDATE_SEQUENCES' | translate"
                     (click)="onValidateButton(firingPanel, $event)">
@@ -59,7 +59,7 @@
                 </button>
                 <button
                     matIconButton
-                    [disabled]="isButtonActive()"
+                    [disabled]="isButtonDisabled()"
                     [color]="buttonColor"
                     [matTooltip]="'PLAY.FIND_SEQUENCES' | translate"
                     (click)="toggleFindSequencesForm(); $event.stopPropagation()">
@@ -82,7 +82,8 @@
                                 mat-icon-button
                                 color="warn"
                                 (click)="onDeleteAllEntries()"
-                                class="delete-all-entries-button">
+                                class="delete-all-entries-button"
+                                [disabled]="isSequencePlaying">
                                 <mat-icon>delete_sweep</mat-icon>
                             </button>
                         </th>
@@ -103,7 +104,8 @@
                                     <button
                                         mat-icon-button
                                         (click)="onPlaySequence(entry)"
-                                        class="play-sequence-button">
+                                        class="play-sequence-button"
+                                        [disabled]="isSequencePlaying">
                                         <mat-icon class="play-icon">play_circle</mat-icon>
                                     </button>
                                 } @else if (entry.isValid === false) {
@@ -148,7 +150,8 @@
                                     mat-icon-button
                                     color="warn"
                                     (click)="onDeleteEntry(entry.id)"
-                                    class="delete-entry-button">
+                                    class="delete-entry-button"
+                                    [disabled]="isSequencePlaying">
                                     <mat-icon>delete</mat-icon>
                                 </button>
                             </td>
