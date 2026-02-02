@@ -103,6 +103,7 @@
             "PROCESSING_ERROR": "Processing error",
             "START_POSITION": "Start position",
             "VALIDATION": "Validation",
+            "VALIDATION_COMPLETED": "Validation completed",
             "STATENODE_ARC_EXISTING": "StateNode and arc exist",
             "PETRI_NET_UNLIMITED": "Petri Net unlimited"
         },
@@ -125,6 +126,8 @@
             "VALIDATION_VALID_MAXIMAL": "The process net is valid and maximal.",
             "VALIDATION_VALID_WITH_INFOS": "The process net is valid.",
             "VALIDATION_INVALID": "The process net is invalid.",
+            "VALID_SEQUENCES": "All firing sequences are valid.",
+            "INVALID_SEQUENCES": "The following firing sequences are invalid. Hover over the info icon next to each invalid sequence in the table to see details.",
             "SWITCHED_STATE_SUCCESSFULLY": "Petri Net marking was successfully switched to corresponding state.",
             "STATENODE_ARC_EXISTING": "StateNode and arc already exist, state of RG was updated.",
             "PETRI_NET_UNLIMITED": "Petri Net is unlimited."

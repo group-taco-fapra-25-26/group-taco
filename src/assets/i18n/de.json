@@ -103,6 +103,7 @@
             "PROCESSING_ERROR": "Verarbeitungsfehler",
             "START_POSITION": "Startposition",
             "VALIDATION": "Validierung",
+            "VALIDATION_COMPLETED": "Validierung abgeschlossen",
             "STATENODE_EXISTING": "Zustandsknoten vorhanden",
             "STATENODE_ARC_EXISTING": "Zustandsknoten und Verbindung vorhanden",
             "PETRI_NET_UNLIMITED": "Petrinetz unbeschränkt"
@@ -126,6 +127,8 @@
             "VALIDATION_VALID_MAXIMAL": "Das Prozessnetz ist gültig und maximal.",
             "VALIDATION_VALID_WITH_INFOS": "Das Prozessnetz ist gültig.",
             "VALIDATION_INVALID": "Das Prozessnetz ist ungültig.",
+            "VALID_SEQUENCES": "Alle Schaltfolgen sind korrekt.",
+            "INVALID_SEQUENCES": "Folgende Schaltfolgen sind fehlerhaft. Für weitere Informationen die Maus über das Info-Symbol neben der entsprechenden Sequenz in der Tabelle bewegen.",
             "SWITCHED_STATE_SUCCESSFULLY": "Die Markierung des Petrinetzes wurde erfolgreich angepasst.",
             "STATENODE_EXISTING": "Der Zustandsknoten existiert bereits, neue Verbindung wurde erstellt.",
             "STATENODE_ARC_EXISTING": "Der Zustandsknoten und die Verbindung existieren bereits, EG-Status wurde angepasst.",

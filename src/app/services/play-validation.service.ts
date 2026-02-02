@@ -10,7 +10,6 @@ import { Tab } from '../classes/tabs';
 
 @Injectable({ providedIn: 'root' })
 export class PlayValidationService {
-    // TODO: use notification service to provide user feedback, consider mode from mode service
     private _notificationService = inject(ToasterNotificationService);
     private _modeService = inject(ModeService);
     private _playService = inject(PlayService);
@@ -79,7 +78,6 @@ export class PlayValidationService {
      */
     async validateInput(diagram: Diagram, entry: FiringEntry): Promise<void> {
         const hasOnlyValidTransitions: boolean = this.hasOnlyValidTransitions(diagram, entry);
-        // TODO: provide user feedback if invalid transitions are present
         if (hasOnlyValidTransitions) await this._playService.playSequence(diagram, entry, 0, false);
     }
 

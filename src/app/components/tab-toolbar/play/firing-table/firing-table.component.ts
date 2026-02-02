@@ -13,12 +13,14 @@ import { MatTooltip } from '@angular/material/tooltip';
 import { filter, Subscription, take, tap } from 'rxjs';
 
 import { ModeService } from '../../../../services/mode.service';
+import { ToasterNotificationService } from '../../../../services/toaster-notification.service';
 import { DisplayService } from '../../../../services/display.service';
 import { PlayService } from '../../../../services/play.service';
 import { PlayValidationService } from '../../../../services/play-validation.service';
 import { Tab } from '../../../../classes/tabs';
 import { Diagram } from '../../../../classes/diagram/diagram';
 import { FiringEntry } from '../../../../classes/firing-entry';
+import { ToastList } from '../../../../classes/toast';
 
 @Component({
     selector: 'app-firing-table',
@@ -44,6 +46,7 @@ export class FiringTableComponent implements OnInit, OnDestroy {
 
     protected modeService = inject(ModeService);
     protected playValidationService = inject(PlayValidationService);
+    private _notificationService = inject(ToasterNotificationService);
     private _displayService = inject(DisplayService);
     private _playService = inject(PlayService);
 
@@ -131,10 +134,21 @@ export class FiringTableComponent implements OnInit, OnDestroy {
 
     async onValidateSequences(): Promise<void> {
         if (!this._diagram) return;
+        const invalidSequences: ToastList[] = []
         for (const entry of this.firingEntries) {
             this._playService.currentFiringEntry = entry;
             await this.playValidationService.validateInput(this._diagram, entry);
+            if (!entry.isValid) invalidSequences.push({message: entry.firingSequence});
         }
+        if (invalidSequences.length === 0) this._notificationService.showSuccess(
+            'TOASTER.HEADER.VALIDATION_COMPLETED',
+            'TOASTER.BODY.VALID_SEQUENCES'
+        )
+        else this._notificationService.showWarning(
+            'TOASTER.HEADER.VALIDATION_COMPLETED',
+            'TOASTER.BODY.INVALID_SEQUENCES',
+            { list: invalidSequences },
+        )
     }
 
     onFindSequences(): void {
