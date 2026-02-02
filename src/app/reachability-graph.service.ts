@@ -35,7 +35,6 @@ export class ReachabilityGraphService {
     private checkedStateNode: StateNode | undefined;
     readonly _dialog = inject(MatDialog);
 
-
     private currentSourceRgId = 'RG1';
 
     set startMarkingRG(marking: Record<string, number>) {
@@ -102,10 +101,10 @@ export class ReachabilityGraphService {
         );
         initialStateNode.isStartingState = true;
         initialStateNode.isStartingState = true;
-            initialStateNode.isStartingState = true;
+        initialStateNode.isStartingState = true;
 
-            //TO-DO Startmarkierung hervorheben, eingehender Arc aus dem Ursprung
-            // const initialEdge = new FiringEdge('Initial', 'Initial', initialId, 'Initial','Initial');
+        //TO-DO Startmarkierung hervorheben, eingehender Arc aus dem Ursprung
+        // const initialEdge = new FiringEdge('Initial', 'Initial', initialId, 'Initial','Initial');
 
         if (!this._modeService.isExamMode(Tab.REACHABILITY_GRAPH)) {
             //AUTOMATISCH StateNode erzeugen
@@ -481,15 +480,15 @@ export class ReachabilityGraphService {
 
         this.compareUserInputWithTargetState(userInputtedMarking, node);
         this._dialog.open(RgMarkingDialogComponent);
-                if (this.hasDataToDelete(tab)) {
-                    this._dialog.open(ConfirmDialogComponent, {
-                        data: {
-                            title: 'CONFIRM_DIALOG.TITLE',
-                            tab: tab,
-                            message: tab === Tab.DRAW ? 'CONFIRM_DIALOG.MESSAGE_DRAW' : 'CONFIRM_DIALOG.MESSAGE_DEFAULT',
-                        },
-                    });
-                }
+        if (this.hasDataToDelete(tab)) {
+            this._dialog.open(ConfirmDialogComponent, {
+                data: {
+                    title: 'CONFIRM_DIALOG.TITLE',
+                    tab: tab,
+                    message: tab === Tab.DRAW ? 'CONFIRM_DIALOG.MESSAGE_DRAW' : 'CONFIRM_DIALOG.MESSAGE_DEFAULT',
+                },
+            });
+        }
 
         //nach jeder Eingabe, die nicht korrekt ist, user erneut auffordern
         //ebenfalls auto-complete button

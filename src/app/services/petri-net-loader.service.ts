@@ -16,7 +16,6 @@ import { DiagramNode } from '../classes/diagram/diagram-node';
 import { applyParallelOffsetsToArcs } from './arc-parallel-offset.util';
 import { ReachabilityGraphService } from '../reachability-graph.service';
 
-
 @Injectable({
     providedIn: 'root',
 })

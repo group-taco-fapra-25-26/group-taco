@@ -1,4 +1,11 @@
 import { Component, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { TranslateModule } from '@ngx-translate/core';
+import { Tab } from '../../../../classes/tabs';
+import { DrawService } from '../../../../services/draw.service';
+import { ReachabilityGraphService } from '../../../../reachability-graph.service';
+import { ProcessNetFiringService } from '../../../../services/process-net-firing.service';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
@@ -10,11 +17,22 @@ import { MatTooltip } from '@angular/material/tooltip';
 import { FormsModule } from '@angular/forms';
 import { KeyValue, KeyValuePipe } from '@angular/common';
 import { DisplayService } from 'src/app/services/display.service';
-import { ReachabilityGraphService } from 'src/app/reachability-graph.service';
+import { StateNode } from 'src/app/classes/reachability-graph.model';
 
+export interface ConfirmUserMarkingDialogData {
+    title: string;
+    marking:Record<string, number>;
+    tab: Tab;
+    message: string;
+}
 @Component({
     selector: 'app-rg-marking-dialog',
+    standalone: true,
     imports: [
+        CommonModule, 
+        MatDialogModule, 
+        MatButtonModule, 
+        TranslateModule,
         FormsModule,
         MatFormFieldModule,
         MatInputModule,
@@ -29,52 +47,42 @@ import { ReachabilityGraphService } from 'src/app/reachability-graph.service';
     templateUrl: './rg-marking-dialog.component.html',
     styleUrl: './rg-marking-dialog.component.css',
 })
+
+
+
 export class RgMarkingDialogComponent {
     private _displayService = inject(DisplayService);
     private _reachabilityGraphService = inject(ReachabilityGraphService);
-
-    incrementMarking() {}
-
-    decrementMarking() {}
-}
-
-
-
-
-
-
-
-
-import { Component, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { MatButtonModule } from '@angular/material/button';
-import { TranslateModule } from '@ngx-translate/core';
-import { Tab } from '../../classes/tabs';
-import { DrawService } from '../../services/draw.service';
-import { ReachabilityGraphService } from '../../reachability-graph.service';
-import { ProcessNetFiringService } from '../../services/process-net-firing.service';
-
-export interface ConfirmDialogData {
-    title: string;
-    tab: Tab;
-    message: string;
-}
-
-@Component({
-    selector: 'app-confirm-dialog',
-    standalone: true,
-    imports: [CommonModule, MatDialogModule, MatButtonModule, TranslateModule],
-    templateUrl: './confirm-dialog.component.html',
-    styleUrls: ['./confirm-dialog.component.css'],
-})
-export class ConfirmDialogComponent {
-    readonly data = inject<ConfirmDialogData>(MAT_DIALOG_DATA);
-    private readonly _dialogRef = inject(MatDialogRef<ConfirmDialogComponent>);
-
-    private readonly processNetFiringService = inject(ProcessNetFiringService);
-    private readonly reachabilityGraphService = inject(ReachabilityGraphService);
+    readonly data = inject<ConfirmUserMarkingDialogData>(MAT_DIALOG_DATA);
+    private readonly _dialogRef = inject(MatDialogRef<RgMarkingDialogComponent>);
     private readonly drawService = inject(DrawService);
+    private dialogMarking: Record<string, number>;
+
+    constructor(marking:Record<string, number>){
+        this.dialogMarking=marking;
+
+
+    }
+
+
+
+incrementMarking(dialogUserMarking: Record<string, number> , placeId: string): Record<string, number> {
+        const newMarking = { ...dialogUserMarking};
+        newMarking[placeId] = (newMarking[placeId] || 0) + 1;
+        dialogUserMarking = newMarking;
+        return dialogUserMarking;
+    }
+
+    decrementMarking(dialogUserMarking: Record<string, number> , placeId: string): Record<string, number> {
+        if ((dialogUserMarking[placeId] || 0) > 0) {
+            const newMarking = { ...dialogUserMarking };
+            newMarking[placeId] = (newMarking[placeId] || 0) - 1;
+            dialogUserMarking = newMarking;
+        }
+        return dialogUserMarking;
+    }
+
+
 
     keep() {
         this._dialogRef.close('keep');
@@ -82,14 +90,9 @@ export class ConfirmDialogComponent {
 
     discard() {
         switch (this.data.tab) {
-            case Tab.DRAW:
-                this.drawService.clearCanvas();
-                break;
-            case Tab.PROCESS_NET:
-                this.processNetFiringService.clear();
-                break;
+
             case Tab.REACHABILITY_GRAPH:
-                this.reachabilityGraphService.clear();
+                this._reachabilityGraphService.clear();
                 break;
             default:
                 break;
