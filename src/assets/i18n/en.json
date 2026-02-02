@@ -92,6 +92,7 @@
     "TOASTER": {
         "HEADER": {
             "SAVE_IMPOSSIBLE": "Save impossible",
+            "TRANSITION_NOT_PRESENT": "Transition not present",
             "TRANSITION_NOT_ACTIVATED": "Transition not activated",
             "MODE_SWITCHED": "Mode switched",
             "READ_ERROR": "Read error",
@@ -107,6 +108,7 @@
         },
         "BODY": {
             "NO_NET_TO_SAVE": "There is no Petri net to save.",
+            "TRANSITION_NOT_PRESENT": "The transition {{label}} is not present in the petri net.",
             "TRANSITION_NOT_ACTIVATED": "The transition {{label}} is not activated and cannot be fired.",
             "MODE_SWITCHED_EXAM": "You are now in exam mode.",
             "MODE_SWITCHED_LEARN": "You are now in learning mode.",

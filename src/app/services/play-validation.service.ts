@@ -6,6 +6,7 @@ import { ModeService } from './mode.service';
 import { PlayService } from './play.service';
 import { Diagram } from '../classes/diagram/diagram';
 import { FiringEntry } from '../classes/firing-entry';
+import { Tab } from '../classes/tabs';
 
 @Injectable({ providedIn: 'root' })
 export class PlayValidationService {
@@ -74,7 +75,7 @@ export class PlayValidationService {
      *          The diagram on which the firing entry is to be validated.
      * @param entry
      *          The firing entry to be validated.
-     * @returns A promise that returns whether the input is valid when the validation is complete.
+     * @returns A promise that resolves when the validation is complete.
      */
     async validateInput(diagram: Diagram, entry: FiringEntry): Promise<void> {
         const hasOnlyValidTransitions: boolean = this.hasOnlyValidTransitions(diagram, entry);
@@ -95,6 +96,12 @@ export class PlayValidationService {
         const labels = entry.labels;
         if (labels.length === 0) return true;
         if (possibleTransitions.length === 0 && labels.length > 0) {
+            if (!this._modeService.isExamMode(Tab.PLAY))
+                this._notificationService.showWarning(
+                    'TOASTER.HEADER.TRANSITION_NOT_PRESENT',
+                    'TOASTER.BODY.TRANSITION_NOT_PRESENT',
+                    { messageParams: { label: labels[0] } },
+                );
             entry.setValidity(false, ['PLAY.NOT_PRESENT', labels, labels]);
             return false;
         }
@@ -102,11 +109,17 @@ export class PlayValidationService {
         const visitedLabels: string[] = [];
         for (const label of labels) {
             visitedLabels.push(label);
-            const exactMatch = possibleTransitions.includes(label);
+            const match = possibleTransitions.includes(label);
 
-            if (exactMatch) {
+            if (match) {
                 continue;
             } else {
+                if (!this._modeService.isExamMode(Tab.PLAY))
+                    this._notificationService.showWarning(
+                        'TOASTER.HEADER.TRANSITION_NOT_PRESENT',
+                        'TOASTER.BODY.TRANSITION_NOT_PRESENT',
+                        { messageParams: { label: label } },
+                    );
                 entry.setValidity(false, ['PLAY.NOT_PRESENT', [label], visitedLabels]);
                 break;
             }

@@ -92,6 +92,7 @@
     "TOASTER": {
         "HEADER": {
             "SAVE_IMPOSSIBLE": "Speichern nicht möglich",
+            "TRANSITION_NOT_PRESENT": "Transition nicht vorhanden",
             "TRANSITION_NOT_ACTIVATED": "Transition nicht aktiviert",
             "MODE_SWITCHED": "Modus gewechselt",
             "READ_ERROR": "Lesefehler",
@@ -108,6 +109,7 @@
         },
         "BODY": {
             "NO_NET_TO_SAVE": "Es ist kein Petri-Netz zum Speichern vorhanden.",
+            "TRANSITION_NOT_PRESENT": "Die Transition {{label}} ist nicht im Petri-Netz vorhanden.",
             "TRANSITION_NOT_ACTIVATED": "Die Transition {{label}} ist nicht aktiviert und kann nicht geschaltet werden.",
             "MODE_SWITCHED_EXAM": "Du befindest dich jetzt im Prüfungsmodus.",
             "MODE_SWITCHED_LEARN": "Du befindest dich jetzt im Lernmodus.",
