@@ -444,6 +444,67 @@ export class ReachabilityGraphService {
         return currentMarkingHigher;
     }
 
+    /**Compares User input of type marking with Marking of the next StateNode
+     * created from firing a transition.
+     * Used in Exam Mode to determine if user can define marking correctly.
+     * @param userInputMarking Marking inputted by user with dialog. Target: Should contain the "next" marking after firing.
+     * @param nextStateNode StateNode after firing, only saved in model before this method, visualized after successful comparison.
+     *
+     */
+
+    compareUserInputWithTargetState(userInputMarking: Record<string, number>, nextStateNode: StateNode): boolean {
+        let comparison = true;
+        const userMarking = Object.values(userInputMarking);
+        const actualTargetMarking = Object.values(nextStateNode.rGMarking);
+
+        for (let i = 0; i < userMarking.length; i++) {
+            if (actualTargetMarking[i] != userMarking[i]) {
+                comparison = false;
+            }
+        }
+        return comparison;
+    }
+
+    /**
+     * Opens up a dialog where user can input a marking, handles checking of the UserMarking and
+     * returns a boolean true if the marking is correct
+     * Also offers possibility to Auto-Fill correct marking depending on the chosen App Mode and User choice.
+     * Calls compareUserInputWithTargetState method
+     * CHOOSES AUTO-FILL IN CASE USER ABORTS TO PREVENT THE PROGRAM FROM CRASHING
+     * @param node The node for which the marking is checked; determined by the calling method
+     * @returns true if user gets correct marking or gives up
+     */
+    getCorrectUserMarking(node: StateNode): boolean {
+        let isUserMarkingCorrect = false;
+        //TODO CHANGE INITIALIZATION AFTER DIALOG IS FINISHED!!!
+        let userInputtedMarking: Record<string, number> = node.rGMarking;
+
+        this.compareUserInputWithTargetState(userInputtedMarking, node);
+        this._dialog.open(RgMarkingDialogComponent);
+                if (this.hasDataToDelete(tab)) {
+                    this._dialog.open(ConfirmDialogComponent, {
+                        data: {
+                            title: 'CONFIRM_DIALOG.TITLE',
+                            tab: tab,
+                            message: tab === Tab.DRAW ? 'CONFIRM_DIALOG.MESSAGE_DRAW' : 'CONFIRM_DIALOG.MESSAGE_DEFAULT',
+                        },
+                    });
+                }
+
+        //nach jeder Eingabe, die nicht korrekt ist, user erneut auffordern
+        //ebenfalls auto-complete button
+
+        //if user aborts, auto-fill the correct marking
+        //set this method return value true, then display correct StateNode in calling mehtod
+        //TODO Add condition in dialogue
+
+        let autoFill = true;
+        if (autoFill) {
+            isUserMarkingCorrect = true;
+        }
+        return isUserMarkingCorrect;
+    }
+
     /**
      * Calculates the complete Reachability Graph for the current source Petri net.
      * Follows Algorithm 2.2.4 (Calculation of the Reachability Graph).
