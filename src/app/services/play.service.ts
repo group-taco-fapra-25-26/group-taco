@@ -174,11 +174,11 @@ export class PlayService {
                     'TOASTER.BODY.TRANSITION_NOT_ACTIVATED',
                     { messageParams: { label: node.label } },
                 );
-                entry.setValidity(isValid, ['PLAY.NOT_ACTIVATED', [node.label], entry.labels]);
             }
+            entry.setValidity(isValid, ['PLAY.NOT_ACTIVATED', [node.label], entry.labels]);
         }
         this._currentFiringSequence = entry.firingSequence;
-        return entry.isValid !== false;
+        return entry.isValid === true;
     }
 
     /**
