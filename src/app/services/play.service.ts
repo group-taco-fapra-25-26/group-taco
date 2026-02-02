@@ -99,13 +99,13 @@ export class PlayService {
         this._currentFiringSequence = entry.firingSequence;
         this._currentFiringEntry = entry;
         entry.endMarking = diagram.marking;
-        entry.setValidity(true, null);
-        entry.isPlaying = true;
+        const isValidation = transitionTime === 0;
+        if (!isValidation) entry.isPlaying = true;
 
         const visitedLabels: string[] = [];
         for (const label of entry.labels) {
             // Check if the playback was cancelled
-            if (!entry.isPlaying) {
+            if (!entry.isPlaying && !isValidation) {
                 diagram.resetMarking();
                 entry.endMarking = endMarkingCopy;
                 return false;
