@@ -170,7 +170,7 @@ export class FiringTableComponent implements OnInit, OnDestroy {
             this._notificationService.showWarning(
                 'TOASTER.HEADER.VALIDATION_COMPLETED',
                 'TOASTER.BODY.INVALID_SEQUENCES',
-                { list: invalidSequences },
+                { duration: 8000, list: invalidSequences },
             );
     }
 
@@ -186,7 +186,7 @@ export class FiringTableComponent implements OnInit, OnDestroy {
             'TOASTER.HEADER.SEQUENCE_GENERATION',
             'TOASTER.BODY.SEQUENCE_GENERATION',
             {
-                duration: 10000,
+                duration: 8000,
                 messageParams: { maxTransitionCount: this.maxTransitionCount, maxSequenceCount: this.maxSequenceCount },
             },
         );
