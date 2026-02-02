@@ -216,7 +216,7 @@ export class ProcessNetFiringService {
             for (let i = 0; i < flow.weight; i++) {
                 const { id: placeId, weight } = this.resolvePlaceForFlow(
                     flow.placeLabel,
-                    baseX - 160,
+                    baseX - 20,
                     inputBaseY + inputOffset * laneSpacing,
                     newElements,
                     1,
@@ -269,7 +269,7 @@ export class ProcessNetFiringService {
                         innerLabel,
                     },
                 );
-                place.x = baseX + 160;
+                place.x = baseX + 100;
                 place.y = outputBaseY + outputOffset * laneSpacing;
                 outputOffset++;
 
