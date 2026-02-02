@@ -9,12 +9,15 @@
     "REACHABILITY_GRAPH": {
         "TOGGLE_VIEW": "Ansichtsmodus umschalten",
         "BUTTON_VALIDATE_NET": "Erreichbarkeitsgraph validieren",
+        "SHOW_COMPLETE_GRAPH": "Vollständigen Graph anzeigen",
+        "HIDE_COMPLETE_GRAPH": "Vollständigen Graph ausblenden",
         "ACTION_BUILD": "Graph aufbauen",
         "INSTRUCTION_BUILD": "Schalte aktive Transitionen im Petri-Netz, um den Erreichbarkeitsgraphen schrittweise zu erkunden.",
         "ACTION_MOVE": "Knoten verschieben",
         "INSTRUCTION_MOVE": "Linksklick und Ziehen, um Zustandsknoten frei anzuordnen.",
         "ACTION_RESET": "Zu Zustand springen",
-        "INSTRUCTION_RESET": "Doppelklick auf einen Zustandsknoten, um das Petri-Netz auf diese Markierung zurückzusetzen."
+        "INSTRUCTION_RESET": "Doppelklick auf einen Zustandsknoten, um das Petri-Netz auf diese Markierung zurückzusetzen.",
+        "LABEL_CALCULATED_GRAPH": "Vollständiger Graph (Berechnet)"
     },
     "TOGGLE_MODE": "Modus umschalten",
     "CONFIRM_DIALOG": {
@@ -127,7 +130,8 @@
             "STATENODE_ARC_EXISTING": "Zustandsknoten und Verbindung vorhanden",
             "PETRI_NET_UNLIMITED": "Petrinetz unbeschränkt",
             "RG_CHECK_SUCCESS": "Erreichbarkeitsgraph vollständig",
-            "RG_CHECK_INCOMPLETE": "Unvollständiger Graph"
+            "RG_CHECK_INCOMPLETE": "Unvollständiger Graph",
+            "RG_INFO": "Wechsel zum selbst erstellten Graphen notwendig"
         },
         "BODY": {
             "NO_NET_TO_SAVE": "Es ist kein Petri-Netz zum Speichern vorhanden.",
@@ -153,7 +157,8 @@
             "PETRI_NET_UNLIMITED": "Das Petrinetz ist unbeschränkt.",
             "RG_CHECK_SUCCESS": "Der erstellte Erreichbarkeitsgraph ist vollständig und korrekt.",
             "RG_CHECK_MISSING_EDGES": "Fehlende Transitionen: {{edges}}",
-            "RG_CHECK_MISSING_EDGES_LIST": "Die folgenden Transitionen fehlen:"
+            "RG_CHECK_MISSING_EDGES_LIST": "Die folgenden Transitionen fehlen:",
+            "SWITCH_BACK_TO_USER_GRAPH": "Bitte wechseln Sie zurück zum selbst erstellten Graphen, um fortzufahren."
         },
         "VALIDATION_MESSAGES": {
             "TRANSITION_NO_MATCH": "❌ Transition {{label}} hat keine passende Beschriftung im Petri-Netz.",

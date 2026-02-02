@@ -14,6 +14,7 @@ import { ProcessNetStateService } from './process-net-state.service';
 import { PanningService } from './panning.service';
 import { DiagramNode } from '../classes/diagram/diagram-node';
 import { applyParallelOffsetsToArcs } from './arc-parallel-offset.util';
+import { ReachabilityGraphService } from '../reachability-graph.service';
 
 @Injectable({
     providedIn: 'root',
@@ -30,6 +31,7 @@ export class PetriNetLoaderService {
     private _serializationService = inject(SerializationService);
     private _processNetSateService = inject(ProcessNetStateService);
     private _panningService = inject(PanningService);
+    private _reachabilityGraphService = inject(ReachabilityGraphService);
 
     /**
      * Processes an uploaded file (File object).
@@ -92,6 +94,7 @@ export class PetriNetLoaderService {
 
             if (parsedNet) {
                 this._processNetSateService.clear();
+                this._reachabilityGraphService.clear();
                 const inDrawTab = this._tabStateService.currentTab() === Tab.DRAW;
                 if (this._modeService.isExamMode(Tab.DRAW) && inDrawTab) {
                     const tuple = this._serializationService.serializeTuple(parsedNet) ?? content;
