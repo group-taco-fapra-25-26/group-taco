@@ -210,7 +210,8 @@ export class DrawService implements OnDestroy {
                 return;
             }
             if (this.isExamMode) {
-                this.handleExamModeSourceUpdate(diagram);
+                // In exam mode, don't sync changes from other tabs to the draw tab
+                // to prevent the drawing in the draw tab from being overwritten
                 return;
             }
             if (diagram) {
