@@ -1,4 +1,14 @@
-import { AfterViewInit, Component, computed, ElementRef, inject, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import {
+    AfterViewInit,
+    Component,
+    computed,
+    effect,
+    ElementRef,
+    inject,
+    OnDestroy,
+    OnInit,
+    ViewChild,
+} from '@angular/core';
 import { SvgNodeComponent } from '../../display/svg-node/svg-node.component';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -30,6 +40,7 @@ export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
     private _imageExportService = inject(ImageExportService);
     private _modeService = inject(ModeService);
     private _sub?: Subscription;
+    private _previousExamMode = false;
 
     readonly drawnElements = this.draw.drawnElements;
     readonly isDragOver = this.draw.isDragOver;
@@ -53,8 +64,22 @@ export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
         return this._modeService.isExamMode(Tab.DRAW);
     });
 
+    // Watch for exam mode changes and clear the drawing when switching to exam mode
+    private readonly _examModeEffect = effect(() => {
+        const isNowInExamMode = this.isExamMode();
+        // Only trigger when transitioning from LEARN to EXAM mode
+        if (isNowInExamMode && !this._previousExamMode) {
+            // Clear only the drawn elements and connections, not the entire canvas state
+            this.draw.drawnElements.set([]);
+            this.draw.connections.set([]);
+            this.draw.selectedElementId.set(null);
+        }
+        this._previousExamMode = isNowInExamMode;
+    });
+
     ngOnInit(): void {
         this.draw.init();
+
         this._sub = this._displayService.downloadRequest$.subscribe(({ format, target }) => {
             if (target && target !== GRAPH_IDS.PETRI_NET) {
                 return;
@@ -77,6 +102,7 @@ export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
     ngOnDestroy(): void {
         this.draw.destroy();
         this._sub?.unsubscribe();
+        this._examModeEffect.destroy();
     }
 
     // Palette drag helpers
