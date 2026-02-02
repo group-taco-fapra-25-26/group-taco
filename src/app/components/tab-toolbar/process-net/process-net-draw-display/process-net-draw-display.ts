@@ -25,7 +25,7 @@ import {
 } from '../../../../services/process-net-validation.service';
 import { ToasterNotificationService } from '../../../../services/toaster-notification.service';
 import { PanningService } from '../../../../services/panning.service';
-import { TOAST_POSITIONS, ToastList } from '../../../../classes/toast';
+import { ToastList } from '../../../../classes/toast';
 import { TranslateModule } from '@ngx-translate/core';
 import { GRAPH_FILENAMES, GRAPH_IDS, PLACE_RADIUS, TRANSITION_SIZE } from '../../../display/display.constants';
 import { ModeService } from '../../../../services/mode.service';
@@ -633,7 +633,6 @@ export class ProcessNetDrawDisplayComponent implements OnInit, OnDestroy, AfterV
         if (!base) {
             this.toaster.showError('TOASTER.HEADER.VALIDATION', 'TOASTER.BODY.VALIDATION_ERROR', {
                 duration: 0,
-                toastPosition: TOAST_POSITIONS.TOP_CENTER,
             });
 
             return;
@@ -679,13 +678,11 @@ export class ProcessNetDrawDisplayComponent implements OnInit, OnDestroy, AfterV
         if (result.valid && result.infos.length == 0) {
             this.toaster.showSuccess('TOASTER.HEADER.VALIDATION', 'TOASTER.BODY.VALIDATION_VALID_MAXIMAL', {
                 duration: 0,
-                toastPosition: TOAST_POSITIONS.TOP_CENTER,
             });
         } else if (result.valid && result.infos.length > 0) {
             const infos = result.infos.map((info): ToastList => ({ message: info.key, messageParams: info.params }));
             this.toaster.showInfo('TOASTER.HEADER.VALIDATION', 'TOASTER.BODY.VALIDATION_VALID_WITH_INFOS', {
                 duration: 0,
-                toastPosition: TOAST_POSITIONS.TOP_CENTER,
                 list: infos,
             });
         } else {
@@ -694,7 +691,6 @@ export class ProcessNetDrawDisplayComponent implements OnInit, OnDestroy, AfterV
             );
             this.toaster.showError('TOASTER.HEADER.VALIDATION', 'TOASTER.BODY.VALIDATION_INVALID', {
                 duration: 0,
-                toastPosition: TOAST_POSITIONS.TOP_CENTER,
                 list: errors,
             });
         }
@@ -721,14 +717,12 @@ export class ProcessNetDrawDisplayComponent implements OnInit, OnDestroy, AfterV
             if (markedPlaces.length === 0) {
                 this.toaster.showInfo('TOASTER.HEADER.START_POSITION', 'TOASTER.BODY.NO_MARKED_PLACES_FOUND', {
                     duration: 0,
-                    toastPosition: TOAST_POSITIONS.TOP_CENTER,
                 });
             }
             return;
         }
 
         this.toaster.showSuccess('TOASTER.HEADER.START_POSITION', 'TOASTER.BODY.START_PLACES_CREATED', {
-            toastPosition: TOAST_POSITIONS.TOP_CENTER,
             messageParams: { count },
         });
     }
