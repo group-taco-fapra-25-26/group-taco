@@ -32,8 +32,10 @@ export class SvgNodeComponent {
 
     readonly showInnerLabel = input<boolean>(false);
     readonly transitionLabelPlacement = input<'inside' | 'below'>('inside');
+    readonly disableActiveColoring = input<boolean>(false);
 
     readonly isTransitionAndActive = computed(() => {
+        if (this.disableActiveColoring()) return false;
         const node = this.diagramNode();
         if (node instanceof DiagramTransition) {
             return (
