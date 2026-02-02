@@ -9,12 +9,15 @@
     "REACHABILITY_GRAPH": {
         "TOGGLE_VIEW": "Toggle View Mode",
         "BUTTON_VALIDATE_NET": "Validate Reachability Graph",
+        "SHOW_COMPLETE_GRAPH": "Show Complete Graph",
+        "HIDE_COMPLETE_GRAPH": "Hide Complete Graph",
         "ACTION_BUILD": "Build Graph",
         "INSTRUCTION_BUILD": "Fire enabled transitions in the Petri net to explore the reachability graph step by step.",
         "ACTION_MOVE": "Move Node",
         "INSTRUCTION_MOVE": "Left-click and drag state nodes to customize the layout.",
         "ACTION_RESET": "Jump to State",
-        "INSTRUCTION_RESET": "Double-click a state node to reset the Petri net to this marking."
+        "INSTRUCTION_RESET": "Double-click a state node to reset the Petri net to this marking.",
+        "LABEL_CALCULATED_GRAPH": "Complete Graph (Calculated)"
     },
     "TOGGLE_MODE": "Toggle Mode",
     "CONFIRM_DIALOG": {
@@ -125,7 +128,8 @@
             "STATENODE_ARC_EXISTING": "StateNode and arc exist",
             "PETRI_NET_UNLIMITED": "Petri Net unlimited",
             "RG_CHECK_SUCCESS": "Reachability Graph Complete",
-            "RG_CHECK_INCOMPLETE": "Incomplete Graph"
+            "RG_CHECK_INCOMPLETE": "Incomplete Graph",
+            "RG_INFO": "Switch back to the self-created Graph necessary"
         },
         "BODY": {
             "NO_NET_TO_SAVE": "There is no Petri net to save.",
@@ -150,7 +154,8 @@
             "PETRI_NET_UNLIMITED": "Petri Net is unlimited.",
             "RG_CHECK_SUCCESS": "The created reachability graph is complete and correct.",
             "RG_CHECK_MISSING_EDGES": "Missing transitions: {{edges}}",
-            "RG_CHECK_MISSING_EDGES_LIST": "The following transitions are missing:"
+            "RG_CHECK_MISSING_EDGES_LIST": "The following transitions are missing:",
+            "SWITCH_BACK_TO_USER_GRAPH": "Please switch back to your self-created Graph to continue editing."
         },
         "VALIDATION_MESSAGES": {
             "TRANSITION_NO_MATCH": "❌ Transition {{label}} has no matching label in the Petri net.",

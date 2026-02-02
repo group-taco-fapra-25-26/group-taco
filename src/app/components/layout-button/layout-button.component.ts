@@ -20,10 +20,7 @@ export class LayoutButtonComponent {
     private _diagramSignal = toSignal(this._displayService.diagram$);
     private _isCalculating = signal(false);
 
-    public isDisabled = computed(
-        () =>
-            !this._diagramSignal() || this._isCalculating() || this._springEmbedderService.isOptimalLayoutCalculated(),
-    );
+    public isDisabled = computed(() => !this._diagramSignal() || this._isCalculating());
 
     constructor() {
         effect(() => {

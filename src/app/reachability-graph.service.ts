@@ -9,13 +9,14 @@ import { ToasterNotificationService } from './services/toaster-notification.serv
 import { Tab } from './classes/tabs';
 import { PanningService } from './services/panning.service';
 import { ToastList } from './classes/toast';
+import { SpringEmbedderService } from './services/spring-embedder.service';
 
 @Injectable({
     providedIn: 'root',
 })
 export class ReachabilityGraphService {
     private _reachabilityGraph: WritableSignal<ReachabilityGraph> = signal(new ReachabilityGraph());
-    private _completeReachabilityGraph: ReachabilityGraph = new ReachabilityGraph();
+    private _completeReachabilityGraph: WritableSignal<ReachabilityGraph> = signal(new ReachabilityGraph());
     private _modeService: ModeService = inject(ModeService);
     private _sourceNetService = inject(SourcePetriNetService);
     private _startMarkingRG: Record<string, number> = {};
@@ -24,6 +25,8 @@ export class ReachabilityGraphService {
     private _cachedCompleteGraphDiagram: Diagram | null = null;
     private _notificationService = inject(ToasterNotificationService);
     private _panningService = inject(PanningService);
+    private _springEmbeddingService = inject(SpringEmbedderService);
+    private _showingCompleteGraph = signal(false);
     private checkedStateNode: StateNode | undefined;
 
     private currentSourceRgId = 'RG1';
@@ -38,6 +41,18 @@ export class ReachabilityGraphService {
 
     get reachabilityGraphSignal(): Signal<ReachabilityGraph> {
         return this._reachabilityGraph.asReadonly();
+    }
+
+    get completeReachabilityGraph(): Signal<ReachabilityGraph> {
+        return this._completeReachabilityGraph;
+    }
+
+    get showingCompleteGraph(): Signal<boolean> {
+        return this._showingCompleteGraph.asReadonly();
+    }
+
+    setShowingCompleteGraph(show: boolean) {
+        this._showingCompleteGraph.set(show);
     }
 
     /**
@@ -150,15 +165,7 @@ export class ReachabilityGraphService {
         if (!markingExists && !connectionExists) {
             // neuer Knoten und neue Kante
 
-            const viewBox = this._panningService.viewBox();
-            const width = Math.max(viewBox.width, 400);
-            const height = Math.max(viewBox.height, 300);
-            const startX = viewBox.minX;
-            const startY = viewBox.minY;
-
-            //x und y konstant festlegen
-            const currentX: number = startX + Math.random() * width;
-            const currentY: number = startY + Math.random() * height;
+            const { x: currentX, y: currentY } = this.calculateRandomPosition();
 
             //neuen StateNode erzeugen
             const previousNode = graph.nodes.find((node) => node.id === this.currentSourceRgId);
@@ -396,7 +403,7 @@ export class ReachabilityGraphService {
         }
 
         if (this._cachedCompleteGraphDiagram === diagram) {
-            return this._completeReachabilityGraph;
+            return this._completeReachabilityGraph();
         }
 
         const { graph, Q, processedNodeIds, nodeByLabel, counters } = this.initializeGraphCalculation(diagram);
@@ -439,7 +446,8 @@ export class ReachabilityGraphService {
         }
 
         this._cachedCompleteGraphDiagram = diagram;
-        this._completeReachabilityGraph = graph;
+        this._completeReachabilityGraph.set(graph);
+        this._springEmbeddingService.calculateLayout(graph).catch(console.error);
         return graph;
     }
 
@@ -495,6 +503,18 @@ export class ReachabilityGraphService {
         return nextMarking;
     }
 
+    private calculateRandomPosition(): { x: number; y: number } {
+        const viewBox = this._panningService.viewBox();
+        const width = Math.max(viewBox.width, 400);
+        const height = Math.max(viewBox.height, 300);
+        const startX = viewBox.minX;
+        const startY = viewBox.minY;
+
+        const x: number = startX + Math.random() * width;
+        const y: number = startY + Math.random() * height;
+        return { x, y };
+    }
+
     private getOrCreateNextNode(
         graph: ReachabilityGraph,
         nodeByLabel: Map<string, StateNode>,
@@ -507,7 +527,8 @@ export class ReachabilityGraphService {
 
         if (!m_prime) {
             counters.nodeId++;
-            m_prime = new StateNode(`RG${counters.nodeId}`, 300, 50, nextLabel, nextMarking);
+            const { x, y } = this.calculateRandomPosition();
+            m_prime = new StateNode(`RG${counters.nodeId}`, x, y, nextLabel, nextMarking);
             graph.nodes.push(m_prime);
             nodeByLabel.set(nextLabel, m_prime);
         }
@@ -541,6 +562,8 @@ export class ReachabilityGraphService {
      */
     clear() {
         this._reachabilityGraph.set(new ReachabilityGraph());
+        this._completeReachabilityGraph.set(new ReachabilityGraph());
+        this._cachedCompleteGraphDiagram = null;
         this._lastProcessedDiagram?.resetMarking();
         this._lastProcessedDiagram = null;
         this.initializeReachabilityGraphFirstStateNode();
@@ -551,8 +574,8 @@ export class ReachabilityGraphService {
      * Uses ToasterNotificationService to inform the user.
      */
     checkReachabilityGraphCompleteness(): void {
-        this._completeReachabilityGraph = this.calculateCompleteReachabilityGraph();
-        const completeGraph = this._completeReachabilityGraph;
+        this._completeReachabilityGraph.set(this.calculateCompleteReachabilityGraph());
+        const completeGraph = this._completeReachabilityGraph();
 
         if (completeGraph.isUnlimited) {
             this._notificationService.showInfo(
@@ -612,5 +635,18 @@ export class ReachabilityGraphService {
         }
 
         this._notificationService.showSuccess('TOASTER.HEADER.RG_CHECK_SUCCESS', 'TOASTER.BODY.RG_CHECK_SUCCESS');
+    }
+
+    /**
+     * Generates the complete Reachability Graph for the current source Petri net.
+     */
+    generateReachabilityGraph() {
+        const graph = this.calculateCompleteReachabilityGraph();
+        if (graph.isUnlimited) {
+            this._notificationService.showInfo(
+                'TOASTER.HEADER.PETRI_NET_UNLIMITED',
+                'TOASTER.BODY.PETRI_NET_UNLIMITED',
+            );
+        }
     }
 }
