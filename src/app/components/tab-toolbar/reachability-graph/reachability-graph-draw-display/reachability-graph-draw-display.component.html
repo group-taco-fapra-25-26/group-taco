@@ -29,16 +29,16 @@
                 <polygon points="0 0, 10 3.5, 0 7" fill="black" />
             </marker>
         </defs>
-        @for (edge of reachabilityGraphDiagram().getEdges(); track edge.id) {
+        @for (edge of displayDiagram().getEdges(); track edge.id) {
             <g
                 appSvgStateArc
                 [diagramArc]="edge"
-                [nodes]="reachabilityGraphDiagram().getNodes() || []"
-                [edges]="reachabilityGraphDiagram().getEdges() || []"
+                [nodes]="displayDiagram().getNodes() || []"
+                [edges]="displayDiagram().getEdges() || []"
                 [viewMode]="viewMode()" />
         }
 
-        @for (node of reachabilityGraphDiagram().nodes; track node.id) {
+        @for (node of displayDiagram().nodes; track node.id) {
             <g class="node-wrapper" [attr.data-node-id]="node.id">
                 <g appSvgStateNode [stateNode]="node" [viewMode]="viewMode()" />
                 <rect
