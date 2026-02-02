@@ -36,7 +36,7 @@ export class DisplayComponent implements OnInit, OnDestroy {
     protected _tabStateService = inject(TabStateService);
     private _imageExportService = inject(ImageExportService);
     private _loaderService = inject(PetriNetLoaderService);
-    private _sourcePetriNetService = inject(SourcePetriNetService);
+    protected _sourcePetriNetService = inject(SourcePetriNetService);
     private _playService = inject(PlayService);
     private _elementRef = inject(ElementRef);
     protected _reachabilityGraphService = inject(ReachabilityGraphService);
@@ -135,7 +135,7 @@ export class DisplayComponent implements OnInit, OnDestroy {
     }
 
     public startPan(event: MouseEvent): void {
-        this._panningService.startPan(event, this.diagram(), this.drawingArea);
+        this._panningService.startPan(event, this.drawingArea);
     }
 
     public pan(event: MouseEvent): void {
@@ -147,6 +147,6 @@ export class DisplayComponent implements OnInit, OnDestroy {
     }
 
     public onWheel(event: WheelEvent): void {
-        this._panningService.zoom(event, this.drawingArea, this.diagram());
+        this._panningService.zoom(event, this.drawingArea);
     }
 }

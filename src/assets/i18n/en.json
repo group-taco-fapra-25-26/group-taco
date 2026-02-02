@@ -8,14 +8,25 @@
     "TAB_PROCESS": "Process Net",
     "REACHABILITY_GRAPH": {
         "TOGGLE_VIEW": "Toggle View Mode",
+        "BUTTON_VALIDATE_NET": "Validate Reachability Graph",
+        "SHOW_COMPLETE_GRAPH": "Show Complete Graph",
+        "HIDE_COMPLETE_GRAPH": "Hide Complete Graph",
         "ACTION_BUILD": "Build Graph",
         "INSTRUCTION_BUILD": "Fire enabled transitions in the Petri net to explore the reachability graph step by step.",
         "ACTION_MOVE": "Move Node",
         "INSTRUCTION_MOVE": "Left-click and drag state nodes to customize the layout.",
         "ACTION_RESET": "Jump to State",
-        "INSTRUCTION_RESET": "Double-click a state node to reset the Petri net to this marking."
+        "INSTRUCTION_RESET": "Double-click a state node to reset the Petri net to this marking.",
+        "LABEL_CALCULATED_GRAPH": "Complete Graph (Calculated)"
     },
     "TOGGLE_MODE": "Toggle Mode",
+    "CONFIRM_DIALOG": {
+        "TITLE": "Switch Mode",
+        "MESSAGE_DRAW": "Do you want to keep the current drawing?",
+        "MESSAGE_DEFAULT": "Do you want to keep the current content?",
+        "KEEP": "Keep",
+        "DISCARD": "Discard"
+    },
     "SWITCH_TO_LEARNING_MODE": "Switch to Learning Mode",
     "SWITCH_TO_EXAM_MODE": "Switch to Exam Mode",
     "EXAM_MODE": "Exam Mode",
@@ -46,7 +57,6 @@
         "VALIDATE": "Validate",
         "PLACE": "+ Place",
         "TRANSITION": "+ Transition",
-        "CONTROLS": "Drag and drop to create new places and transitions. Right click a transition and a place to create a connection between them. Scroll up or down on a connection to change its weight or on a place to change its marking. Middle click removes a place, transition or connection. Double click a transition or place to rename it.",
         "TOAST_SUCCESS_BODY": "Tuple processed successfully",
         "TOAST_SUCCESS_HEADER": "Net loaded",
         "TOAST_VALIDATION_HEADER": "Correct Drawing",
@@ -73,7 +83,21 @@
         "PROMPT_EDIT_TRANSITION_TITLE": "Edit transition label",
         "EDIT_LABEL": "Label",
         "TOAST_DUPLICATE_LABEL_HEADER": "Duplicate label",
-        "TOAST_DUPLICATE_LABEL_BODY": "The label '{{label}}' is already used. Please choose a unique label."
+        "TOAST_DUPLICATE_LABEL_BODY": "The label '{{label}}' is already used. Please choose a unique label.",
+        "INSTRUCTION": {
+            "ACTION_DRAG_DROP": "Drag & Drop",
+            "DRAG_DROP": "Drag elements from the palette to the canvas to create your Petri net.",
+            "MOVE": "Move",
+            "LEFT_CLICK_MOVE": "Left-click and drag to move elements around the canvas and from the palette to the canvas.",
+            "CONNECT": "Connect",
+            "RIGHT_CLICK_CONNECT": "Right-click a place or transition, then right-click the opposite type to create a connection.",
+            "DELETE": "Delete",
+            "MIDDLE_CLICK_DELETE": "Middle-click an element or connection to delete it.",
+            "EDIT_LABEL": "Edit Label",
+            "DOUBLE_CLICK_EDIT_LABEL": "Double-click an element to edit its label.",
+            "SCROLL": "Scroll",
+            "SCROLL_CHANGE_TOKENS_WEIGHT": "Use the mouse wheel to change the number of tokens (places) or the weight (connection)."
+        }
     },
     "PLAY": {
         "FIRING_TABLE": "Firing Table",
@@ -88,7 +112,8 @@
         "NOT_PRESENT": "not present",
         "NOT_ACTIVATED": "not activated"
     },
-    "HEADER_SUBTITLE": "Fachpraktikum Programmiersysteme WiSe25/26 by Marie G., Florian M., Ben L. and Alexander K.",
+    "HEADER_SUBTITLE": "Fachpraktikum Programmiersysteme WiSe25/26 by",
+    "HEADER_SUBTITLE_NAMES": "Marie G., Alexander K., Ben L. & Florian M.",
     "TOASTER": {
         "HEADER": {
             "SAVE_IMPOSSIBLE": "Save impossible",
@@ -106,7 +131,10 @@
             "VALIDATION_COMPLETED": "Validation completed",
             "SEQUENCE_GENERATION": "Sequence generation completed",
             "STATENODE_ARC_EXISTING": "StateNode and arc exist",
-            "PETRI_NET_UNLIMITED": "Petri Net unlimited"
+            "PETRI_NET_UNLIMITED": "Petri Net unlimited",
+            "RG_CHECK_SUCCESS": "Reachability Graph Complete",
+            "RG_CHECK_INCOMPLETE": "Incomplete Graph",
+            "RG_INFO": "Switch back to the self-created Graph necessary"
         },
         "BODY": {
             "NO_NET_TO_SAVE": "There is no Petri net to save.",
@@ -132,7 +160,11 @@
             "SEQUENCE_GENERATION": "Generated firing sequences of the Petri net, limited to {{maxTransitionCount}} transitions per sequence and a total of {{maxSequenceCount}} sequences. This represents a bounded sublanguage of the Petri net.",
             "SWITCHED_STATE_SUCCESSFULLY": "Petri Net marking was successfully switched to corresponding state.",
             "STATENODE_ARC_EXISTING": "StateNode and arc already exist, state of RG was updated.",
-            "PETRI_NET_UNLIMITED": "Petri Net is unlimited."
+            "PETRI_NET_UNLIMITED": "Petri Net is unlimited.",
+            "RG_CHECK_SUCCESS": "The created reachability graph is complete and correct.",
+            "RG_CHECK_MISSING_EDGES": "Missing transitions: {{edges}}",
+            "RG_CHECK_MISSING_EDGES_LIST": "The following transitions are missing:",
+            "SWITCH_BACK_TO_USER_GRAPH": "Please switch back to your self-created Graph to continue editing."
         },
         "VALIDATION_MESSAGES": {
             "TRANSITION_NO_MATCH": "❌ Transition {{label}} has no matching label in the Petri net.",

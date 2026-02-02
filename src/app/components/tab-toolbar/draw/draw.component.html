@@ -1,13 +1,33 @@
+<div class="tab-toolbar-container"></div>
 <div class="draw-layout">
     <div class="palette">
         <h3>Palette</h3>
-        <button draggable="true" (dragstart)="startPaletteDrag($event, 'place')" (dragend)="endPaletteDrag()">
-            {{ 'TUPLE_INPUT.PLACE' | translate }}
-        </button>
-        <button draggable="true" (dragstart)="startPaletteDrag($event, 'transition')" (dragend)="endPaletteDrag()">
-            {{ 'TUPLE_INPUT.TRANSITION' | translate }}
-        </button>
-        <p class="hint">{{ 'TUPLE_INPUT.CONTROLS' | translate }}</p>
+        <div
+            class="palette-item"
+            draggable="true"
+            (dragstart)="startPaletteDrag($event, 'place')"
+            (dragend)="endPaletteDrag()"
+            tabindex="0"
+            role="button"
+            aria-label="{{ 'TUPLE_INPUT.PLACE' | translate }}"
+            [title]="'TUPLE_INPUT.PLACE' | translate">
+            <svg width="56" height="56" viewBox="0 0 56 56" style="display: block; margin: auto">
+                <circle cx="28" cy="28" r="22" fill="#fff" stroke="#222" stroke-width="2.5" />
+            </svg>
+        </div>
+        <div
+            class="palette-item"
+            draggable="true"
+            (dragstart)="startPaletteDrag($event, 'transition')"
+            (dragend)="endPaletteDrag()"
+            tabindex="0"
+            role="button"
+            aria-label="{{ 'TUPLE_INPUT.TRANSITION' | translate }}"
+            [title]="'TUPLE_INPUT.TRANSITION' | translate">
+            <svg width="56" height="56" viewBox="0 0 56 56" style="display: block; margin: auto">
+                <rect x="6" y="6" width="44" height="44" fill="#fff" stroke="#222" stroke-width="2.5" rx="3" />
+            </svg>
+        </div>
     </div>
 
     <div class="canvas-container">
@@ -191,4 +211,10 @@
             </ng-container>
         </svg>
     </div>
+    <app-draw-toolbar
+        [headerTitle]="'PROCESS_NET.DRAWING_AREA_HEADER'"
+        [helpTooltip]="'PROCESS_NET.HELP_TOOLTIP'"
+        [actions]="toolbarActions()"
+        [instructions]="toolbarInstructions()"
+        class="draw-toolbar-fullwidth"></app-draw-toolbar>
 </div>

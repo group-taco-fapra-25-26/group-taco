@@ -1,6 +1,7 @@
 import { computed, ElementRef, Injectable, signal } from '@angular/core';
 import { DisplayableGraph } from '../classes/displayable-graph.interface';
-import { ViewBox, viewBoxValues } from '../components/display/display.constants';
+import { PLACE_RADIUS, TRANSITION_SIZE, ViewBox, viewBoxValues } from '../components/display/display.constants';
+import { SHAPE } from '../classes/diagram/diagram-node';
 
 @Injectable({
     providedIn: 'root',
@@ -12,6 +13,7 @@ export class PanningService {
     public viewBox = this._viewBoxValues.asReadonly();
     private _isPanning = false;
     private _panStartPoint = { x: 0, y: 0 };
+    private _panScale = { x: 1, y: 1 };
 
     public viewBoxAsString = computed(() => {
         const v: ViewBox = this._viewBoxValues();
@@ -22,19 +24,22 @@ export class PanningService {
      * Initiates the panning process.
      * @param event
      *          the mouse event that started the panning
-     * @param diagram
-     *         the current diagram being displayed
      * @param drawingArea
      *        reference to the SVG drawing area
      */
-    public startPan(
-        event: MouseEvent,
-        diagram: DisplayableGraph | undefined,
-        drawingArea: ElementRef<SVGGraphicsElement>,
-    ): void {
+    public startPan(event: MouseEvent, drawingArea: ElementRef<SVGGraphicsElement>): void {
         if (event.button !== 0) return;
         this._isPanning = true;
         this._panStartPoint = { x: event.clientX, y: event.clientY };
+
+        const svg = drawingArea.nativeElement;
+        const rect = svg.getBoundingClientRect();
+        const vb = this._viewBoxValues();
+        this._panScale = {
+            x: vb.width / rect.width,
+            y: vb.height / rect.height,
+        };
+
         drawingArea.nativeElement.style.cursor = 'grabbing';
     }
 
@@ -52,13 +57,8 @@ export class PanningService {
         }
         event.preventDefault();
 
-        const svg = drawingArea.nativeElement;
-        const clientRect = svg.getBoundingClientRect();
-        const scaleX = this._viewBoxValues().width / clientRect.width;
-        const scaleY = this._viewBoxValues().height / clientRect.height;
-
-        const dx = (event.clientX - this._panStartPoint.x) * scaleX;
-        const dy = (event.clientY - this._panStartPoint.y) * scaleY;
+        const dx = (event.clientX - this._panStartPoint.x) * this._panScale.x;
+        const dy = (event.clientY - this._panStartPoint.y) * this._panScale.y;
 
         this._viewBoxValues.update(
             (v: ViewBox): ViewBox => ({
@@ -94,6 +94,44 @@ export class PanningService {
         }
     }
 
+    public fitViewToGraph(graph: DisplayableGraph): void {
+        const nodes = graph.getNodes();
+        if (nodes.length === 0) return;
+
+        let minX = Number.MAX_VALUE;
+        let minY = Number.MAX_VALUE;
+        let maxX = Number.MIN_VALUE;
+        let maxY = Number.MIN_VALUE;
+
+        nodes.forEach((node) => {
+            let halfWidth;
+            let halfHeight;
+            if (node.shape === SHAPE.CIRCLE) {
+                halfWidth = PLACE_RADIUS;
+                halfHeight = PLACE_RADIUS;
+            } else {
+                halfWidth = TRANSITION_SIZE / 2;
+                halfHeight = TRANSITION_SIZE / 2;
+            }
+
+            minX = Math.min(minX, node.x - halfWidth);
+            minY = Math.min(minY, node.y - halfHeight);
+            maxX = Math.max(maxX, node.x + halfWidth);
+            maxY = Math.max(maxY, node.y + halfHeight);
+        });
+
+        const padding = 50;
+        const width = maxX - minX + 2 * padding;
+        const height = maxY - minY + 2 * padding;
+
+        this._viewBoxValues.set({
+            minX: minX - padding,
+            minY: minY - padding,
+            width: width,
+            height: height,
+        });
+    }
+
     public nudgeViewBox(deltaX: number, deltaY: number): void {
         this._viewBoxValues.update(
             (v: ViewBox): ViewBox => ({
@@ -110,14 +148,8 @@ export class PanningService {
      *        the wheel event triggering the zoom
      * @param drawingArea
      *       reference to the SVG drawing area
-     * @param diagram
-     *       the current diagram being displayed
      */
-    public zoom(
-        event: WheelEvent,
-        drawingArea: ElementRef<SVGGraphicsElement>,
-        diagram: DisplayableGraph | undefined,
-    ): void {
+    public zoom(event: WheelEvent, drawingArea: ElementRef<SVGGraphicsElement>): void {
         event.preventDefault();
 
         const svg = drawingArea.nativeElement;

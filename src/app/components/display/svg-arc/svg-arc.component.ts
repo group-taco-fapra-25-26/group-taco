@@ -4,6 +4,12 @@ import { Coords } from '../../../classes/json-petri-net';
 import { DisplayableEdge, DisplayableNode } from '../../../classes/displayable-graph.interface';
 import { PLACE_RADIUS, TRANSITION_SIZE } from '../display.constants';
 
+// Extend DisplayableEdge to allow startOffset/endOffset
+export interface DisplayableEdgeWithOffset extends DisplayableEdge {
+    startOffset?: Coords;
+    endOffset?: Coords;
+}
+
 @Component({
     selector: 'g[appSvgArc]',
     imports: [],
@@ -15,7 +21,7 @@ export class SvgArcComponent {
     readonly RECT_WIDTH = TRANSITION_SIZE;
     readonly RECT_HEIGHT = TRANSITION_SIZE;
 
-    readonly diagramArc = input<DisplayableEdge>();
+    readonly diagramArc = input<DisplayableEdgeWithOffset>();
     readonly nodes = input<DisplayableNode[]>([]);
 
     readonly sourceNode = computed(() => {
@@ -32,23 +38,91 @@ export class SvgArcComponent {
         return nodeList.find((node) => node.id === arc.target);
     });
 
+    /**
+     * Returns the connection point on the node's edge, with optional parallel offset.
+     */
+    private getOffsetConnectionPoint(
+        node: DisplayableNode | undefined,
+        otherNode: DisplayableNode | undefined,
+        offset = 0,
+    ): Coords {
+        if (!node || !otherNode) return { x: 0, y: 0 };
+        const dx = otherNode.x - node.x;
+        const dy = otherNode.y - node.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        if (distance === 0) return { x: node.x, y: node.y };
+        const normalizedX = dx / distance;
+        const normalizedY = dy / distance;
+        // Perpendicular vector
+        const perpX = -normalizedY;
+        const perpY = normalizedX;
+        // Get connection point on node edge
+        let basePoint: Coords;
+        if (node.shape === SHAPE.CIRCLE) {
+            const radius = this.RADIUS;
+            basePoint = {
+                x: node.x + normalizedX * radius,
+                y: node.y + normalizedY * radius,
+            };
+        } else {
+            const halfWidth = this.RECT_WIDTH / 2;
+            const halfHeight = this.RECT_HEIGHT / 2;
+            const xIntercept = Math.abs(normalizedX) > 0 ? halfWidth / Math.abs(normalizedX) : Infinity;
+            const yIntercept = Math.abs(normalizedY) > 0 ? halfHeight / Math.abs(normalizedY) : Infinity;
+            const intercept = Math.min(xIntercept, yIntercept);
+            basePoint = {
+                x: node.x + normalizedX * intercept,
+                y: node.y + normalizedY * intercept,
+            };
+        }
+        // Apply parallel offset
+        return {
+            x: basePoint.x + perpX * offset,
+            y: basePoint.y + perpY * offset,
+        };
+    }
+
     readonly sourceConnectionPoint = computed(() => {
+        const arc = this.diagramArc();
         const source = this.sourceNode();
         const target = this.targetNode();
-
-        if (!source || !target) return { x: 0, y: 0 };
-
-        return this.getConnectionPoint(source, target, true);
+        // Use startOffset if present (for parallel arcs)
+        const offset = arc && arc.startOffset ? this.getOffsetFromCenters(source, target, arc.startOffset) : 0;
+        return this.getOffsetConnectionPoint(source, target, offset);
     });
 
     readonly targetConnectionPoint = computed(() => {
+        const arc = this.diagramArc();
         const source = this.sourceNode();
         const target = this.targetNode();
-
-        if (!source || !target) return { x: 0, y: 0 };
-
-        return this.getConnectionPoint(target, source, false);
+        // Use endOffset if present (for parallel arcs)
+        const offset = arc && arc.endOffset ? this.getOffsetFromCenters(target, source, arc.endOffset) : 0;
+        return this.getOffsetConnectionPoint(target, source, offset);
     });
+
+    /**
+     * Calculates the perpendicular offset value from the node center to the offset point.
+     */
+    private getOffsetFromCenters(
+        node: DisplayableNode | undefined,
+        otherNode: DisplayableNode | undefined,
+        offsetPoint: Coords,
+    ): number {
+        if (!node || !otherNode) return 0;
+        // Vector from node to otherNode
+        const dx = otherNode.x - node.x;
+        const dy = otherNode.y - node.y;
+        // Perpendicular vector
+        const perpX = -dy;
+        const perpY = dx;
+        // Vector from node to offsetPoint
+        const ox = offsetPoint.x - node.x;
+        const oy = offsetPoint.y - node.y;
+        // Project offset vector onto perpendicular
+        const perpLength = Math.sqrt(perpX * perpX + perpY * perpY);
+        if (perpLength === 0) return 0;
+        return (ox * perpX + oy * perpY) / perpLength;
+    }
 
     readonly pathData = computed(() => {
         const sourcePoint = this.sourceConnectionPoint();
@@ -118,36 +192,4 @@ export class SvgArcComponent {
         const arc = this.diagramArc();
         return arc?.displayLabel || '';
     });
-
-    private getConnectionPoint(node: DisplayableNode, otherNode: DisplayableNode, isSource: boolean): Coords {
-        const dx = otherNode.x - node.x;
-        const dy = otherNode.y - node.y;
-        const distance = Math.sqrt(dx * dx + dy * dy);
-
-        if (distance === 0) return { x: node.x, y: node.y };
-
-        const normalizedX = dx / distance;
-        const normalizedY = dy / distance;
-
-        // Determine if this is a place (circle) or transition (rectangle)
-        if (node.shape === SHAPE.CIRCLE) {
-            const radius = this.RADIUS;
-            return {
-                x: node.x + normalizedX * radius,
-                y: node.y + normalizedY * radius,
-            };
-        }
-
-        const halfWidth = this.RECT_WIDTH / 2;
-        const halfHeight = this.RECT_HEIGHT / 2;
-
-        const xIntercept = Math.abs(normalizedX) > 0 ? halfWidth / Math.abs(normalizedX) : Infinity;
-        const yIntercept = Math.abs(normalizedY) > 0 ? halfHeight / Math.abs(normalizedY) : Infinity;
-        const intercept = Math.min(xIntercept, yIntercept);
-
-        return {
-            x: node.x + normalizedX * intercept,
-            y: node.y + normalizedY * intercept,
-        };
-    }
 }

@@ -54,7 +54,9 @@ export interface TuplePreview {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare const window: any;
 
-@Injectable()
+@Injectable({
+    providedIn: 'root',
+})
 export class DrawService implements OnDestroy {
     drawnElements = signal<DrawnElement[]>([]);
     connections = signal<Connection[]>([]);
@@ -64,6 +66,8 @@ export class DrawService implements OnDestroy {
     hoveredConnectionId = signal<string | null>(null);
     showTuplePreviewOnly = signal(false);
 
+    private _lastDiagramRef: Diagram | null = null;
+    private _shouldResetView = false;
     private _tabStateService = inject(TabStateService);
     private _processNetStateService = inject(ProcessNetStateService);
 
@@ -180,9 +184,16 @@ export class DrawService implements OnDestroy {
     private panning = inject(PanningService);
     private _dialog = inject(MatDialog);
 
-    readonly viewBox = this.panning.viewBoxAsString;
-    readonly viewBoxObj = this.panning.viewBox;
-    readonly isExamMode = this._modeService.isExamMode(Tab.DRAW);
+    get isExamMode() {
+        return this._modeService.isExamMode(Tab.DRAW);
+    }
+
+    get viewBox() {
+        return this.panning.viewBoxAsString;
+    }
+    get viewBoxObj() {
+        return this.panning.viewBox;
+    }
 
     private readonly _examTupleEffect = this.createExamTupleEffect();
     private readonly _examModePreviewEffect = effect(() => {
@@ -204,7 +215,6 @@ export class DrawService implements OnDestroy {
             }
             if (diagram) {
                 this.loadDiagramIntoCanvas(diagram);
-                this.resetViewIfReady();
                 const tuple = this._serializationService.serializeTuple(diagram);
                 if (tuple && !this.isExamMode) {
                     this.tupleString.set(tuple);
@@ -227,7 +237,6 @@ export class DrawService implements OnDestroy {
         if (!drawingArea) return;
         this.drawingArea = drawingArea;
         this.svgElement = (this.drawingArea?.nativeElement as SVGSVGElement) ?? null;
-        this.resetViewIfReady();
     }
 
     ngOnDestroy(): void {
@@ -249,6 +258,48 @@ export class DrawService implements OnDestroy {
         if (event.dataTransfer) {
             event.dataTransfer.setData('element-type', type);
             event.dataTransfer.effectAllowed = 'copy';
+
+            // Create a custom SVG drag image
+            const svgNS = 'http://www.w3.org/2000/svg';
+            const size = 56;
+            const svg = document.createElementNS(svgNS, 'svg');
+            svg.setAttribute('width', size.toString());
+            svg.setAttribute('height', size.toString());
+            svg.setAttribute('viewBox', `0 0 ${size} ${size}`);
+            svg.style.background = 'none';
+
+            if (type === 'place') {
+                const circle = document.createElementNS(svgNS, 'circle');
+                circle.setAttribute('cx', '28');
+                circle.setAttribute('cy', '28');
+                circle.setAttribute('r', '22');
+                circle.setAttribute('fill', '#fff');
+                circle.setAttribute('stroke', '#222');
+                circle.setAttribute('stroke-width', '2.5');
+                svg.appendChild(circle);
+            } else {
+                const rect = document.createElementNS(svgNS, 'rect');
+                rect.setAttribute('x', '6');
+                rect.setAttribute('y', '6');
+                rect.setAttribute('width', '44');
+                rect.setAttribute('height', '44');
+                rect.setAttribute('fill', '#fff');
+                rect.setAttribute('stroke', '#222');
+                rect.setAttribute('stroke-width', '2.5');
+                rect.setAttribute('rx', '3');
+                svg.appendChild(rect);
+            }
+
+            // Add to DOM off-screen to render
+            svg.style.position = 'absolute';
+            svg.style.left = '-9999px';
+            document.body.appendChild(svg);
+
+            // Use the SVG as drag image
+            event.dataTransfer.setDragImage(svg, size / 2, size / 2);
+
+            // Remove after a short delay to ensure drag image is set
+            setTimeout(() => document.body.removeChild(svg), 0);
         }
         window.__dragData = {
             elementType: type,
@@ -298,7 +349,7 @@ export class DrawService implements OnDestroy {
         const target = event.target as Element | null;
         const isOnElement = target?.closest('.element-wrapper') || target?.classList.contains('drag-overlay');
         if (isOnElement) return;
-        this.panning.startPan(event, undefined, this.drawingArea);
+        this.panning.startPan(event, this.drawingArea);
     }
 
     onCanvasPan(event: MouseEvent) {
@@ -313,7 +364,7 @@ export class DrawService implements OnDestroy {
 
     onCanvasWheel(event: WheelEvent) {
         if (!this.drawingArea) return;
-        this.panning.zoom(event, this.drawingArea, undefined);
+        this.panning.zoom(event, this.drawingArea);
     }
 
     preventContext(event: MouseEvent) {
@@ -353,6 +404,11 @@ export class DrawService implements OnDestroy {
             this._springEmbedderService.calculateLayout().catch((error) => console.error(error));
             this._toaster.showSuccess('TUPLE_INPUT.TOAST_SUCCESS_HEADER', 'TUPLE_INPUT.TOAST_SUCCESS_BODY');
             this.showTuplePreviewIfAvailable();
+
+            // Build node map and apply parallel offsets to arcs
+            const nodeMap = new Map<string, DiagramNode>();
+            diagram.allNodes.forEach((node: DiagramNode) => nodeMap.set(node.id, node));
+            this.applyParallelOffsetsToArcs(diagram.arcs, nodeMap);
         } else {
             this._toaster.showError('TUPLE_INPUT.TOAST_ERROR_HEADER', 'TUPLE_INPUT.TOAST_ERROR_BODY');
         }
@@ -584,16 +640,6 @@ export class DrawService implements OnDestroy {
             this.showTupleInline();
         } else {
             this.clearCanvas(true);
-        }
-    }
-
-    private resetViewIfReady() {
-        if (this.drawingArea) {
-            this.panning.resetViewBox(this.drawingArea);
-            // Nudge view down so top overlays (tuple input/preview) don't cover the net
-            this.panning.nudgeViewBox(0, -70);
-            // Slightly zoom out to keep bottom content visible after the nudge
-            this.panning.expandViewBox(1.1);
         }
     }
 
