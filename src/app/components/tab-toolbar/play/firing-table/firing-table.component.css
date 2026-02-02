@@ -129,28 +129,29 @@
 }
 
 .invalid-sequence-button {
-    cursor: default;
+    pointer-events: none;
 }
 
 .info-icon-container {
-  position: absolute;
-  top: -2px;
-  right: -6px;
-  width: 13px;
-  height: 13px;
-  border-radius: 50%;
-  background-color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 0 2px rgba(0, 0, 0, 0.2);
-  z-index: 5;
+    position: absolute;
+    top: -2px;
+    right: -6px;
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    background-color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 2px rgba(0, 0, 0, 0.2);
+    z-index: 5;
+    pointer-events: all;
 }
 
 .info-icon {
-  font-size: 16px;
-  width: 16px;
-  height: 16px;
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
 }
 
 .play-icon {

@@ -42,6 +42,10 @@ export class PlayService {
         return this._currentFiringSequence;
     }
 
+    set currentFiringSequence(sequence: string) {
+        this._currentFiringSequence = sequence;
+    }
+
     /**
      * Clears all firing entries in the firing sequence table and deletes the last marking.
      */
@@ -74,9 +78,10 @@ export class PlayService {
         this._currentFiringSequence = entry.firingSequence;
         this._currentFiringEntry = entry;
         entry.endMarking = diagram.marking;
-        entry.isValid = true;
+        entry.setValidity(true, null);
         entry.isPlaying = true;
 
+        const visitedLabels: string[] = [];
         for (const label of entry.labels) {
             // Check if the playback was cancelled
             if (!entry.isPlaying) {
@@ -85,6 +90,7 @@ export class PlayService {
                 return false;
             }
             await this.sleep(transitionTime);
+            visitedLabels.push(label);
             const node: DiagramTransition | undefined = diagram.getTransitionByLabel(label);
 
             if (node) {
@@ -97,13 +103,14 @@ export class PlayService {
                     true,
                 );
                 if (!successfullyFired) {
-                    entry.isValid = false;
                     entry.isPlaying = false;
+                    entry.setValidity(false, ['PLAY.NOT_ACTIVATED', [label], visitedLabels]);
                     return false;
                 }
                 entry.endMarking = { ...diagram.marking };
             } else {
                 entry.isPlaying = false;
+                entry.setValidity(false, ['PLAY.NOT_PRESENT', [label], visitedLabels]);
                 return false;
             }
         }
@@ -153,22 +160,25 @@ export class PlayService {
             this.fireTransition(node, diagram, displayFiring);
             this._currentMarking.set({ ...diagram.marking });
             entry.endMarking = { ...diagram.marking };
+            entry.setValidity(true, null);
             if (updateSequence) {
                 this._sourceNetService.updateEditedNet(diagram, { triggeredByFiring: true });
                 this.updateFiringEntry(node.label, true);
             }
-            entry.isValid = true;
-            return true;
-        } else if (notify && !this._isExamMode()) {
-            this._notificationService.showWarning(
-                'TOASTER.HEADER.TRANSITION_NOT_ACTIVATED',
-                'TOASTER.BODY.TRANSITION_NOT_ACTIVATED',
-                { messageParams: { label: node.label } },
-            );
+        } else {
+            const isValid = !this._isExamMode() || isSimulation ? false : undefined;
+            if (updateSequence) this.updateFiringEntry(node.label, false);
+            if (notify && !this._isExamMode()) {
+                this._notificationService.showWarning(
+                    'TOASTER.HEADER.TRANSITION_NOT_ACTIVATED',
+                    'TOASTER.BODY.TRANSITION_NOT_ACTIVATED',
+                    { messageParams: { label: node.label } },
+                );
+                entry.setValidity(isValid, ['PLAY.NOT_ACTIVATED', [node.label], entry.labels]);
+            }
         }
-        if (updateSequence) this.updateFiringEntry(node.label, false);
-        if (!this._isExamMode() || isSimulation) entry.isValid = false;
-        return false;
+        this._currentFiringSequence = entry.firingSequence;
+        return entry.isValid !== false;
     }
 
     /**
@@ -257,7 +267,6 @@ export class PlayService {
                   : ' ';
         if (entry.firingSequence.length === 0) entry.firingSequence = label;
         else entry.firingSequence = entry.firingSequence.replace(/[\s,;]+$/, '') + delimiter + label;
-        this._currentFiringSequence = entry.firingSequence;
         entry.transitionCount += 1;
         if (this._isExamMode()) entry.isValid = undefined;
         if (updateEndMarking) entry.endMarking = { ...this._currentMarking() };

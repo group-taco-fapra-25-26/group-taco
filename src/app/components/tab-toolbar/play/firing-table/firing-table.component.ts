@@ -43,9 +43,9 @@ export class FiringTableComponent implements OnInit, OnDestroy {
     private _sub?: Subscription;
 
     protected modeService = inject(ModeService);
+    protected playValidationService = inject(PlayValidationService);
     private _displayService = inject(DisplayService);
     private _playService = inject(PlayService);
-    private _playValidationService = inject(PlayValidationService);
 
     private readonly _TRANSITION_TIME: number = 1000;
     private readonly _MAX_TRANSITIONS_DEFAULT: number = 50;
@@ -88,11 +88,12 @@ export class FiringTableComponent implements OnInit, OnDestroy {
         if (!this._diagram) return;
         entry.transitionCount = entry.labels.length;
         this._playService.currentFiringEntry = entry;
-        if (this.modeService.isExamMode(Tab.PLAY)) entry.isValid = undefined;
+        if (this.modeService.isExamMode(Tab.PLAY)) entry.setValidity(undefined, null);
         else {
             if (entry.firingSequence.trim() === this._playService.currentFiringSequence.trim()) return;
-            await this._playValidationService.validateInput(this._diagram, entry);
+            await this.playValidationService.validateInput(this._diagram, entry);
         }
+        this._playService.currentFiringSequence = entry.firingSequence;
     }
 
     onDeleteEntry(id: number): void {
@@ -117,7 +118,6 @@ export class FiringTableComponent implements OnInit, OnDestroy {
 
     async onPlaySequence(entry: FiringEntry): Promise<void> {
         if (this._diagram) {
-            //this._playService.closeCurrentFiringEntry();
             await this._playService.playSequence(this._diagram, entry, this._TRANSITION_TIME, true);
         }
     }
@@ -130,14 +130,14 @@ export class FiringTableComponent implements OnInit, OnDestroy {
         if (!this._diagram) return;
         for (const entry of this.firingEntries) {
             this._playService.currentFiringEntry = entry;
-            await this._playValidationService.validateInput(this._diagram, entry);
+            await this.playValidationService.validateInput(this._diagram, entry);
         }
     }
 
     onFindSequences(): void {
         if (this._diagram) {
             this._playService.resetFiringEntries();
-            this._playValidationService.findSequences(this._diagram, this.maxTransitionCount, this.maxSequenceCount);
+            this.playValidationService.findSequences(this._diagram, this.maxTransitionCount, this.maxSequenceCount);
             this._diagram.resetMarking();
         }
     }

@@ -1,4 +1,5 @@
 import { inject, Injectable } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
 
 import { ToasterNotificationService } from './toaster-notification.service';
 import { ModeService } from './mode.service';
@@ -12,6 +13,7 @@ export class PlayValidationService {
     private _notificationService = inject(ToasterNotificationService);
     private _modeService = inject(ModeService);
     private _playService = inject(PlayService);
+    private _translate = inject(TranslateService);
 
     /**
      * Finds valid firing sequences in a Petri net diagram beginning at its start marking,
@@ -77,8 +79,7 @@ export class PlayValidationService {
     async validateInput(diagram: Diagram, entry: FiringEntry): Promise<void> {
         const hasOnlyValidTransitions: boolean = this.hasOnlyValidTransitions(diagram, entry);
         // TODO: provide user feedback if invalid transitions are present
-        if (hasOnlyValidTransitions) entry.isValid = await this._playService.playSequence(diagram, entry, 0, false);
-        else entry.isValid = hasOnlyValidTransitions;
+        if (hasOnlyValidTransitions) await this._playService.playSequence(diagram, entry, 0, false);
     }
 
     /**
@@ -93,18 +94,29 @@ export class PlayValidationService {
         const possibleTransitions: string[] = diagram.getTransitionLabels();
         const labels = entry.labels;
         if (labels.length === 0) return true;
-        if (possibleTransitions.length === 0 && labels.length > 0) return false;
-        entry.isValid = true;
+        if (possibleTransitions.length === 0 && labels.length > 0) {
+            entry.setValidity(false, ['PLAY.NOT_PRESENT', labels, labels]);
+            return false;
+        }
+        entry.setValidity(true, null);
+        const visitedLabels: string[] = [];
         for (const label of labels) {
+            visitedLabels.push(label);
             const exactMatch = possibleTransitions.includes(label);
 
             if (exactMatch) {
                 continue;
             } else {
-                entry.isValid = false;
+                entry.setValidity(false, ['PLAY.NOT_PRESENT', [label], visitedLabels]);
                 break;
             }
         }
-        return entry.isValid;
+        return entry.isValid === true;
+    }
+
+    getErrorMessage(entry: FiringEntry): string | null {
+        if (!entry.error) return null;
+        const [errorType, faultyLabels, visitedLabels] = [...entry.error];
+        return `Transition ${faultyLabels.join(', ')} ${this._translate.instant(errorType)}: [ ${visitedLabels.join(' ')} <--- ... ]`;
     }
 }

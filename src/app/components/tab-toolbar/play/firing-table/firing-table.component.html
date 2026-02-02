@@ -107,15 +107,14 @@
                                         <mat-icon class="play-icon">play_circle</mat-icon>
                                     </button>
                                 } @else if (entry.isValid === false) {
-                                    <button mat-icon-button class="invalid-sequence-button"
-                                                matTooltip="Tooltip test">
+                                    <button
+                                        mat-icon-button
+                                        class="invalid-sequence-button"
+                                        matTooltip="{{ this.playValidationService.getErrorMessage(entry) }}"
+                                        matTooltipClass="wide-tooltip">
                                         <mat-icon color="warn">cancel</mat-icon>
                                         <div class="info-icon-container">
-                                            <mat-icon
-                                                color="primary"
-                                                class="info-icon">
-                                                info_outline
-                                            </mat-icon>
+                                            <mat-icon color="primary" class="info-icon"> info_outline </mat-icon>
                                         </div>
                                     </button>
                                 }

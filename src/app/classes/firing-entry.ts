@@ -12,6 +12,7 @@ export class FiringEntry {
         public isClosed: boolean,
         public isValid: boolean | undefined,
         public isPlaying = false,
+        public error: [string, string[], string[]] | null = null,
     ) {}
 
     /**
@@ -31,6 +32,11 @@ export class FiringEntry {
      */
     get formattedEndMarking(): string {
         return this.formatMarking(this.endMarking);
+    }
+
+    setValidity(isValid: boolean | undefined, error: [string, string[], string[]] | null) {
+        this.isValid = isValid;
+        this.error = error;
     }
 
     /**

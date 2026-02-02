@@ -84,7 +84,9 @@
         "VALIDATE_SEQUENCES": "Sequenzen validieren",
         "FIND_SEQUENCES": "Sequenzen finden...",
         "MAX_TRANSITION_COUNT": "max. Anzahl Transitionen",
-        "MAX_SEQUENCE_COUNT": "max. Anzahl Sequenzen"
+        "MAX_SEQUENCE_COUNT": "max. Anzahl Sequenzen",
+        "NOT_PRESENT": "nicht vorhanden",
+        "NOT_ACTIVATED": "nicht aktiviert"
     },
     "HEADER_SUBTITLE": "Fachpraktikum Programmiersysteme WiSe25/26 von Marie G., Florian M., Ben L. und Alexander K.",
     "TOASTER": {
