@@ -1,7 +1,5 @@
 import { DisplayableEdge, DisplayableNode } from '../classes/displayable-graph.interface';
 import { Coords } from '../classes/json-petri-net';
-import { DisplayableEdge, DisplayableNode } from '../classes/displayable-graph.interface';
-import { Coords } from '../classes/json-petri-net';
 
 export const DEFAULT_PARALLEL_OFFSET = 26;
 export const OFFSET_TOLERANCE = 0.01;
@@ -143,14 +141,10 @@ export interface DisplayableEdgeWithOffset extends DisplayableEdge {
 export function applyParallelOffsetsToArcs(
     arcs: DisplayableEdge[],
     nodes: DisplayableNode[] | Map<string, DisplayableNode>,
-    arcs: DisplayableEdge[],
-    nodes: DisplayableNode[] | Map<string, DisplayableNode>,
     parallelOffset = DEFAULT_PARALLEL_OFFSET,
 ): void {
     const nodeMap: Map<string, DisplayableNode> = nodes instanceof Map ? nodes : new Map(nodes.map((n) => [n.id, n]));
-    const nodeMap: Map<string, DisplayableNode> = nodes instanceof Map ? nodes : new Map(nodes.map((n) => [n.id, n]));
 
-    const groups = new Map<string, DisplayableEdge[]>();
     const groups = new Map<string, DisplayableEdge[]>();
     arcs.forEach((arc) => {
         const key = arc.source < arc.target ? `${arc.source}~${arc.target}` : `${arc.target}~${arc.source}`;

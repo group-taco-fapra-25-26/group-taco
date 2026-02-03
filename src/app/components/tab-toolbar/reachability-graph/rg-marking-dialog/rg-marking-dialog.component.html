@@ -1,25 +1,25 @@
-<!-- <div class="marking-container">
-    @for (item of entry.startMarking | keyvalue; track item.key) {
-                                <div class="marking-entry">
-                                    <span>{{ item.key }}: {{ item.value }}</span>
-                                    <div class="button-container">
-                <button mat-icon-button (click)="incrementMarking(entry, item.key)" class="marking-button">
-                                            <mat-icon>add</mat-icon>
-                                        </button>
-                                        <button
-                                            mat-icon-button
-                                            (click)="decrementMarking(entry, item.key)"
-                                            [disabled]="isDisabled(item.value)"
-                                            class="marking-button">
-                                            <mat-icon>remove</mat-icon>
-                                        </button>
-                                    </div>
-                                </div>
-                            }
-                        </div> -->
 <h2 mat-dialog-title>{{ data.title | translate }}</h2>
 <mat-dialog-content>
     <p>{{ data.message | translate }}</p>
+    <!-- <div class="marking-container">
+        @for (item of entry.startMarking | keyvalue; track item.key) {
+                                    <div class="marking-entry">
+                                        <span>{{ item.key }}: {{ item.value }}</span>
+                                        <div class="button-container">
+                    <button mat-icon-button (click)="incrementMarking(entry, item.key)" class="marking-button">
+                                                <mat-icon>add</mat-icon>
+                                            </button>
+                                            <button
+                                                mat-icon-button
+                                                (click)="decrementMarking(entry, item.key)"
+                                                [disabled]="isDisabled(item.value)"
+                                                class="marking-button">
+                                                <mat-icon>remove</mat-icon>
+                                            </button>
+                                        </div>
+                                    </div>
+                                }
+                            </div> -->
 </mat-dialog-content>
 <mat-dialog-actions align="end">
     <button mat-button color="warn" (click)="discard()">{{ 'CONFIRM_DIALOG.DISCARD' | translate }}</button>
