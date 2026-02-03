@@ -127,6 +127,7 @@
                                         type="text"
                                         [(ngModel)]="entry.firingSequence"
                                         id="firing-sequence-input"
+                                        [disabled]="isButtonDisabled()"
                                         (input)="onInputChange(entry)"
                                         (keyup.Backspace)="onInputChange(entry)"
                                         (keyup.Delete)="onInputChange(entry)"
