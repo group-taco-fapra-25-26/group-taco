@@ -10,7 +10,11 @@ import { ImageExportService } from '../../../services/image-export.service';
 import { ModeService } from '../../../services/mode.service';
 import { Subscription } from 'rxjs';
 import { GRAPH_FILENAMES, GRAPH_IDS } from '../../display/display.constants';
-import { DrawToolbarComponent, DrawToolbarInstruction } from '../../draw-toolbar/draw-toolbar.component';
+import {
+    DrawToolbarComponent,
+    DrawToolbarAction,
+    DrawToolbarInstruction,
+} from '../../draw-toolbar/draw-toolbar.component';
 import { Tab } from '../../../classes/tabs';
 
 /**
@@ -372,13 +376,22 @@ export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
 
     /**
      * Returns the list of toolbar action items.
-     * Currently, returns an empty array, but can be extended to provide custom toolbar actions.
+     * Provides actions such as clearing the drawing area.
      *
-     * @returns {[]} Array of toolbar action configurations
+     * @returns {DrawToolbarAction[]} Array of toolbar action configurations
      */
-    toolbarActions(): [] {
-        return [];
-    }
+    toolbarActions = computed<DrawToolbarAction[]>(() => {
+        const hasElements = this.drawnElements().length > 0;
+        return [
+            {
+                icon: 'delete',
+                tooltip: 'DRAW.ACTION.CLEAR_DRAWING',
+                color: 'warn',
+                isActive: hasElements,
+                action: () => this.draw.clearCanvas(false, true),
+            },
+        ];
+    });
 
     /**
      * Computed signal containing the instruction labels and descriptions for the drawing toolbar.

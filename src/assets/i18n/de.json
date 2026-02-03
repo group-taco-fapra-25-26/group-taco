@@ -85,6 +85,9 @@
         "EDIT_LABEL": "Beschriftung",
         "TOAST_DUPLICATE_LABEL_HEADER": "Doppelte Beschriftung",
         "TOAST_DUPLICATE_LABEL_BODY": "Die Beschriftung '{{label}}' wird bereits verwendet. Bitte wähle eine eindeutige Beschriftung.",
+        "ACTION": {
+            "CLEAR_DRAWING": "Zeichnung löschen"
+        },
         "INSTRUCTION": {
             "ACTION_DRAG_DROP": "Ziehen & Ablegen",
             "DRAG_DROP": "Ziehen Sie Elemente aus der linken Palette ins Zeichenfeld, um Ihr Petri-Netz zu erstellen.",

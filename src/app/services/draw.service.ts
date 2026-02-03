@@ -309,7 +309,23 @@ export class DrawService implements OnDestroy {
             }
             if (this.isExamMode) {
                 // In exam mode, don't sync changes from other tabs to the draw tab
-                // to prevent the drawing in the draw tab from being overwritten
+                // to prevent the drawing in the draw tab from being overwritten.
+                // When a net is loaded, show only the tuple and keep the canvas empty.
+                if (diagram) {
+                    this.hasUserDrawnInExamMode = false;
+                    this.clearCanvas(true, true);
+                    const tupleFromSource = this._serializationService.serializeTuple(diagram);
+                    if (tupleFromSource) {
+                        this.tupleString.set(tupleFromSource);
+                        // Ensure the inline tuple input is shown, not the preview
+                        this.showTuplePreviewOnly.set(false);
+                    }
+                } else {
+                    // Check if sourceText is empty (from clear()) or has content (from file upload)
+                    const sourceText = this._sourceNetService.getSourceText();
+                    const preserveTuple = !!sourceText && sourceText.trim().length > 0;
+                    this.clearCanvas(true, preserveTuple);
+                }
                 return;
             }
             if (diagram) {
@@ -325,10 +341,15 @@ export class DrawService implements OnDestroy {
         });
 
         this.sourceTextSub = this._sourceNetService.sourceText$.subscribe((text: string | null) => {
-            // Don't overwrite the tuple if the user has already started drawing in exam mode
-            if (this.isExamMode && text && !this.hasUserDrawnInExamMode) {
-                this.tupleString.set(text);
-                this.showTupleInline();
+            // In exam mode, sync the tuple from source text
+            if (this.isExamMode) {
+                if (text && text.trim().length > 0) {
+                    this.tupleString.set(text);
+                    this.showTuplePreviewOnly.set(false);
+                } else {
+                    // Clear tuple when sourceText is cleared (from sidebar delete)
+                    this.tupleString.set('');
+                }
             }
         });
     }
@@ -552,7 +573,7 @@ export class DrawService implements OnDestroy {
     }
 
     /**
-     * Clears all elements from the canvas and resets the drawing state.
+     * Clears the drawing canvas.
      *
      * Performs a complete reset:
      * - Removes all drawn elements and connections
@@ -560,15 +581,20 @@ export class DrawService implements OnDestroy {
      * - Clears selection
      * - Resets the viewBox to default
      * - Clears the source net (unless triggered by the source service)
+     * - Optionally preserves the tuple string
      *
      * @param {boolean} triggeredByService - If true, skips clearing the source net to avoid circular updates
+     * @param {boolean} preserveTuple - If true, keeps the tuple string unchanged
      */
-    clearCanvas(triggeredByService = false) {
+    clearCanvas(triggeredByService = false, preserveTuple = false) {
         if (this.isClearing) return;
         this.isClearing = true;
         this.drawnElements.set([]);
         this.connections.set([]);
         this.selectedElementId.set(null);
+        if (!preserveTuple) {
+            this.tupleString.set('');
+        }
         this.showTupleInline();
         this.elementIdCounter = 0;
         this.connectionIdCounter = 0;
@@ -578,11 +604,48 @@ export class DrawService implements OnDestroy {
         if (this.drawingArea) {
             this.panning.resetViewBox(this.drawingArea);
         }
-        if (!triggeredByService) {
+        // In exam mode, don't clear the source net when clearing canvas locally
+        // This allows the sidebar delete button to remain functional
+        if (!triggeredByService && !this.isExamMode) {
             this._sourceNetService.clear();
         }
         this._displayService.clear();
         this.isClearing = false;
+    }
+
+    /**
+     * Deletes the currently selected element from the canvas without updating the tuple.
+     *
+     * This method removes the selected element and its connected arcs from the drawing,
+     * but preserves the tuple string. This is useful in exam mode where the tuple
+     * specification should remain unchanged while the student modifies their drawing.
+     *
+     * If an element is selected, this method:
+     * - Removes the element from the canvas
+     * - Removes all arcs connected to the element
+     * - Clears the selection
+     * - Does NOT update the tuple string
+     * - Does NOT sync to source net (in exam mode)
+     *
+     * Does nothing if no element is currently selected.
+     */
+    deleteSelectedElement() {
+        const selectedId = this.selectedElementId();
+        if (!selectedId) return;
+
+        const element = this.drawnElements().find((e) => e.id === selectedId);
+        if (element) {
+            // Delete the element without syncing/updating tuple
+            this.drawnElements.update((els) => els.filter((e) => e.id !== element.id));
+            this.connections.update((cs) => cs.filter((c) => c.aId !== element.id && c.bId !== element.id));
+            if (this.selectedElementId() === element.id) {
+                this.selectedElementId.set(null);
+            }
+            if (this.isExamMode) {
+                this.hasUserDrawnInExamMode = true;
+            }
+            // Note: Deliberately NOT calling syncSourceNetFromCanvas() to preserve the tuple
+        }
     }
 
     /**
