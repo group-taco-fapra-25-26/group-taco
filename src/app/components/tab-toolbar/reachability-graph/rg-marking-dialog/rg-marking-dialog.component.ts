@@ -21,7 +21,7 @@ import { StateNode } from 'src/app/classes/reachability-graph.model';
 
 export interface ConfirmUserMarkingDialogData {
     title: string;
-    marking:Record<string, number>;
+    marking: Record<string, number>;
     // tab: Tab;
     message: string;
 }
@@ -29,9 +29,9 @@ export interface ConfirmUserMarkingDialogData {
     selector: 'app-rg-marking-dialog',
     standalone: true,
     imports: [
-        CommonModule, 
-        MatDialogModule, 
-        MatButtonModule, 
+        CommonModule,
+        MatDialogModule,
+        MatButtonModule,
         TranslateModule,
         FormsModule,
         MatFormFieldModule,
@@ -47,9 +47,6 @@ export interface ConfirmUserMarkingDialogData {
     templateUrl: './rg-marking-dialog.component.html',
     styleUrl: './rg-marking-dialog.component.css',
 })
-
-
-
 export class RgMarkingDialogComponent {
     private _displayService = inject(DisplayService);
     private _reachabilityGraphService = inject(ReachabilityGraphService);
@@ -58,39 +55,29 @@ export class RgMarkingDialogComponent {
     private readonly drawService = inject(DrawService);
     private currentDialogMarking: Record<string, number> = this.data.marking;
 
-    
-
-    
-
-
-
-incrementMarking(dialogUserMarking: Record<string, number> , placeId: string): Record<string, number> {
-        const newMarking = { ...dialogUserMarking};
+    incrementMarking(dialogUserMarking: Record<string, number>, placeId: string): Record<string, number> {
+        const newMarking = { ...dialogUserMarking };
         newMarking[placeId] = (newMarking[placeId] || 0) + 1;
         dialogUserMarking = newMarking;
-        this.currentDialogMarking= newMarking;
+        this.currentDialogMarking = newMarking;
         return dialogUserMarking;
     }
 
-    decrementMarking(dialogUserMarking: Record<string, number> , placeId: string): Record<string, number> {
+    decrementMarking(dialogUserMarking: Record<string, number>, placeId: string): Record<string, number> {
         if ((dialogUserMarking[placeId] || 0) > 0) {
             const newMarking = { ...dialogUserMarking };
             newMarking[placeId] = (newMarking[placeId] || 0) - 1;
             dialogUserMarking = newMarking;
-            this.currentDialogMarking= newMarking;
-
+            this.currentDialogMarking = newMarking;
         }
         return dialogUserMarking;
     }
-
-
 
     keep() {
         this._dialogRef.close('keep');
     }
 
     discard() {
-        
         this._dialogRef.close('discard');
     }
 }

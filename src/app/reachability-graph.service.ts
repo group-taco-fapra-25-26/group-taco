@@ -482,17 +482,14 @@ export class ReachabilityGraphService {
         }
 
         this._dialog.open(RgMarkingDialogComponent, {
-                data: {
-                    title: 'RGMARKING_DIALOG.TITLE',
-                    marking: userInputtedMarking,
-                    message: 'RGMARKING_DIALOG.MESSAGE_DEFAULT',
-                },
-            });
+            data: {
+                title: 'RGMARKING_DIALOG.TITLE',
+                marking: userInputtedMarking,
+                message: 'RGMARKING_DIALOG.MESSAGE_DEFAULT',
+            },
+        });
 
-
-        isUserMarkingCorrect=this.compareUserInputWithTargetState(userInputtedMarking, node);
-        
-        
+        isUserMarkingCorrect = this.compareUserInputWithTargetState(userInputtedMarking, node);
 
         //nach jeder Eingabe, die nicht korrekt ist, user erneut auffordern
         //ebenfalls auto-complete button

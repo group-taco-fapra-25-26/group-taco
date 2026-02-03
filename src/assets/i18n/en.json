@@ -27,7 +27,7 @@
         "KEEP": "Keep",
         "DISCARD": "Discard"
     },
-         "RGMARKING_DIALOG": {
+    "RGMARKING_DIALOG": {
         "TITLE": "Input Marking",
         "MESSAGE_DEFAULT": "Please input the correct marking of the Petri Net after firing.",
         "KEEP": "Keep",

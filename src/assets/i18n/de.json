@@ -27,7 +27,7 @@
         "KEEP": "Behalten",
         "DISCARD": "Verwerfen"
     },
-     "RGMARKING_DIALOG": {
+    "RGMARKING_DIALOG": {
         "TITLE": "Markierung eingeben",
         "MESSAGE_DEFAULT": "Bitte geben Sie die korrekte Markierung des Petrinetzes nach dem Schalten ein.",
         "KEEP": "Behalten",
