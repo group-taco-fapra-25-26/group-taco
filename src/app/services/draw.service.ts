@@ -201,6 +201,8 @@ export class DrawService implements OnDestroy {
     private suppressNextSourceLoad = false;
     /** Flag indicating if a clear operation is in progress */
     private isClearing = false;
+    /** Flag indicating if user has made changes in exam mode (prevents tuple updates from external sources) */
+    private hasUserDrawnInExamMode = false;
 
     // ===== Drawing State =====
     /** Reference to the SVG drawing area element */
@@ -323,7 +325,8 @@ export class DrawService implements OnDestroy {
         });
 
         this.sourceTextSub = this._sourceNetService.sourceText$.subscribe((text: string | null) => {
-            if (this.isExamMode && text) {
+            // Don't overwrite the tuple if the user has already started drawing in exam mode
+            if (this.isExamMode && text && !this.hasUserDrawnInExamMode) {
                 this.tupleString.set(text);
                 this.showTupleInline();
             }
@@ -571,6 +574,7 @@ export class DrawService implements OnDestroy {
         this.connectionIdCounter = 0;
         this.placeLabelCounter = 0;
         this.transitionLabelCounter = 0;
+        this.hasUserDrawnInExamMode = false;
         if (this.drawingArea) {
             this.panning.resetViewBox(this.drawingArea);
         }
@@ -715,6 +719,9 @@ export class DrawService implements OnDestroy {
             };
             this.connections.update((cs) => [...cs, newConn]);
             this.selectedElementId.set(null);
+            if (this.isExamMode) {
+                this.hasUserDrawnInExamMode = true;
+            }
             this.syncSourceNetFromCanvas();
         } else {
             this.selectedElementId.set(element.id);
@@ -758,6 +765,9 @@ export class DrawService implements OnDestroy {
                 return { ...c, weight: newWeight };
             }),
         );
+        if (this.isExamMode) {
+            this.hasUserDrawnInExamMode = true;
+        }
         this.syncSourceNetFromCanvas();
     }
 
@@ -778,6 +788,9 @@ export class DrawService implements OnDestroy {
         if (delta === 0) return;
         const current = element.node.tokenCount();
         element.node.tokens = Math.max(0, current - delta);
+        if (this.isExamMode) {
+            this.hasUserDrawnInExamMode = true;
+        }
         this.syncSourceNetFromCanvas();
     }
 
@@ -828,6 +841,9 @@ export class DrawService implements OnDestroy {
                 if (this.selectedElementId() === oldId) {
                     this.selectedElementId.set(newLabel);
                 }
+                if (this.isExamMode) {
+                    this.hasUserDrawnInExamMode = true;
+                }
                 this.syncSourceNetFromCanvas();
             });
             return;
@@ -863,6 +879,9 @@ export class DrawService implements OnDestroy {
                 );
                 if (this.selectedElementId() === oldId) {
                     this.selectedElementId.set(newLabel);
+                }
+                if (this.isExamMode) {
+                    this.hasUserDrawnInExamMode = true;
                 }
                 this.syncSourceNetFromCanvas();
             });
@@ -902,6 +921,9 @@ export class DrawService implements OnDestroy {
     private createExamTupleEffect() {
         return effect(() => {
             if (!this.isExamMode) return;
+            // Don't overwrite the tuple if the user has already started drawing
+            if (this.hasUserDrawnInExamMode) return;
+
             const sourceDiagram = this._sourceNetService.getCurrentSourceNet();
             const sourceText = this._sourceNetService.getSourceText();
             if (sourceDiagram) {
@@ -1204,6 +1226,9 @@ export class DrawService implements OnDestroy {
         if (this.isDraggingElement) {
             event.preventDefault();
             event.stopImmediatePropagation();
+            if (this.isExamMode) {
+                this.hasUserDrawnInExamMode = true;
+            }
         }
         this.draggedElement = null;
         this.isDraggingElement = false;
@@ -1275,6 +1300,9 @@ export class DrawService implements OnDestroy {
         newNode.x = x;
         newNode.y = y;
         this.drawnElements.update((elements) => [...elements, { id: newId, node: newNode }]);
+        if (this.isExamMode) {
+            this.hasUserDrawnInExamMode = true;
+        }
         this.syncSourceNetFromCanvas();
     }
 
@@ -1335,6 +1363,9 @@ export class DrawService implements OnDestroy {
         if (this.selectedElementId() === element.id) {
             this.selectedElementId.set(null);
         }
+        if (this.isExamMode) {
+            this.hasUserDrawnInExamMode = true;
+        }
         this.syncSourceNetFromCanvas();
     }
 
@@ -1348,6 +1379,9 @@ export class DrawService implements OnDestroy {
      */
     private deleteConnection(connectionId: string) {
         this.connections.update((cs) => cs.filter((c) => c.id !== connectionId));
+        if (this.isExamMode) {
+            this.hasUserDrawnInExamMode = true;
+        }
         this.syncSourceNetFromCanvas();
     }
 
