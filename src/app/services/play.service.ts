@@ -1,4 +1,4 @@
-import { inject, Injectable, signal } from '@angular/core';
+import { computed, inject, Injectable, signal } from '@angular/core';
 
 import { ModeService } from './mode.service';
 import { ToasterNotificationService } from './toaster-notification.service';
@@ -19,34 +19,64 @@ export class PlayService {
     private _startMarking: Record<string, number> = {};
     private _currentMarking = signal<Record<string, number>>({ ...this._startMarking });
     private _currentFiringEntry: FiringEntry | undefined;
-    private _lastMarking: Record<string, number> | undefined;
+    private _currentFiringSequence = '';
     private _idCounter = 0;
 
     firingEntries = signal<FiringEntry[]>([]);
 
+    private _isExamMode = computed(() => this._modeService.isExamMode(Tab.PLAY));
+
+    /**
+     * Sets the initial marking of the Petri net.
+     * @param marking - The marking to set as the start marking.
+     */
     set startMarking(marking: Record<string, number>) {
         this._startMarking = marking;
     }
 
+    /**
+     * Sets the current marking of the Petri net.
+     * @param marking - The marking to set as the current marking.
+     */
     set currentMarking(marking: Record<string, number>) {
         this._currentMarking.set(marking);
     }
 
+    /**
+     * Sets the currently active firing entry. This is used to avoid unnecessary
+     * validation, e.g. when spaces are added or removed.
+     * @param entry - The firing entry to set as current.
+     */
     set currentFiringEntry(entry: FiringEntry | undefined) {
         this._currentFiringEntry = entry;
     }
 
     /**
-     * Clears all firing entries in the firing sequence table and deletes the last marking.
+     * Returns the current firing sequence as a string.
+     * @returns The current firing sequence.
      */
-    resetFiringEntries(): void {
+    get currentFiringSequence(): string {
+        return this._currentFiringSequence;
+    }
+
+    /**
+     * Sets the current firing sequence.
+     * @param sequence - The firing sequence to set.
+     */
+    set currentFiringSequence(sequence: string) {
+        this._currentFiringSequence = sequence;
+    }
+
+    /**
+     * Clears all firing entries in the firing sequence table.
+     */
+    clearFiringEntries(): void {
         this.firingEntries.set([]);
-        this._lastMarking = undefined;
         this._currentFiringEntry = undefined;
     }
 
     /**
-     * Plays a firing sequence on a diagram.
+     * Plays a firing sequence on a Petri net diagram.
      * @param diagram
      *          The diagram on which the firing sequence is played.
      * @param entry
@@ -63,38 +93,52 @@ export class PlayService {
         transitionTime: number,
         displayFiring: boolean,
     ): Promise<boolean> {
-        diagram.resetMarking();
-        this._currentFiringEntry = entry;
-        entry.isValid = true;
-        entry.isPlaying = true;
         const endMarkingCopy: Record<string, number> = { ...entry.endMarking };
+        if (this._currentFiringEntry) this._currentFiringEntry.endMarking = { ...diagram.marking };
+        diagram.resetMarking();
+        this._currentFiringSequence = entry.firingSequence;
+        this._currentFiringEntry = entry;
+        entry.endMarking = diagram.marking;
+        const isValidation = transitionTime === 0;
+        if (!isValidation) entry.isPlaying = true;
 
+        const visitedLabels: string[] = [];
         for (const label of entry.labels) {
             // Check if the playback was cancelled
-            if (!entry.isPlaying) {
+            if (!entry.isPlaying && !isValidation) {
                 diagram.resetMarking();
                 entry.endMarking = endMarkingCopy;
                 return false;
             }
-            await this.sleep(transitionTime);
+            await this._sleep(transitionTime);
+            visitedLabels.push(label);
             const node: DiagramTransition | undefined = diagram.getTransitionByLabel(label);
 
             if (node) {
-                const successfullyFired: boolean = this.processTransitionClick(
+                const successfullyFired: boolean = this.processTransitionClicked(
                     diagram,
                     node,
-                    false,
                     true,
                     displayFiring,
+                    true,
                 );
                 if (!successfullyFired) {
-                    entry.isValid = false;
                     entry.isPlaying = false;
+                    entry.setValidity(false, {
+                        type: 'PLAY.NOT_ACTIVATED',
+                        invalidLabel: label,
+                        visitedLabels: visitedLabels,
+                    });
                     return false;
                 }
                 entry.endMarking = { ...diagram.marking };
             } else {
                 entry.isPlaying = false;
+                entry.setValidity(false, {
+                    type: 'PLAY.NOT_PRESENT',
+                    invalidLabel: label,
+                    visitedLabels: visitedLabels,
+                });
                 return false;
             }
         }
@@ -102,6 +146,13 @@ export class PlayService {
         return true;
     }
 
+    /**
+     * Fires a transition in the Petri net if it is activated.
+     * @param node - The transition to fire.
+     * @param diagram - The Petri net diagram.
+     * @param displayFiring - Whether to visually highlight the firing transition.
+     * @returns True if the transition was fired successfully, false otherwise.
+     */
     fireTransition(node: DiagramTransition, diagram: Diagram, displayFiring: boolean): boolean {
         if (node.isActivated()) {
             node.fire(displayFiring);
@@ -114,55 +165,63 @@ export class PlayService {
     /**
      * Fires a transition if it is activated, updates the diagram
      * and optionally records the firing in the firing sequence.
+     * Depending on the mode (learning mode/ exam mode), a warning toast is displayed.
      * @param diagram
      *          The diagram containing the transition.
      * @param node
      *          The transition node to be fired.
-     * @param updateSequence
-     *          Whether the firing sequence should be updated when firing, false when validating a sequence.
-     * @param notify
+     * @param showNotification
      *          Whether notifications (e.g., transition not activated) should be displayed.
      * @param displayFiring
      *          Whether the color of the firing transition should be animated while firing.
+     * @param isSimulation
+     *          Whether the firing takes place only for simulation (e.g. playback) purposes.
      * @return true if the transition was fired successfully, otherwise false.
      */
-    processTransitionClick(
+    processTransitionClicked(
         diagram: Diagram,
         node: DiagramTransition,
-        updateSequence: boolean,
-        notify: boolean,
+        showNotification: boolean,
         displayFiring: boolean,
+        isSimulation: boolean,
     ): boolean {
-        const entry: FiringEntry = this._currentFiringEntry || this.getEmptyFiringEntry();
-        if (node.isActivated() && entry.isValid !== false) {
+        const entry: FiringEntry =
+            this._currentFiringEntry && (!this._currentFiringEntry.isClosed || isSimulation)
+                ? this._currentFiringEntry
+                : this.getEmptyFiringEntry();
+        if (node.isActivated() && entry.isValid !== false && (!this._isExamMode() || isSimulation)) {
             this.fireTransition(node, diagram, displayFiring);
             this._currentMarking.set({ ...diagram.marking });
-            this._lastMarking = { ...diagram.marking };
             entry.endMarking = { ...diagram.marking };
-            if (updateSequence) {
+            entry.setValidity(true, null);
+            if (!isSimulation) {
                 this._sourceNetService.updateEditedNet(diagram, { triggeredByFiring: true });
-                const updateEndMarking = !this._modeService.isExamMode(Tab.PLAY);
-                this.updateFiringEntry(node.label, updateEndMarking);
+                this.updateFiringEntry(node.label, true);
             }
-            entry.isValid = true;
-            return true;
-        } else if (notify) {
-            this._notificationService.showWarning(
-                'TOASTER.HEADER.TRANSITION_NOT_ACTIVATED',
-                'TOASTER.BODY.TRANSITION_NOT_ACTIVATED',
-                { messageParams: { label: node.label } },
-            );
+        } else {
+            const isValid = !this._isExamMode() || isSimulation ? false : undefined;
+            if (!isSimulation) this.updateFiringEntry(node.label, false);
+            if (showNotification && !this._isExamMode()) {
+                this._notificationService.showWarning(
+                    'TOASTER.HEADER.TRANSITION_NOT_ACTIVATED',
+                    'TOASTER.BODY.TRANSITION_NOT_ACTIVATED',
+                    { messageParams: { label: node.label } },
+                );
+            }
+            entry.setValidity(isValid, {
+                type: 'PLAY.NOT_ACTIVATED',
+                invalidLabel: node.label,
+                visitedLabels: entry.labels,
+            });
         }
-        if (updateSequence) this.updateFiringEntry(node.label, false);
-        entry.isValid = false;
-        return false;
+        this._currentFiringSequence = entry.firingSequence;
+        return entry.isValid === true;
     }
 
     /**
-     * Checks if a transition can be fired in the current tab and state.
-     * @param node
-     *          The transition to be checked
-     * @returns true if the transition can be fired
+     * Checks if a transition can be fired in the current tab and activation state.
+     * @param node - The transition to be checked
+     * @returns true if the transition can be fired, else false.
      */
     canBeFired(node: DiagramTransition): boolean {
         return (
@@ -175,23 +234,21 @@ export class PlayService {
 
     /**
      * Starts a new, empty firing sequence.
-     * @param diagram
-     *          The diagram for which the firing sequence is started.
+     * @param diagram - The diagram for which the firing sequence is started.
      */
     startNewFiringSequence(diagram: Diagram): void {
         diagram.resetMarking();
-        this._lastMarking = { ...diagram.marking };
         if (this._currentFiringEntry) this.closeCurrentFiringEntry();
         this.getEmptyFiringEntry();
         setTimeout(() => {
             document.getElementById('firing-sequence-input')?.focus();
         }, 0);
+        this._currentFiringSequence = '';
     }
 
     /**
      * Deletes a firing entry from the firing sequence table.
-     * @param id
-     *          The ID of the firing entry that is to be deleted
+     * @param id - The ID of the firing entry that is to be deleted
      */
     deleteFiringEntry(id: number): void {
         this.firingEntries.update((entries) => entries.filter((entry) => entry.id !== id));
@@ -199,14 +256,10 @@ export class PlayService {
 
     /**
      * Adds a predefined firing entry to the firing table.
-     * @param firingSequence
-     *          The firing sequence.
-     * @param transitionCount
-     *          The transition count.
-     * @param endMarking
-     *          The end marking.
-     * @param isValid
-     *          Indicates whether the firing entry is valid.
+     * @param firingSequence - The firing sequence.
+     * @param transitionCount - The transition count.
+     * @param endMarking - The end marking.
+     * @param isValid - Indicates whether the firing entry is valid.
      */
     addFiringEntry(
         firingSequence: string,
@@ -223,8 +276,8 @@ export class PlayService {
     }
 
     /**
-     * Appends the label of a fired transition to the current firing sequence
-     * and updates transition count and optionally the end marking accordingly.
+     * Appends the label of a fired transition to the current firing sequence.
+     * Updates the transition count and optionally the end marking accordingly.
      * @param label
      *          The label of the fired transition.
      * @param updateEndMarking
@@ -245,7 +298,7 @@ export class PlayService {
         if (entry.firingSequence.length === 0) entry.firingSequence = label;
         else entry.firingSequence = entry.firingSequence.replace(/[\s,;]+$/, '') + delimiter + label;
         entry.transitionCount += 1;
-        if (this._modeService.isExamMode(Tab.PLAY)) entry.isValid = undefined;
+        if (this._isExamMode()) entry.isValid = undefined;
         if (updateEndMarking) entry.endMarking = { ...this._currentMarking() };
     }
 
@@ -267,7 +320,7 @@ export class PlayService {
      */
     private getEmptyFiringEntry(): FiringEntry {
         const endMarking = { ...this._startMarking };
-        const isValid = this._modeService.getIsExamModeSignal(Tab.PLAY) ? undefined : true;
+        const isValid = this._isExamMode() ? undefined : true;
         const newFiringEntry = new FiringEntry(this.getNewId(), '', 0, endMarking, false, isValid);
         this._currentFiringEntry = newFiringEntry;
         this.firingEntries.update((entries) => {
@@ -285,7 +338,12 @@ export class PlayService {
         return this._idCounter++;
     }
 
-    private sleep(time: number): Promise<void> {
+    /**
+     * Returns a Promise that resolves after a specified delay.
+     * @param time - Delay in milliseconds.
+     * @returns A Promise that resolves after the given time.
+     */
+    private _sleep(time: number): Promise<void> {
         return new Promise((resolve) => setTimeout(resolve, time));
     }
 }

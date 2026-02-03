@@ -33,7 +33,7 @@ export class ClearNetButtonComponent {
 
     public clearNet(): void {
         this._sourcePetriNetService.clear();
-        this._playService.resetFiringEntries();
+        this._playService.clearFiringEntries();
         this._displayService.clear();
         this._processNetFiringService.clear();
     }
