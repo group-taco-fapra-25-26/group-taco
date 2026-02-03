@@ -563,7 +563,7 @@ export class DrawService implements OnDestroy {
      *
      * @param {boolean} triggeredByService - If true, skips clearing the source net to avoid circular updates
      */
-    clearCanvas(triggeredByService: boolean = false) {
+    clearCanvas(triggeredByService = false) {
         if (this.isClearing) return;
         this.isClearing = true;
         this.drawnElements.set([]);
@@ -1565,7 +1565,7 @@ export class DrawService implements OnDestroy {
     private buildPlace(
         id: string,
         label?: string,
-        initialTokens: number = 0,
+        initialTokens = 0,
         options?: {
             innerLabel?: string;
             hideTokens?: boolean;

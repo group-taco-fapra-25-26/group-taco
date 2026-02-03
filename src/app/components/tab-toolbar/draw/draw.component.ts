@@ -374,9 +374,9 @@ export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
      * Returns the list of toolbar action items.
      * Currently, returns an empty array, but can be extended to provide custom toolbar actions.
      *
-     * @returns {any[]} Array of toolbar action configurations
+     * @returns {[]} Array of toolbar action configurations
      */
-    toolbarActions(): any[] {
+    toolbarActions(): [] {
         return [];
     }
 
