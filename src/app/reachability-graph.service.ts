@@ -12,8 +12,6 @@ import { MatButtonModule } from '@angular/material/button';
 import { RgMarkingDialogComponent } from './components/tab-toolbar/reachability-graph/rg-marking-dialog/rg-marking-dialog.component';
 import { MatDialog } from '@angular/material/dialog';
 import { ToastList } from './classes/toast';
-import { PanningService } from './services/panning.service';
-import { ToastList } from './classes/toast';
 import { SpringEmbedderService } from './services/spring-embedder.service';
 
 @Injectable({
@@ -476,19 +474,25 @@ export class ReachabilityGraphService {
     getCorrectUserMarking(node: StateNode): boolean {
         let isUserMarkingCorrect = false;
         //TODO CHANGE INITIALIZATION AFTER DIALOG IS FINISHED!!!
-        let userInputtedMarking: Record<string, number> = node.rGMarking;
+        let correctMarking: Record<string, number> = node.rGMarking;
+        let userInputtedMarking: Record<string, number> = correctMarking;
+        //reset numeric values so user can input them
+        for (let element of Object.values(userInputtedMarking)) {
+            element = 0;
+        }
 
-        this.compareUserInputWithTargetState(userInputtedMarking, node);
-        this._dialog.open(RgMarkingDialogComponent);
-        if (this.hasDataToDelete(tab)) {
-            this._dialog.open(ConfirmDialogComponent, {
+        this._dialog.open(RgMarkingDialogComponent, {
                 data: {
-                    title: 'CONFIRM_DIALOG.TITLE',
-                    tab: tab,
-                    message: tab === Tab.DRAW ? 'CONFIRM_DIALOG.MESSAGE_DRAW' : 'CONFIRM_DIALOG.MESSAGE_DEFAULT',
+                    title: 'RGMARKING_DIALOG.TITLE',
+                    marking: userInputtedMarking,
+                    message: 'RGMARKING_DIALOG.MESSAGE_DEFAULT',
                 },
             });
-        }
+
+
+        isUserMarkingCorrect=this.compareUserInputWithTargetState(userInputtedMarking, node);
+        
+        
 
         //nach jeder Eingabe, die nicht korrekt ist, user erneut auffordern
         //ebenfalls auto-complete button

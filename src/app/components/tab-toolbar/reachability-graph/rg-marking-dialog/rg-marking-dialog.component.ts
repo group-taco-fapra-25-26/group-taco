@@ -22,7 +22,7 @@ import { StateNode } from 'src/app/classes/reachability-graph.model';
 export interface ConfirmUserMarkingDialogData {
     title: string;
     marking:Record<string, number>;
-    tab: Tab;
+    // tab: Tab;
     message: string;
 }
 @Component({
@@ -53,16 +53,14 @@ export interface ConfirmUserMarkingDialogData {
 export class RgMarkingDialogComponent {
     private _displayService = inject(DisplayService);
     private _reachabilityGraphService = inject(ReachabilityGraphService);
-    readonly data = inject<ConfirmUserMarkingDialogData>(MAT_DIALOG_DATA);
+    data = inject<ConfirmUserMarkingDialogData>(MAT_DIALOG_DATA);
     private readonly _dialogRef = inject(MatDialogRef<RgMarkingDialogComponent>);
     private readonly drawService = inject(DrawService);
-    private dialogMarking: Record<string, number>;
+    private currentDialogMarking: Record<string, number> = this.data.marking;
 
-    constructor(marking:Record<string, number>){
-        this.dialogMarking=marking;
+    
 
-
-    }
+    
 
 
 
@@ -70,6 +68,7 @@ incrementMarking(dialogUserMarking: Record<string, number> , placeId: string): R
         const newMarking = { ...dialogUserMarking};
         newMarking[placeId] = (newMarking[placeId] || 0) + 1;
         dialogUserMarking = newMarking;
+        this.currentDialogMarking= newMarking;
         return dialogUserMarking;
     }
 
@@ -78,6 +77,8 @@ incrementMarking(dialogUserMarking: Record<string, number> , placeId: string): R
             const newMarking = { ...dialogUserMarking };
             newMarking[placeId] = (newMarking[placeId] || 0) - 1;
             dialogUserMarking = newMarking;
+            this.currentDialogMarking= newMarking;
+
         }
         return dialogUserMarking;
     }
@@ -89,14 +90,7 @@ incrementMarking(dialogUserMarking: Record<string, number> , placeId: string): R
     }
 
     discard() {
-        switch (this.data.tab) {
-
-            case Tab.REACHABILITY_GRAPH:
-                this._reachabilityGraphService.clear();
-                break;
-            default:
-                break;
-        }
+        
         this._dialogRef.close('discard');
     }
 }
