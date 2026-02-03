@@ -9,16 +9,18 @@ import { MatIconButton } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
 import { MatSliderModule } from '@angular/material/slider';
 import { MatExpansionModule, MatExpansionPanel } from '@angular/material/expansion';
+import { MatTooltip } from '@angular/material/tooltip';
 import { filter, Subscription, take, tap } from 'rxjs';
 
 import { ModeService } from '../../../../services/mode.service';
+import { ToasterNotificationService } from '../../../../services/toaster-notification.service';
 import { DisplayService } from '../../../../services/display.service';
 import { PlayService } from '../../../../services/play.service';
 import { PlayValidationService } from '../../../../services/play-validation.service';
 import { Tab } from '../../../../classes/tabs';
 import { Diagram } from '../../../../classes/diagram/diagram';
 import { FiringEntry } from '../../../../classes/firing-entry';
-import { MatTooltip } from '@angular/material/tooltip';
+import { ToastList } from '../../../../classes/toast';
 
 @Component({
     selector: 'app-firing-table',
@@ -42,23 +44,23 @@ import { MatTooltip } from '@angular/material/tooltip';
 export class FiringTableComponent implements OnInit, OnDestroy {
     private _sub?: Subscription;
 
-    protected modeService = inject(ModeService);
+    modeService = inject(ModeService);
+    playValidationService = inject(PlayValidationService);
+    private _notificationService = inject(ToasterNotificationService);
     private _displayService = inject(DisplayService);
     private _playService = inject(PlayService);
-    private _playValidationService = inject(PlayValidationService);
 
+    @Input() firingEntries: FiringEntry[] = [];
+    isSequencePlaying = false;
     private readonly _TRANSITION_TIME: number = 1000;
+    private _diagram: Diagram | undefined;
+
+    // Attributes used for the "Find Sequences" functionality
+    isFindSequencesFormVisible = false;
     private readonly _MAX_TRANSITIONS_DEFAULT: number = 50;
     private readonly _MAX_SEQUENCES_DEFAULT: number = 250;
-
-    private _lastFiringSequence = '';
-    private _diagram: Diagram | undefined;
-    @Input() firingEntries: FiringEntry[] = [];
-
-    protected isFindSequencesFormVisible = false;
-    protected maxTransitionCount: number = this._MAX_TRANSITIONS_DEFAULT;
-    protected maxSequenceCount: number = this._MAX_SEQUENCES_DEFAULT;
-    protected buttonColor = 'basic';
+    maxTransitionCount: number = this._MAX_TRANSITIONS_DEFAULT;
+    maxSequenceCount: number = this._MAX_SEQUENCES_DEFAULT;
 
     ngOnInit(): void {
         this._sub = this._displayService.diagram$
@@ -80,29 +82,37 @@ export class FiringTableComponent implements OnInit, OnDestroy {
     }
 
     /**
-     * Handles input changes for a firing sequence and validates the input if not in exam mode.
-     * Updates the last recorded firing sequence and triggers validation.
-     * @param entry - The firing entry containing the firing sequence to validate.
-     * @returns A Promise that resolves when the validation is complete.
+     * Handles changes to a firing sequence and triggers validation based on the current mode.
+     *
+     * - In **learning mode**, the input is validated immediately.
+     * - In **exam mode**, the validity of the entry is set to `undefined` to increase difficulty.
+     *
+     * @param entry - The firing entry whose sequence was changed.
+     * @returns A Promise that resolves when validation or processing is complete.
      */
     async onInputChange(entry: FiringEntry): Promise<void> {
         if (!this._diagram) return;
         entry.transitionCount = entry.labels.length;
         this._playService.currentFiringEntry = entry;
-        if (this.modeService.isExamMode(Tab.PLAY)) entry.isValid = undefined;
-        else {
-            if (entry.firingSequence.trim() === this._lastFiringSequence.trim()) return;
-            this._lastFiringSequence = entry.firingSequence;
-            await this._playValidationService.validateInput(this._diagram, entry);
-        }
+        if (entry.firingSequence.trim() === this._playService.currentFiringSequence.trim()) return;
+        if (this.modeService.isExamMode(Tab.PLAY)) entry.setValidity(undefined, null);
+        else await this.playValidationService.validateInput(this._diagram, entry);
+        this._playService.currentFiringSequence = entry.firingSequence;
     }
 
+    /**
+     * Deletes a firing entry by its ID.
+     * @param id - The ID of the entry to delete.
+     */
     onDeleteEntry(id: number): void {
         this._playService.deleteFiringEntry(id);
     }
 
+    /**
+     * Deletes all firing entries and resets the diagram marking.
+     */
     onDeleteAllEntries(): void {
-        this._playService.resetFiringEntries();
+        this._playService.clearFiringEntries();
         this._displayService.diagram$
             .pipe(
                 take(1),
@@ -113,69 +123,136 @@ export class FiringTableComponent implements OnInit, OnDestroy {
             });
     }
 
+    /**
+     * Creates a new firing entry.
+     */
     onNewEntry(): void {
         if (this._diagram) this._playService.startNewFiringSequence(this._diagram);
     }
 
+    /**
+     * Plays the firing sequence in the diagram.
+     * @param entry - The firing entry to play.
+     */
     async onPlaySequence(entry: FiringEntry): Promise<void> {
         if (this._diagram) {
-            this._playService.closeCurrentFiringEntry();
+            this.isSequencePlaying = true;
             await this._playService.playSequence(this._diagram, entry, this._TRANSITION_TIME, true);
+            this.isSequencePlaying = false;
         }
     }
 
+    /**
+     * Stops the currently playing firing sequence.
+     * @param entry - The firing entry to stop.
+     */
     onStopPlaySequence(entry: FiringEntry): void {
         entry.isPlaying = false;
     }
 
+    /**
+     * Validates all firing sequences and shows a notification with the results.
+     */
     async onValidateSequences(): Promise<void> {
         if (!this._diagram) return;
+        const invalidSequences: ToastList[] = [];
         for (const entry of this.firingEntries) {
             this._playService.currentFiringEntry = entry;
-            await this._playValidationService.validateInput(this._diagram, entry);
+            await this.playValidationService.validateInput(this._diagram, entry);
+            if (!entry.isValid) invalidSequences.push({ message: entry.firingSequence });
         }
+        if (invalidSequences.length === 0)
+            this._notificationService.showSuccess(
+                'TOASTER.HEADER.VALIDATION_COMPLETED',
+                'TOASTER.BODY.VALID_SEQUENCES',
+            );
+        else
+            this._notificationService.showWarning(
+                'TOASTER.HEADER.VALIDATION_COMPLETED',
+                'TOASTER.BODY.INVALID_SEQUENCES',
+                { duration: 8000, list: invalidSequences },
+            );
     }
 
+    /**
+     * Finds firing sequences based on the current Petri net and user-defined limits.
+     */
     onFindSequences(): void {
-        if (this._diagram) {
-            this._playService.resetFiringEntries();
-            this._playValidationService.findSequences(this._diagram, this.maxTransitionCount, this.maxSequenceCount);
-            this._diagram.resetMarking();
-        }
+        if (!this._diagram) return;
+        this._playService.clearFiringEntries();
+        this.playValidationService.findSequences(this._diagram, this.maxTransitionCount, this.maxSequenceCount);
+        this._diagram.resetMarking();
+        this._notificationService.showSuccess(
+            'TOASTER.HEADER.SEQUENCE_GENERATION',
+            'TOASTER.BODY.SEQUENCE_GENERATION',
+            {
+                duration: 8000,
+                messageParams: { maxTransitionCount: this.maxTransitionCount, maxSequenceCount: this.maxSequenceCount },
+            },
+        );
     }
 
+    /**
+     * Toggles the visibility of the "Find Sequences" form.
+     */
     toggleFindSequencesForm(): void {
         if (!this._diagram) return;
         this.isFindSequencesFormVisible = !this.isFindSequencesFormVisible;
-        this.buttonColor = this.isFindSequencesFormVisible ? 'primary' : 'basic';
     }
 
-    isButtonActive(): boolean {
-        return !this._diagram;
+    /**
+     * Checks if buttons should be disabled (e.g., when no Petri net is loaded or a sequence is playing).
+     * @returns true if buttons should be disabled, false otherwise.
+     */
+    isButtonDisabled(): boolean {
+        return !this._diagram || this.isSequencePlaying;
     }
 
+    /**
+     * Updates the maximum transition count based on user input.
+     * @param event - The input event containing the new value.
+     */
     onMaxTransitionCountChange(event: Event): void {
         const inputElement = event.target as HTMLInputElement;
         this.maxTransitionCount = Number(inputElement.value);
     }
 
+    /**
+     * Updates the maximum sequence count based on user input.
+     * @param event - The input event containing the new value.
+     */
     onMaxSequenceCountChange(event: Event): void {
         const inputElement = event.target as HTMLInputElement;
         this.maxSequenceCount = Number(inputElement.value);
     }
 
+    /**
+     * Adds a new firing entry when the "Add" button is clicked.
+     * @param panel - The expansion panel containing the button.
+     * @param event - The click event.
+     */
     onAddButton(panel: MatExpansionPanel, event: Event): void {
         event.stopPropagation();
         if (!panel.expanded) panel.open();
         this.onNewEntry();
     }
 
+    /**
+     * Validates all sequences when the "Validate" button is clicked.
+     * @param panel - The expansion panel containing the button.
+     * @param event - The click event.
+     */
     onValidateButton(panel: MatExpansionPanel, event: Event): void {
         event.stopPropagation();
         if (!panel.expanded) panel.open();
         this.onValidateSequences().catch(console.error);
     }
 
+    /**
+     * Finds sequences when the "Find" button is clicked.
+     * @param panel - The expansion panel containing the button.
+     * @param event - The click event.
+     */
     onFindButton(panel: MatExpansionPanel, event: Event): void {
         event.stopPropagation();
         if (!panel.expanded) panel.open();

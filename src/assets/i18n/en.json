@@ -108,13 +108,16 @@
         "VALIDATE_SEQUENCES": "Validate Sequences",
         "FIND_SEQUENCES": "Find Sequences...",
         "MAX_TRANSITION_COUNT": "max. transition count",
-        "MAX_SEQUENCE_COUNT": "max. sequence count"
+        "MAX_SEQUENCE_COUNT": "max. sequence count",
+        "NOT_PRESENT": "not present",
+        "NOT_ACTIVATED": "not activated"
     },
     "HEADER_SUBTITLE": "Fachpraktikum Programmiersysteme WiSe25/26 by",
     "HEADER_SUBTITLE_NAMES": "Marie G., Alexander K., Ben L. & Florian M.",
     "TOASTER": {
         "HEADER": {
             "SAVE_IMPOSSIBLE": "Save impossible",
+            "TRANSITION_NOT_PRESENT": "Transition not present",
             "TRANSITION_NOT_ACTIVATED": "Transition not activated",
             "MODE_SWITCHED": "Mode switched",
             "READ_ERROR": "Read error",
@@ -125,6 +128,8 @@
             "PROCESSING_ERROR": "Processing error",
             "START_POSITION": "Start position",
             "VALIDATION": "Validation",
+            "VALIDATION_COMPLETED": "Validation completed",
+            "SEQUENCE_GENERATION": "Sequence generation completed",
             "STATENODE_ARC_EXISTING": "StateNode and arc exist",
             "PETRI_NET_UNLIMITED": "Petri Net unlimited",
             "RG_CHECK_SUCCESS": "Reachability Graph Complete",
@@ -133,6 +138,7 @@
         },
         "BODY": {
             "NO_NET_TO_SAVE": "There is no Petri net to save.",
+            "TRANSITION_NOT_PRESENT": "The transition {{label}} is not present in the petri net.",
             "TRANSITION_NOT_ACTIVATED": "The transition {{label}} is not activated and cannot be fired.",
             "MODE_SWITCHED_EXAM": "You are now in exam mode.",
             "MODE_SWITCHED_LEARN": "You are now in learning mode.",
@@ -149,6 +155,9 @@
             "VALIDATION_VALID_MAXIMAL": "The process net is valid and maximal.",
             "VALIDATION_VALID_WITH_INFOS": "The process net is valid.",
             "VALIDATION_INVALID": "The process net is invalid.",
+            "VALID_SEQUENCES": "All firing sequences are valid.",
+            "INVALID_SEQUENCES": "The following firing sequences are invalid. Hover over the info icon next to each invalid sequence in the table to see details.",
+            "SEQUENCE_GENERATION": "Generated firing sequences of the Petri net, limited to {{maxTransitionCount}} transitions per sequence and a total of {{maxSequenceCount}} sequences. This represents a bounded sublanguage of the Petri net.",
             "SWITCHED_STATE_SUCCESSFULLY": "Petri Net marking was successfully switched to corresponding state.",
             "STATENODE_ARC_EXISTING": "StateNode and arc already exist, state of RG was updated.",
             "PETRI_NET_UNLIMITED": "Petri Net is unlimited.",

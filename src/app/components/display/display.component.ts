@@ -101,8 +101,7 @@ export class DisplayComponent implements OnInit, OnDestroy {
             return;
         const currentTab = this._tabStateService.currentTab();
         if (currentTab === Tab.PLAY) {
-            // In PLAY tab, the actual firing is executed within processTransitionClick
-            this._playService.processTransitionClick(diagram, node, true, true, true);
+            this._playService.processTransitionClicked(diagram, node, true, true, false);
             return;
         }
         if (currentTab === Tab.PROCESS_NET) {

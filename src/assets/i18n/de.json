@@ -109,13 +109,16 @@
         "VALIDATE_SEQUENCES": "Sequenzen validieren",
         "FIND_SEQUENCES": "Sequenzen finden...",
         "MAX_TRANSITION_COUNT": "max. Anzahl Transitionen",
-        "MAX_SEQUENCE_COUNT": "max. Anzahl Sequenzen"
+        "MAX_SEQUENCE_COUNT": "max. Anzahl Sequenzen",
+        "NOT_PRESENT": "nicht vorhanden",
+        "NOT_ACTIVATED": "nicht aktiviert"
     },
     "HEADER_SUBTITLE": "Fachpraktikum Programmiersysteme WiSe25/26 von",
     "HEADER_SUBTITLE_NAMES": "Marie G., Alexander K., Ben L. & Florian M.",
     "TOASTER": {
         "HEADER": {
             "SAVE_IMPOSSIBLE": "Speichern nicht möglich",
+            "TRANSITION_NOT_PRESENT": "Transition nicht vorhanden",
             "TRANSITION_NOT_ACTIVATED": "Transition nicht aktiviert",
             "MODE_SWITCHED": "Modus gewechselt",
             "READ_ERROR": "Lesefehler",
@@ -126,6 +129,8 @@
             "PROCESSING_ERROR": "Verarbeitungsfehler",
             "START_POSITION": "Startposition",
             "VALIDATION": "Validierung",
+            "VALIDATION_COMPLETED": "Validierung abgeschlossen",
+            "SEQUENCE_GENERATION": "Sequenzgenerierung abgeschlossen",
             "STATENODE_EXISTING": "Zustandsknoten vorhanden",
             "STATENODE_ARC_EXISTING": "Zustandsknoten und Verbindung vorhanden",
             "PETRI_NET_UNLIMITED": "Petrinetz unbeschränkt",
@@ -135,6 +140,7 @@
         },
         "BODY": {
             "NO_NET_TO_SAVE": "Es ist kein Petri-Netz zum Speichern vorhanden.",
+            "TRANSITION_NOT_PRESENT": "Die Transition {{label}} ist nicht im Petri-Netz vorhanden.",
             "TRANSITION_NOT_ACTIVATED": "Die Transition {{label}} ist nicht aktiviert und kann nicht geschaltet werden.",
             "MODE_SWITCHED_EXAM": "Du befindest dich jetzt im Prüfungsmodus.",
             "MODE_SWITCHED_LEARN": "Du befindest dich jetzt im Lernmodus.",
@@ -151,6 +157,9 @@
             "VALIDATION_VALID_MAXIMAL": "Das Prozessnetz ist gültig und maximal.",
             "VALIDATION_VALID_WITH_INFOS": "Das Prozessnetz ist gültig.",
             "VALIDATION_INVALID": "Das Prozessnetz ist ungültig.",
+            "VALID_SEQUENCES": "Alle Schaltfolgen sind korrekt.",
+            "INVALID_SEQUENCES": "Folgende Schaltfolgen sind fehlerhaft. Für weitere Informationen die Maus über das Info-Symbol neben der entsprechenden Sequenz in der Tabelle bewegen.",
+            "SEQUENCE_GENERATION": "Schaltsequenzen des Petrinetzes wurden generiert mit maximal {{maxTransitionCount}} Transitionen pro Ablauf und auf {{maxSequenceCount}} Sequenzen begrenzt. Dies entspricht einer Teilmenge der Sprache des Petrinetzes.",
             "SWITCHED_STATE_SUCCESSFULLY": "Die Markierung des Petrinetzes wurde erfolgreich angepasst.",
             "STATENODE_EXISTING": "Der Zustandsknoten existiert bereits, neue Verbindung wurde erstellt.",
             "STATENODE_ARC_EXISTING": "Der Zustandsknoten und die Verbindung existieren bereits, EG-Status wurde angepasst.",
