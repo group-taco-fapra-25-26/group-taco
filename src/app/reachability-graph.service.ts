@@ -498,10 +498,10 @@ export class ReachabilityGraphService {
         //set this method return value true, then display correct StateNode in calling mehtod
         //TODO Add condition in dialogue
 
-        let autoFill = true;
-        if (autoFill) {
-            isUserMarkingCorrect = true;
-        }
+        // let autoFill = true;
+        // if (autoFill) {
+        //     isUserMarkingCorrect = true;
+        // }
         return isUserMarkingCorrect;
     }
 
