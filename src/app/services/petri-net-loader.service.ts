@@ -99,7 +99,17 @@ export class PetriNetLoaderService {
                 if (this._modeService.isExamMode(Tab.DRAW) && inDrawTab) {
                     const tuple = this._serializationService.serializeTuple(parsedNet) ?? content;
                     this._sourcePetriNetService.setSourceText(tuple);
-                    this._toasterService.showSuccess('TOASTER.HEADER.SUCCESS', 'TOASTER.BODY.NET_LOADED_SUCCESSFULLY');
+                    if (this._modeService.isExamMode(Tab.DRAW) && inDrawTab) {
+                        this._toasterService.showSuccess(
+                            'TOASTER.HEADER.SUCCESS',
+                            'TOASTER.BODY.NET_LOADED_SUCCESSFULLY_HIDDEN',
+                        );
+                    } else {
+                        this._toasterService.showSuccess(
+                            'TOASTER.HEADER.SUCCESS',
+                            'TOASTER.BODY.NET_LOADED_SUCCESSFULLY',
+                        );
+                    }
                     return;
                 }
                 this._sourcePetriNetService.loadNewNet(parsedNet, content);
@@ -116,7 +126,14 @@ export class PetriNetLoaderService {
                 ) {
                     this._processNetSateService.createStartPositions(parsedNet, this._panningService.INITIAL_VIEWBOX);
                 }
-                this._toasterService.showSuccess('TOASTER.HEADER.SUCCESS', 'TOASTER.BODY.NET_LOADED_SUCCESSFULLY');
+                if (this._modeService.isExamMode(Tab.DRAW) && inDrawTab) {
+                    this._toasterService.showSuccess(
+                        'TOASTER.HEADER.SUCCESS',
+                        'TOASTER.BODY.NET_LOADED_SUCCESSFULLY_HIDDEN',
+                    );
+                } else {
+                    this._toasterService.showSuccess('TOASTER.HEADER.SUCCESS', 'TOASTER.BODY.NET_LOADED_SUCCESSFULLY');
+                }
                 // Build node map and apply parallel offsets to arcs
                 const nodeMap = new Map<string, DiagramNode>();
                 parsedNet.allNodes.forEach((node: DiagramNode) => nodeMap.set(node.id, node));

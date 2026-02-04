@@ -84,6 +84,9 @@
         "EDIT_LABEL": "Label",
         "TOAST_DUPLICATE_LABEL_HEADER": "Duplicate label",
         "TOAST_DUPLICATE_LABEL_BODY": "The label '{{label}}' is already used. Please choose a unique label.",
+        "ACTION": {
+            "CLEAR_DRAWING": "Clear Drawing"
+        },
         "INSTRUCTION": {
             "ACTION_DRAG_DROP": "Drag & Drop",
             "DRAG_DROP": "Drag elements from the palette to the canvas to create your Petri net.",
@@ -146,6 +149,7 @@
             "DOWNLOAD_FAILED": "File at {{url}} could not be loaded.{{details}}",
             "EMPTY_RESPONSE": "No content was returned from the server at {{url}}.",
             "NET_LOADED_SUCCESSFULLY": "Petri net was successfully loaded.",
+            "NET_LOADED_SUCCESSFULLY_HIDDEN": "Petri net was successfully loaded, but some elements were hidden due to exam mode restrictions.",
             "FILE_NOT_INTERPRETABLE": "The file could not be interpreted.",
             "CRITICAL_PARSING_ERROR": "A critical error occurred while parsing the file.",
             "LOAD_NET_FIRST": "Please load a Petri net first.",
