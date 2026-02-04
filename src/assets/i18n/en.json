@@ -30,6 +30,8 @@
     "RGMARKING_DIALOG": {
         "TITLE": "Input Marking",
         "MESSAGE_DEFAULT": "Please input the correct marking of the Petri Net after firing.",
+        "AUTOFILL": "Give Solution",
+        "USERVALUE": "Input Value",
         "KEEP": "Keep",
         "DISCARD": "Discard"
     },

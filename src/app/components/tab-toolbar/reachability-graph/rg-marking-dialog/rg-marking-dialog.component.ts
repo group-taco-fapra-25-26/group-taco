@@ -42,7 +42,6 @@ export interface ConfirmUserMarkingDialogData {
         MatIcon,
         MatSliderModule,
         MatExpansionModule,
-        MatTooltip,
         KeyValuePipe,
     ],
     templateUrl: './rg-marking-dialog.component.html',

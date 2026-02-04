@@ -30,6 +30,8 @@
     "RGMARKING_DIALOG": {
         "TITLE": "Markierung eingeben",
         "MESSAGE_DEFAULT": "Bitte geben Sie die korrekte Markierung des Petrinetzes nach dem Schalten ein.",
+        "AUTOFILL": "Loesungsvorschlag",
+        "USERVALUE": "Bestaetigen",
         "KEEP": "Behalten",
         "DISCARD": "Verwerfen"
     },
