@@ -13,6 +13,8 @@ import { RgMarkingDialogComponent } from './components/tab-toolbar/reachability-
 import { MatDialog } from '@angular/material/dialog';
 import { ToastList } from './classes/toast';
 import { SpringEmbedderService } from './services/spring-embedder.service';
+import { MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { Component } from '@angular/core';
 
 @Injectable({
     providedIn: 'root',
@@ -114,7 +116,7 @@ export class ReachabilityGraphService {
             console.log('initialReachabilityLabel' + initialReachabilityLabel);
         } else if (this._modeService.isExamMode(Tab.REACHABILITY_GRAPH)) {
             //nur im Hintergrund vergleichen, User gibt NodeLabel, also Marking, selbst ein und bekommt Feedback
-            let userMarkingCorrect = this.getCorrectUserMarking(initialStateNode);
+            const userMarkingCorrect = this.getCorrectUserMarking(initialStateNode);
 
             //UserMarking will always be ccorrect at this point
             //TO-DO check if additional checks are necessary
@@ -220,7 +222,7 @@ export class ReachabilityGraphService {
                 });
             } else if (this._modeService.isExamMode(Tab.REACHABILITY_GRAPH)) {
                 //nur im Hintergrund vergleichen, User gibt NodeLabel, also Marking, selbst ein und bekommt Feedback
-                let userMarkingCorrect = this.getCorrectUserMarking(currentStateNode);
+                const userMarkingCorrect = this.getCorrectUserMarking(currentStateNode);
 
                 //UserMarking will always be ccorrect at this point
                 //TO-DO check if additional checks are necessary
@@ -474,22 +476,26 @@ export class ReachabilityGraphService {
     getCorrectUserMarking(node: StateNode): boolean {
         let isUserMarkingCorrect = false;
         //TODO CHANGE INITIALIZATION AFTER DIALOG IS FINISHED!!!
-        let correctMarking: Record<string, number> = node.rGMarking;
-        let userInputtedMarking: Record<string, number> = correctMarking;
+        const correctMarking: Record<string, number> = node.rGMarking;
+        const userInputtedMarking: Record<string, number> = correctMarking;
         //reset numeric values so user can input them
         for (let element of Object.values(userInputtedMarking)) {
             element = 0;
         }
 
-        this._dialog.open(RgMarkingDialogComponent, {
+        const markingDialogRef = this._dialog.open(RgMarkingDialogComponent, {
             data: {
                 title: 'RGMARKING_DIALOG.TITLE',
-                marking: userInputtedMarking,
+                userInputMarking: userInputtedMarking,
+                expectedCorrectMarking: correctMarking,
                 message: 'RGMARKING_DIALOG.MESSAGE_DEFAULT',
             },
         });
 
-        isUserMarkingCorrect = this.compareUserInputWithTargetState(userInputtedMarking, node);
+        const result = markingDialogRef.afterClosed().subscribe();
+        const markingAfterDialog: Record<string, number> = result as unknown as Record<string, number>;
+
+        isUserMarkingCorrect = this.compareUserInputWithTargetState(markingAfterDialog, node);
 
         //nach jeder Eingabe, die nicht korrekt ist, user erneut auffordern
         //ebenfalls auto-complete button

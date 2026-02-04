@@ -21,7 +21,8 @@ import { StateNode } from 'src/app/classes/reachability-graph.model';
 
 export interface ConfirmUserMarkingDialogData {
     title: string;
-    marking: Record<string, number>;
+    userInputMarking: Record<string, number>;
+    expectedCorrectMarking: Record<string, number>;
     // tab: Tab;
     message: string;
 }
@@ -51,9 +52,11 @@ export class RgMarkingDialogComponent {
     private _displayService = inject(DisplayService);
     private _reachabilityGraphService = inject(ReachabilityGraphService);
     data = inject<ConfirmUserMarkingDialogData>(MAT_DIALOG_DATA);
-    private readonly _dialogRef = inject(MatDialogRef<RgMarkingDialogComponent>);
+    private _dialogRef = inject(MatDialogRef<RgMarkingDialogComponent>);
+
     private readonly drawService = inject(DrawService);
-    private currentDialogMarking: Record<string, number> = this.data.marking;
+    protected currentDialogMarking: Record<string, number> = this.data.userInputMarking;
+    private correctDialogMarking: Record<string, number> = this.data.expectedCorrectMarking;
 
     incrementMarking(dialogUserMarking: Record<string, number>, placeId: string): Record<string, number> {
         const newMarking = { ...dialogUserMarking };
@@ -74,10 +77,10 @@ export class RgMarkingDialogComponent {
     }
 
     keep() {
-        this._dialogRef.close('keep');
+        this._dialogRef.close(this.currentDialogMarking);
     }
 
     discard() {
-        this._dialogRef.close('discard');
+        this._dialogRef.close(this.correctDialogMarking);
     }
 }
