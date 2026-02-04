@@ -85,6 +85,9 @@
         "EDIT_LABEL": "Beschriftung",
         "TOAST_DUPLICATE_LABEL_HEADER": "Doppelte Beschriftung",
         "TOAST_DUPLICATE_LABEL_BODY": "Die Beschriftung '{{label}}' wird bereits verwendet. Bitte wähle eine eindeutige Beschriftung.",
+        "ACTION": {
+            "CLEAR_DRAWING": "Zeichnung löschen"
+        },
         "INSTRUCTION": {
             "ACTION_DRAG_DROP": "Ziehen & Ablegen",
             "DRAG_DROP": "Ziehen Sie Elemente aus der linken Palette ins Zeichenfeld, um Ihr Petri-Netz zu erstellen.",
@@ -148,6 +151,7 @@
             "DOWNLOAD_FAILED": "Datei unter {{url}} konnte nicht geladen werden.{{details}}",
             "EMPTY_RESPONSE": "Vom Server unter {{url}} wurden keine Inhalte geliefert.",
             "NET_LOADED_SUCCESSFULLY": "Petri-Netz wurde erfolgreich geladen.",
+            "NET_LOADED_SUCCESSFULLY_HIDDEN": "Das Petri-Netz wurde erfolgreich geladen, aber einige Elemente wurden aufgrund der Einschränkungen des Prüfungsmodus ausgeblendet.",
             "FILE_NOT_INTERPRETABLE": "Die Datei konnte nicht interpretiert werden.",
             "CRITICAL_PARSING_ERROR": "Beim Parsen der Datei ist ein kritischer Fehler aufgetreten.",
             "LOAD_NET_FIRST": "Bitte zuerst ein Petri-Netz laden.",

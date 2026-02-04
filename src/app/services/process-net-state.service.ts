@@ -4,6 +4,7 @@ import { DiagramPlace, DiagramPlaceLabelPlacement } from '../classes/diagram/dia
 import { DiagramTransition } from '../classes/diagram/diagram-transition';
 import { Diagram } from '../classes/diagram/diagram';
 import { viewBoxValues } from '../components/display/display.constants';
+import { Subject } from 'rxjs';
 
 export interface DrawnElement {
     node: DiagramNode;
@@ -24,10 +25,15 @@ export class ProcessNetStateService {
 
     private elementIdCounter = 0;
     private connectionIdCounter = 0;
-    private bLabelCounter = 0;
-    private eLabelCounter = 0;
 
     readonly viewBox = signal<{ minX: number; minY: number; width: number; height: number }>(viewBoxValues);
+
+    private readonly _fitViewRequest$ = new Subject<void>();
+    public readonly fitViewRequest$ = this._fitViewRequest$.asObservable();
+
+    requestFitView() {
+        this._fitViewRequest$.next();
+    }
 
     updateViewBox(wb: { minX: number; minY: number; width: number; height: number }) {
         this.viewBox.set(wb);
@@ -63,8 +69,6 @@ export class ProcessNetStateService {
         this.connections.set([]);
         this.elementIdCounter = 0;
         this.connectionIdCounter = 0;
-        this.bLabelCounter = 0;
-        this.eLabelCounter = 0;
     }
 
     generateElementId(prefix: string): string {
@@ -75,12 +79,38 @@ export class ProcessNetStateService {
         return `${prefix}-${++this.connectionIdCounter}`;
     }
 
-    getNextInnerLabel(): string {
-        return `b${++this.bLabelCounter}`;
+    getNextInnerLabel(exclude: string[] = []): string {
+        const labels = this.drawnElements()
+            .map((e) => (e.node instanceof DiagramPlace ? e.node.innerLabel : undefined))
+            .concat(exclude);
+        return this.findNextAvailableLabel(labels, 'b');
     }
 
-    getNextTransitionInnerLabel(): string {
-        return `e${++this.eLabelCounter}`;
+    getNextTransitionInnerLabel(exclude: string[] = []): string {
+        const labels = this.drawnElements()
+            .map((e) => (e.node instanceof DiagramTransition ? e.node.innerLabel : undefined))
+            .concat(exclude);
+        return this.findNextAvailableLabel(labels, 'e');
+    }
+
+    private findNextAvailableLabel(labels: (string | undefined)[], prefix: string): string {
+        const existingLabels = new Set<number>();
+        const regex = new RegExp(`^${prefix}(\\d+)$`);
+
+        labels.forEach((label) => {
+            if (label) {
+                const match = label.match(regex);
+                if (match) {
+                    existingLabels.add(parseInt(match[1], 10));
+                }
+            }
+        });
+
+        let counter = 1;
+        while (existingLabels.has(counter)) {
+            counter++;
+        }
+        return `${prefix}${counter}`;
     }
 
     buildPlace(
@@ -121,14 +151,16 @@ export class ProcessNetStateService {
         const padding = 40;
         const availableHeight = baseViewBox.height - padding * 2;
         const PLACE_RADIUS = 25;
-        const minSpacing = PLACE_RADIUS * 2 + 20;
+        const minSpacing = PLACE_RADIUS * 2 + 30;
         const spacing = tokenInstances.length > 0 ? Math.max(availableHeight / tokenInstances.length, minSpacing) : 0;
 
         const newElements: DrawnElement[] = [];
         const startX = baseViewBox.minX + baseViewBox.width * 0.25;
+        const reservedLabels: string[] = [];
 
         tokenInstances.forEach((place, index) => {
-            const innerLabel = this.getNextInnerLabel();
+            const innerLabel = this.getNextInnerLabel(reservedLabels);
+            reservedLabels.push(innerLabel);
             const uniqueId = `start-${innerLabel}-${place.id}-${index}`;
             const newPlace = this.buildPlace(uniqueId, place.displayLabel, 0, {
                 innerLabel,

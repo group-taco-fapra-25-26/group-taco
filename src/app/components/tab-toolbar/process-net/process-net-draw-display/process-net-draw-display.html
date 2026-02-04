@@ -70,7 +70,8 @@
                 [diagramNode]="element.node"
                 [selected]="selectedElementId() === element.id"
                 [showInnerLabel]="true"
-                [transitionLabelPlacement]="'below'" />
+                [transitionLabelPlacement]="'below'"
+                [disableActiveColoring]="true" />
             <rect
                 class="drag-overlay"
                 [attr.x]="element.node.x - 60"

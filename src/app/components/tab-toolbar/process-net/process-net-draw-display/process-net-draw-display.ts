@@ -12,7 +12,7 @@ import {
     ViewChild,
 } from '@angular/core';
 import { SvgNodeComponent } from '../../../display/svg-node/svg-node.component';
-import { DiagramNode, SHAPE } from '../../../../classes/diagram/diagram-node';
+import { DiagramNode } from '../../../../classes/diagram/diagram-node';
 import { Diagram } from '../../../../classes/diagram/diagram';
 import { DiagramPlace } from '../../../../classes/diagram/diagram-place';
 import { DiagramTransition } from '../../../../classes/diagram/diagram-transition';
@@ -25,7 +25,7 @@ import {
 } from '../../../../services/process-net-validation.service';
 import { ToasterNotificationService } from '../../../../services/toaster-notification.service';
 import { PanningService } from '../../../../services/panning.service';
-import { TOAST_POSITIONS, ToastList } from '../../../../classes/toast';
+import { ToastList } from '../../../../classes/toast';
 import { TranslateModule } from '@ngx-translate/core';
 import { GRAPH_FILENAMES, GRAPH_IDS, PLACE_RADIUS, TRANSITION_SIZE } from '../../../display/display.constants';
 import { ModeService } from '../../../../services/mode.service';
@@ -141,12 +141,19 @@ export class ProcessNetDrawDisplayComponent implements OnInit, OnDestroy, AfterV
     readonly viewBox = this.panningService.viewBoxAsString;
     readonly viewBoxObj = this.panningService.viewBox;
 
-    private initEffect = effect(() => {
+    private viewBoxSyncEffect = effect(() => {
         if (this.tabStateService.currentTab() !== Tab.PROCESS_NET) {
             return;
         }
-
         this.stateService.updateViewBox(this.viewBoxObj());
+    });
+
+    private fitViewSubscription?: Subscription;
+
+    private startPositionEffect = effect(() => {
+        if (this.tabStateService.currentTab() !== Tab.PROCESS_NET) {
+            return;
+        }
 
         if (this.drawnElements().length === 0 && !this.modeService.isExamMode(Tab.PROCESS_NET)) {
             this.onCreateStartPosition();
@@ -184,6 +191,13 @@ export class ProcessNetDrawDisplayComponent implements OnInit, OnDestroy, AfterV
                 GRAPH_FILENAMES[GRAPH_IDS.PROCESS_NET],
             );
         });
+
+        this.fitViewSubscription = this.stateService.fitViewRequest$.subscribe(() => {
+            this.panningService.fitViewToGraph({
+                getNodes: () => this.drawnElements().map((e) => e.node),
+                getEdges: () => [],
+            });
+        });
     }
 
     ngAfterViewInit() {
@@ -198,6 +212,7 @@ export class ProcessNetDrawDisplayComponent implements OnInit, OnDestroy, AfterV
             canvas.removeEventListener('mousedown', this.handleCanvasMouseDown, true);
         }
         this.downloadSub?.unsubscribe();
+        this.fitViewSubscription?.unsubscribe();
     }
 
     private handleCanvasMouseDown = (event: MouseEvent) => {
@@ -498,12 +513,14 @@ export class ProcessNetDrawDisplayComponent implements OnInit, OnDestroy, AfterV
                         newNode = this.stateService.buildPlace(el.node.id, originalLabel, tokens, {
                             innerLabel: el.node.innerLabel,
                             hideTokens: el.node.hideTokens,
-                            labelPlacement: el.node.labelPlacement,
                             isStartPlace: el.node.isStartPlace,
                         });
                     } else if (el.node instanceof DiagramTransition) {
-                        const label = (el.node as DiagramTransition).displayLabel ?? el.node.id;
-                        newNode = this.stateService.buildTransition(el.node.id, label, el.node.innerLabel);
+                        newNode = this.stateService.buildTransition(
+                            el.node.id,
+                            el.node.displayLabel,
+                            el.node.innerLabel,
+                        );
                     } else {
                         // Fallback: keep same reference (should not happen)
                         newNode = el.node;
@@ -633,7 +650,6 @@ export class ProcessNetDrawDisplayComponent implements OnInit, OnDestroy, AfterV
         if (!base) {
             this.toaster.showError('TOASTER.HEADER.VALIDATION', 'TOASTER.BODY.VALIDATION_ERROR', {
                 duration: 0,
-                toastPosition: TOAST_POSITIONS.TOP_CENTER,
             });
 
             return;
@@ -679,13 +695,11 @@ export class ProcessNetDrawDisplayComponent implements OnInit, OnDestroy, AfterV
         if (result.valid && result.infos.length == 0) {
             this.toaster.showSuccess('TOASTER.HEADER.VALIDATION', 'TOASTER.BODY.VALIDATION_VALID_MAXIMAL', {
                 duration: 0,
-                toastPosition: TOAST_POSITIONS.TOP_CENTER,
             });
         } else if (result.valid && result.infos.length > 0) {
             const infos = result.infos.map((info): ToastList => ({ message: info.key, messageParams: info.params }));
             this.toaster.showInfo('TOASTER.HEADER.VALIDATION', 'TOASTER.BODY.VALIDATION_VALID_WITH_INFOS', {
                 duration: 0,
-                toastPosition: TOAST_POSITIONS.TOP_CENTER,
                 list: infos,
             });
         } else {
@@ -694,7 +708,6 @@ export class ProcessNetDrawDisplayComponent implements OnInit, OnDestroy, AfterV
             );
             this.toaster.showError('TOASTER.HEADER.VALIDATION', 'TOASTER.BODY.VALIDATION_INVALID', {
                 duration: 0,
-                toastPosition: TOAST_POSITIONS.TOP_CENTER,
                 list: errors,
             });
         }
@@ -721,14 +734,12 @@ export class ProcessNetDrawDisplayComponent implements OnInit, OnDestroy, AfterV
             if (markedPlaces.length === 0) {
                 this.toaster.showInfo('TOASTER.HEADER.START_POSITION', 'TOASTER.BODY.NO_MARKED_PLACES_FOUND', {
                     duration: 0,
-                    toastPosition: TOAST_POSITIONS.TOP_CENTER,
                 });
             }
             return;
         }
 
         this.toaster.showSuccess('TOASTER.HEADER.START_POSITION', 'TOASTER.BODY.START_PLACES_CREATED', {
-            toastPosition: TOAST_POSITIONS.TOP_CENTER,
             messageParams: { count },
         });
     }
@@ -739,14 +750,10 @@ export class ProcessNetDrawDisplayComponent implements OnInit, OnDestroy, AfterV
 
     private getRequiredStartPlaceCount(placeId: string): number {
         const base = this.displayService.diagram;
-        if (!base) {
+        if (!base || !(base instanceof Diagram)) {
             return 0;
         }
-        const node = base.getNodes().find((n) => n.id === placeId && n.shape === SHAPE.CIRCLE);
-        if (!node) {
-            return 0;
-        }
-        const tokens = node.tokenCount();
+        const tokens = base.startMarking[placeId] ?? 0;
         return Math.max(0, Math.floor(tokens));
     }
 
