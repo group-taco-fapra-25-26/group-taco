@@ -190,6 +190,7 @@ export class FiringTableComponent implements OnInit, OnDestroy {
                 messageParams: { maxTransitionCount: this.maxTransitionCount, maxSequenceCount: this.maxSequenceCount },
             },
         );
+        this.isFindSequencesFormVisible = false;
     }
 
     /**
