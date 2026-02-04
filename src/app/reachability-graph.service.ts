@@ -15,6 +15,7 @@ import { ToastList } from './classes/toast';
 import { SpringEmbedderService } from './services/spring-embedder.service';
 import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { Component } from '@angular/core';
+import { setValue } from '@ngx-translate/core';
 
 @Injectable({
     providedIn: 'root',
@@ -479,9 +480,10 @@ export class ReachabilityGraphService {
         const correctMarking: Record<string, number> = node.rGMarking;
         const userInputtedMarking: Record<string, number> = correctMarking;
         //reset numeric values so user can input them
-        for (let element of Object.values(userInputtedMarking)) {
-            element = 0;
+        for (const element of Object.entries(userInputtedMarking)) {
+            element[1]=0;
         }
+    
 
         const markingDialogRef = this._dialog.open(RgMarkingDialogComponent, {
             data: {
@@ -500,14 +502,6 @@ export class ReachabilityGraphService {
         //nach jeder Eingabe, die nicht korrekt ist, user erneut auffordern
         //ebenfalls auto-complete button
 
-        //if user aborts, auto-fill the correct marking
-        //set this method return value true, then display correct StateNode in calling mehtod
-        //TODO Add condition in dialogue
-
-        // let autoFill = true;
-        // if (autoFill) {
-        //     isUserMarkingCorrect = true;
-        // }
         return isUserMarkingCorrect;
     }
 
