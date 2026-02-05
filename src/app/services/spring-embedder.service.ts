@@ -64,18 +64,10 @@ export class SpringEmbedderService {
             y: viewBox.minY + viewBox.height / 2,
         };
 
-        const updateEvery = 5;
         for (let i = 0; i < this.MAX_ITERATIONS; i++) {
             if (this._calculateNewPosition(nodes, neighborMap, center, isSourceNet) < this.MIN_MOVEMENT) {
                 this._sourceNetService.optimalLayoutCalculated();
                 break;
-            }
-            if (isSourceNet && i % updateEvery === 0) {
-                this._separateParallelArcs(arcs, nodes);
-                const diagram = this._sourceNetService.getCurrentSourceNet();
-                if (diagram) {
-                    this._sourceNetService.updateEditedNet(diagram);
-                }
             }
             await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
         }
