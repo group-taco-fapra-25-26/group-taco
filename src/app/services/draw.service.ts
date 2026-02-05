@@ -297,6 +297,22 @@ export class DrawService implements OnDestroy {
      */
     init(): void {
         if (this.sourceNetSub || this.sourceTextSub) return;
+
+        // Subscribe to sourceText$ to detect new net uploads (loadNewNet calls)
+        // This updates the tuple even in exam mode when a new net is uploaded
+        this.sourceTextSub = this._sourceNetService.sourceText$.subscribe((text: string) => {
+            if (text && this.isExamMode) {
+                // A new net was loaded via loadNewNet, update the tuple string
+                const diagram = this._sourceNetService.getCurrentSourceNet();
+                if (diagram) {
+                    const tuple = this._serializationService.serializeTuple(diagram);
+                    if (tuple) {
+                        this.tupleString.set(tuple);
+                    }
+                }
+            }
+        });
+
         this.sourceNetSub = this._sourceNetService.sourceNet$.subscribe((diagram: Diagram | null) => {
             if (this.suppressNextSourceLoad) {
                 this.suppressNextSourceLoad = false;
@@ -304,9 +320,13 @@ export class DrawService implements OnDestroy {
             }
             if (diagram) {
                 this.loadDiagramIntoCanvas(diagram);
-                const tuple = this._serializationService.serializeTuple(diagram);
-                if (tuple) {
-                    this.tupleString.set(tuple);
+                // In exam mode, preserve the original tuple string (don't update from edited diagrams)
+                // The sourceText$ subscription above handles new uploads
+                if (!this.isExamMode) {
+                    const tuple = this._serializationService.serializeTuple(diagram);
+                    if (tuple) {
+                        this.tupleString.set(tuple);
+                    }
                 }
                 this.showTuplePreviewIfAvailable();
             } else {
@@ -1360,17 +1380,13 @@ export class DrawService implements OnDestroy {
      * - The source net service (for cross-tab synchronization)
      * - The display service (for visualization)
      * - The tab state service (for marking history)
-     * - The tuple string (for text representation)
+     * - The tuple string (for text representation, except in exam mode)
      *
-     * In exam mode, synchronization is skipped to prevent the student's work
-     * from being saved or shared with other tabs.
+     * In exam mode, the tuple string is preserved to show the original specification.
      *
      * @private
      */
     private syncSourceNetFromCanvas() {
-        if (this.isExamMode) {
-            return;
-        }
         const diagram = this.buildDiagramFromCanvas();
 
         this.suppressNextSourceLoad = true;
@@ -1379,9 +1395,12 @@ export class DrawService implements OnDestroy {
         this._displayService.display(diagram);
         this._processNetStateService.clear();
 
-        const tuple = this._serializationService.serializeTuple(diagram);
-        if (tuple) {
-            this.tupleString.set(tuple);
+        // In exam mode, preserve the original tuple string (the specification to match)
+        if (!this.isExamMode) {
+            const tuple = this._serializationService.serializeTuple(diagram);
+            if (tuple) {
+                this.tupleString.set(tuple);
+            }
         }
     }
 
