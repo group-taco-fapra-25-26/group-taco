@@ -432,16 +432,17 @@ export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
 
     /**
      * Computed signal for the toolbar toggle configuration.
-     * Provides a sample toggle switch for demonstration.
+     * Controls whether the drawing is displayed on the canvas.
+     * When toggled off, only the tuple is shown; when on, both tuple and drawing are shown.
      */
     protected readonly toolbarToggle = computed<DrawToolbarToggle>(() => {
         return {
-            label: 'DRAW.TOGGLE.SAMPLE',
-            tooltip: 'DRAW.TOGGLE.SAMPLE_TOOLTIP',
+            label: 'DRAW.TOGGLE.SHOW_DRAWING',
+            tooltip: 'DRAW.TOGGLE.SHOW_DRAWING_TOOLTIP',
             checked: this.toggleState(),
             onChange: (checked: boolean) => {
                 this.toggleState.set(checked);
-                console.log('Toggle state changed:', checked);
+                this.draw.setShowDrawing(checked);
             },
         };
     });

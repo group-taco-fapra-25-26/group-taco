@@ -176,8 +176,17 @@ export class DrawService implements OnDestroy {
     tupleString = signal('');
     readonly tuplePreview = computed(() => this.parseTuplePreview(this.tupleString()));
 
+    /** Signal to control whether the drawing should be loaded and displayed */
+    showDrawing = signal(true);
+
     setTupleString(value: string) {
         this.tupleString.set(value);
+    }
+
+    setShowDrawing(value: boolean) {
+        this.showDrawing.set(value);
+        // The toggle only controls whether incoming nets are drawn
+        // It does not retroactively load or clear existing drawings
     }
 
     showTupleInline() {
@@ -319,7 +328,24 @@ export class DrawService implements OnDestroy {
                 return;
             }
             if (diagram) {
-                this.loadDiagramIntoCanvas(diagram);
+                // Check if the incoming diagram matches what's currently on the canvas
+                // This prevents clearing when the diagram is just the user's own work coming back (e.g., tab switches)
+                const currentDiagram = this.buildDiagramFromCanvas();
+                const isSameDiagram = this.diagramsMatch(currentDiagram, diagram);
+
+                // Only clear and reload if the diagram is different or if there's nothing on canvas yet
+                if (!isSameDiagram || this.drawnElements().length === 0) {
+                    // Always clear old drawing when a new net arrives
+                    this.drawnElements.set([]);
+                    this.connections.set([]);
+                    this.selectedElementId.set(null);
+
+                    // Only load the new drawing if showDrawing is true
+                    if (this.showDrawing()) {
+                        this.loadDiagramIntoCanvas(diagram);
+                    }
+                }
+
                 // In exam mode, preserve the original tuple string (don't update from edited diagrams)
                 // The sourceText$ subscription above handles new uploads
                 if (!this.isExamMode) {
@@ -1370,6 +1396,44 @@ export class DrawService implements OnDestroy {
      */
     private getElementById(id: string): DrawnElement | undefined {
         return this.drawnElements().find((e) => e.id === id);
+    }
+
+    /**
+     * Compares two diagrams to check if they represent the same Petri net structure.
+     * Checks places, transitions, arcs, and markings for equality.
+     *
+     * @param {Diagram} diagram1 - First diagram to compare
+     * @param {Diagram} diagram2 - Second diagram to compare
+     * @returns {boolean} True if diagrams match, false otherwise
+     * @private
+     */
+    private diagramsMatch(diagram1: Diagram, diagram2: Diagram): boolean {
+        // Compare number of places and transitions
+        if (diagram1.places.length !== diagram2.places.length) return false;
+        if (diagram1.transitions.length !== diagram2.transitions.length) return false;
+        if (diagram1.arcs.length !== diagram2.arcs.length) return false;
+
+        // Check if all places match (by id and token count)
+        const places1Map = new Map(diagram1.places.map((p) => [p.id, p]));
+        for (const place2 of diagram2.places) {
+            const place1 = places1Map.get(place2.id);
+            if (!place1 || place1.tokenCount() !== place2.tokenCount()) return false;
+        }
+
+        // Check if all transitions match (by id)
+        const transitions1Set = new Set(diagram1.transitions.map((t) => t.id));
+        for (const transition2 of diagram2.transitions) {
+            if (!transitions1Set.has(transition2.id)) return false;
+        }
+
+        // Check if all arcs match (by source, target, and weight)
+        const arcs1Set = new Set(diagram1.arcs.map((a) => `${a.source}->${a.target}:${a.weight}`));
+        for (const arc2 of diagram2.arcs) {
+            const arcKey = `${arc2.source}->${arc2.target}:${arc2.weight}`;
+            if (!arcs1Set.has(arcKey)) return false;
+        }
+
+        return true;
     }
 
     /**
