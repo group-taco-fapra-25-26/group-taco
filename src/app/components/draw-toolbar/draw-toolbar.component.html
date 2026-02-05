@@ -6,9 +6,11 @@
                 <mat-panel-title>{{ headerTitle() | translate }}</mat-panel-title>
             </div>
             @if (toggle(); as toggleConfig) {
-                <div class="pn-toggle-container"
-                     [matTooltip]="toggleConfig.tooltip | translate"
-                     (click)="$event.stopPropagation()">
+                <div
+                    class="pn-toggle-container"
+                    [matTooltip]="toggleConfig.tooltip | translate"
+                    (click)="$event.stopPropagation()"
+                    tabindex="0">
                     <span class="pn-toggle-label">{{ toggleConfig.label | translate }}</span>
                     <label class="pn-toggle-switch">
                         <input
