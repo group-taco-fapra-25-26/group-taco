@@ -146,6 +146,8 @@
             "STATENODE_ARC_EXISTING": "Zustandsknoten und Verbindung vorhanden",
             "PETRI_NET_UNLIMITED": "Petrinetz unbeschränkt",
             "MARKING_INPUT_WRONG": "Eingegebene Markierung fehlerhaft.",
+            "MARKING_INPUT_CORRECT": "Korrekte Markierungseingabe",
+            "MARKING_DIALOG_DISMISSED": "Dialog abgebrochen",
             "RG_CHECK_SUCCESS": "Erreichbarkeitsgraph vollständig",
             "RG_CHECK_INCOMPLETE": "Unvollständiger Graph",
             "RG_INFO": "Wechsel zum selbst erstellten Graphen notwendig"
@@ -178,6 +180,8 @@
             "STATENODE_ARC_EXISTING": "Der Zustandsknoten und die Verbindung existieren bereits, EG-Status wurde angepasst.",
             "PETRI_NET_UNLIMITED": "Das Petrinetz ist unbeschränkt.",
             "MARKING_INPUT_WRONG": "Die eingegebene Markierung entspricht nicht der Zielmarkierung, die das Petrinetz nach dem Schalten erreicht.",
+            "MARKING_INPUT_CORRECT": "Die eingegebene Markierung ist korrekt.",
+            "MARKING_DIALOG_DISMISSED": "Keine Eingabe getätigt, Knoten wurde automatisch erstellt.",
             "RG_CHECK_SUCCESS": "Der erstellte Erreichbarkeitsgraph ist vollständig und korrekt.",
             "RG_CHECK_MISSING_EDGES": "Fehlende Transitionen: {{edges}}",
             "RG_CHECK_MISSING_EDGES_LIST": "Die folgenden Transitionen fehlen:",

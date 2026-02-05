@@ -8,14 +8,10 @@ import { DiagramPlace } from './classes/diagram/diagram-place';
 import { ToasterNotificationService } from './services/toaster-notification.service';
 import { Tab } from './classes/tabs';
 import { PanningService } from './services/panning.service';
-import { MatButtonModule } from '@angular/material/button';
 import { RgMarkingDialogComponent } from './components/tab-toolbar/reachability-graph/rg-marking-dialog/rg-marking-dialog.component';
 import { MatDialog } from '@angular/material/dialog';
 import { ToastList } from './classes/toast';
 import { SpringEmbedderService } from './services/spring-embedder.service';
-import { MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { Component } from '@angular/core';
-import { setValue } from '@ngx-translate/core';
 
 @Injectable({
     providedIn: 'root',
@@ -117,22 +113,12 @@ export class ReachabilityGraphService {
             console.log('initialReachabilityLabel' + initialReachabilityLabel);
         } else if (this._modeService.isExamMode(Tab.REACHABILITY_GRAPH)) {
             //nur im Hintergrund vergleichen, User gibt NodeLabel, also Marking, selbst ein und bekommt Feedback
-            const userMarkingCorrect = this.getCorrectUserMarking(initialStateNode);
-
-            //UserMarking will always be ccorrect at this point
-            //TO-DO check if additional checks are necessary
-            if (userMarkingCorrect) {
+            this.getCorrectUserMarking(initialStateNode, () => {
                 const newGraph = new ReachabilityGraph();
                 newGraph.nodes = [initialStateNode];
                 newGraph.edges = [];
                 this._reachabilityGraph.set(newGraph);
-            } else {
-                //TODO delete else condition?
-                this._notificationService.showInfo(
-                    'TOASTER.HEADER.MARKING_INPUT_WRONG',
-                    'TOASTER.BODY.MARKING_INPUT_WRONG',
-                );
-            }
+            });
         }
     }
 
@@ -213,53 +199,44 @@ export class ReachabilityGraphService {
                 firingPath,
             );
 
-            //Automatically show new graph in Learn Mode
-            if (!this._modeService.isExamMode(Tab.REACHABILITY_GRAPH)) {
+            const proceed = () => {
                 this._reachabilityGraph.update((graph) => {
                     const newGraph = new ReachabilityGraph();
                     newGraph.nodes = [...graph.nodes, currentStateNode];
                     newGraph.edges = [...graph.edges, currentFiringEdge];
                     return newGraph;
                 });
-            } else if (this._modeService.isExamMode(Tab.REACHABILITY_GRAPH)) {
-                //nur im Hintergrund vergleichen, User gibt NodeLabel, also Marking, selbst ein und bekommt Feedback
-                const userMarkingCorrect = this.getCorrectUserMarking(currentStateNode);
 
-                //UserMarking will always be ccorrect at this point
-                //TO-DO check if additional checks are necessary
-                if (userMarkingCorrect) {
-                    this._reachabilityGraph.update((graph) => {
-                        const newGraph = new ReachabilityGraph();
-                        newGraph.nodes = [...graph.nodes, currentStateNode];
-                        newGraph.edges = [...graph.edges, currentFiringEdge];
-                        return newGraph;
-                    });
-                } else {
-                    //TODO delete else condition?
+                //add predecessors and successors to StateNodes
+                for (const graphNodeElement of graph.nodes) {
+                    compareSourceStateNode = graphNodeElement;
+
+                    if (compareSourceStateNode.id === this.currentSourceRgId) {
+                        currentStateNode.predecessors.push(compareSourceStateNode);
+                        compareSourceStateNode.successors.push(currentStateNode);
+                    }
+                }
+                //check for infinity after addition of each new StateNode
+                this.checkForInfinity(currentStateNode);
+                if (this._reachabilityGraph().isUnlimited) {
                     this._notificationService.showInfo(
-                        'TOASTER.HEADER.MARKING_INPUT_WRONG',
-                        'TOASTER.BODY.MARKING_INPUT_WRONG',
+                        'TOASTER.HEADER.PETRI_NET_UNLIMITED',
+                        'TOASTER.BODY.PETRI_NET_UNLIMITED',
                     );
                 }
-            }
 
-            //add predecessors and successors to StateNodes
-            for (const graphNodeElement of graph.nodes) {
-                compareSourceStateNode = graphNodeElement;
+                //change target to new source for arcs
+                this.currentSourceRgId = currentRgId;
+                console.log(currentReachabilityLabel);
+            };
 
-                if (compareSourceStateNode.id === this.currentSourceRgId) {
-                    currentStateNode.predecessors.push(compareSourceStateNode);
-                    compareSourceStateNode.successors.push(currentStateNode);
-                }
+            if (!this._modeService.isExamMode(Tab.REACHABILITY_GRAPH)) {
+                proceed();
+            } else if (this._modeService.isExamMode(Tab.REACHABILITY_GRAPH)) {
+                //nur im Hintergrund vergleichen, User gibt NodeLabel, also Marking, selbst ein und bekommt Feedback
+                this.getCorrectUserMarking(currentStateNode, proceed, previousNode?.rGMarking);
             }
-            //check for infinity after addition of each new StateNode
-            this.checkForInfinity(currentStateNode);
-            if (this._reachabilityGraph().isUnlimited) {
-                this._notificationService.showInfo(
-                    'TOASTER.HEADER.PETRI_NET_UNLIMITED',
-                    'TOASTER.BODY.PETRI_NET_UNLIMITED',
-                );
-            }
+            return;
         }
 
         if (markingExists && !connectionExists) {
@@ -297,6 +274,10 @@ export class ReachabilityGraphService {
             }
 
             this._notificationService.showInfo('TOASTER.HEADER.STATENODE_EXISTING', 'TOASTER.BODY.STATENODE_EXISTING');
+
+            this.currentSourceRgId = currentRgId;
+            console.log(currentReachabilityLabel);
+            return;
         }
 
         //TO-DO: Decide, if behavior should change in Exam Mode, otherwise keep it like this
@@ -307,13 +288,11 @@ export class ReachabilityGraphService {
                 'TOASTER.HEADER.STATENODE_ARC_EXISTING',
                 'TOASTER.BODY.STATENODE_ARC_EXISTING',
             );
+
+            this.currentSourceRgId = currentRgId;
+            console.log(currentReachabilityLabel);
+            return;
         }
-
-        //change target to new source for arcs
-        this.currentSourceRgId = currentRgId;
-
-        console.log(currentReachabilityLabel);
-        //nur 3 Fälle, !markingExists && connectionExists kann nicht auftreten
     }
 
     /**
@@ -466,24 +445,29 @@ export class ReachabilityGraphService {
     }
 
     /**
-     * Opens up a dialog where user can input a marking, handles checking of the UserMarking and
-     * returns a boolean true if the marking is correct
-     * Also offers possibility to Auto-Fill correct marking depending on the chosen App Mode and User choice.
-     * Calls compareUserInputWithTargetState method
-     * CHOOSES AUTO-FILL IN CASE USER ABORTS TO PREVENT THE PROGRAM FROM CRASHING
-     * @param node The node for which the marking is checked; determined by the calling method
-     * @returns true if user gets correct marking or gives up
+     * Opens up a dialog where user can input a marking, handles checking of the user marking.
+     * If the marking is correct or the user dismisses the dialog (auto-fill), the onCorrect callback is executed.
+     * Calls compareUserInputWithTargetState method.
+     *
+     * @param node The node for which the marking is checked; determined by the calling method.
+     * @param onCorrect Callback function to be executed when the marking is correct or the dialog is dismissed.
+     * @param startMarking Optional marking to pre-fill the dialog with. If not provided, defaults to 0s.
      */
-    getCorrectUserMarking(node: StateNode): boolean {
-        let isUserMarkingCorrect = false;
-        //TODO CHANGE INITIALIZATION AFTER DIALOG IS FINISHED!!!
+    getCorrectUserMarking(node: StateNode, onCorrect: () => void, startMarking?: Record<string, number>): void {
         const correctMarking: Record<string, number> = node.rGMarking;
-        const userInputtedMarking: Record<string, number> = correctMarking;
-        //reset numeric values so user can input them
-        for (const element of Object.entries(userInputtedMarking)) {
-            element[1]=0;
-        }
+        const userInputtedMarking: Record<string, number> = {};
 
+        // Initialize user input marking
+        if (startMarking) {
+            for (const key of Object.keys(correctMarking)) {
+                userInputtedMarking[key] = startMarking[key] ?? 0;
+            }
+        } else {
+            // Initialize with 0s for user input
+            for (const key of Object.keys(correctMarking)) {
+                userInputtedMarking[key] = 0;
+            }
+        }
 
         const markingDialogRef = this._dialog.open(RgMarkingDialogComponent, {
             data: {
@@ -494,15 +478,29 @@ export class ReachabilityGraphService {
             },
         });
 
-        const result = markingDialogRef.afterClosed().subscribe();
-        const markingAfterDialog: Record<string, number> = result as unknown as Record<string, number>;
-
-        isUserMarkingCorrect = this.compareUserInputWithTargetState(markingAfterDialog, node);
-
-        //nach jeder Eingabe, die nicht korrekt ist, user erneut auffordern
-        //ebenfalls auto-complete button
-
-        return isUserMarkingCorrect;
+        markingDialogRef.afterClosed().subscribe((result: Record<string, number> | undefined) => {
+            if (result) {
+                const isUserMarkingCorrect = this.compareUserInputWithTargetState(result, node);
+                if (isUserMarkingCorrect) {
+                    this._notificationService.showSuccess(
+                        'TOASTER.HEADER.MARKING_INPUT_CORRECT',
+                        'TOASTER.BODY.MARKING_INPUT_CORRECT',
+                    );
+                    onCorrect();
+                } else {
+                    this._notificationService.showError(
+                        'TOASTER.HEADER.MARKING_INPUT_WRONG',
+                        'TOASTER.BODY.MARKING_INPUT_WRONG',
+                    );
+                }
+            } else {
+                this._notificationService.showInfo(
+                    'TOASTER.HEADER.MARKING_DIALOG_DISMISSED',
+                    'TOASTER.BODY.MARKING_DIALOG_DISMISSED',
+                );
+                onCorrect();
+            }
+        });
     }
 
     /**
@@ -675,14 +673,18 @@ export class ReachabilityGraphService {
 
     /**
      * Clears the current Reachability Graph and resets the last processed diagram as well as the marking.
+     * @param reinitialize If true, re-initializes the graph with the first state node of the current net.
      */
-    clear() {
+    clear(reinitialize = true) {
         this._reachabilityGraph.set(new ReachabilityGraph());
         this._completeReachabilityGraph.set(new ReachabilityGraph());
         this._cachedCompleteGraphDiagram = null;
         this._lastProcessedDiagram?.resetMarking();
         this._lastProcessedDiagram = null;
-        this.initializeReachabilityGraphFirstStateNode();
+
+        if (reinitialize) {
+            this.initializeReachabilityGraphFirstStateNode();
+        }
     }
 
     /**

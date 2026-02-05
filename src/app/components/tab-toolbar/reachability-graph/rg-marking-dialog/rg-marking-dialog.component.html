@@ -6,17 +6,14 @@
             <div class="marking-entry">
                 <span>{{ item.key }}: {{ item.value }}</span>
                 <div class="button-container">
-                    <button
-                        mat-icon-button
-                        (click)="incrementMarking(currentDialogMarking, item.key)"
-                        class="marking-button">
+                    <button mat-icon-button (click)="incrementMarking(item.key)" class="marking-button">
                         <mat-icon>add</mat-icon>
                     </button>
                     <button
                         mat-icon-button
-                        (click)="decrementMarking(currentDialogMarking, item.key)"
-                        class="marking-button">
-                        <!-- [disabled]="isDisabled(item.value)" -->
+                        (click)="decrementMarking(item.key)"
+                        class="marking-button"
+                        [disabled]="item.value <= 0">
                         <mat-icon>remove</mat-icon>
                     </button>
                 </div>

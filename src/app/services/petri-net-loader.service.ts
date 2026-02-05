@@ -94,7 +94,7 @@ export class PetriNetLoaderService {
 
             if (parsedNet) {
                 this._processNetSateService.clear();
-                this._reachabilityGraphService.clear();
+                this._reachabilityGraphService.clear(false);
                 const inDrawTab = this._tabStateService.currentTab() === Tab.DRAW;
                 if (this._modeService.isExamMode(Tab.DRAW) && inDrawTab) {
                     const tuple = this._serializationService.serializeTuple(parsedNet) ?? content;

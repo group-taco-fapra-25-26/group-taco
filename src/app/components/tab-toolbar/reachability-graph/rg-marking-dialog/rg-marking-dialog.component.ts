@@ -2,22 +2,15 @@ import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { TranslateModule } from '@ngx-translate/core';
-import { Tab } from '../../../../classes/tabs';
-import { DrawService } from '../../../../services/draw.service';
-import { ReachabilityGraphService } from '../../../../reachability-graph.service';
-import { ProcessNetFiringService } from '../../../../services/process-net-firing.service';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconButton } from '@angular/material/button';
+import { MatButtonModule, MatIconButton } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
 import { MatSliderModule } from '@angular/material/slider';
-import { MatExpansionModule, MatExpansionPanel } from '@angular/material/expansion';
-import { MatTooltip } from '@angular/material/tooltip';
+import { MatExpansionModule } from '@angular/material/expansion';
 import { FormsModule } from '@angular/forms';
-import { KeyValue, KeyValuePipe } from '@angular/common';
-import { DisplayService } from 'src/app/services/display.service';
-import { StateNode } from 'src/app/classes/reachability-graph.model';
+import { KeyValuePipe } from '@angular/common';
+import { ToasterNotificationService } from '../../../../services/toaster-notification.service';
 
 export interface ConfirmUserMarkingDialogData {
     title: string;
@@ -37,7 +30,6 @@ export interface ConfirmUserMarkingDialogData {
         FormsModule,
         MatFormFieldModule,
         MatInputModule,
-        MatButtonModule,
         MatIconButton,
         MatIcon,
         MatSliderModule,
@@ -48,35 +40,40 @@ export interface ConfirmUserMarkingDialogData {
     styleUrl: './rg-marking-dialog.component.css',
 })
 export class RgMarkingDialogComponent {
-    private _displayService = inject(DisplayService);
-    private _reachabilityGraphService = inject(ReachabilityGraphService);
+    private _notificationService = inject(ToasterNotificationService);
     data = inject<ConfirmUserMarkingDialogData>(MAT_DIALOG_DATA);
     private _dialogRef = inject(MatDialogRef<RgMarkingDialogComponent>);
 
-    private readonly drawService = inject(DrawService);
     protected currentDialogMarking: Record<string, number> = this.data.userInputMarking;
     private correctDialogMarking: Record<string, number> = this.data.expectedCorrectMarking;
 
-    incrementMarking(dialogUserMarking: Record<string, number>, placeId: string): Record<string, number> {
-        const newMarking = { ...dialogUserMarking };
-        newMarking[placeId] = (newMarking[placeId] || 0) + 1;
-        dialogUserMarking = newMarking;
-        this.currentDialogMarking = newMarking;
-        return dialogUserMarking;
+    incrementMarking(placeId: string): void {
+        this.currentDialogMarking[placeId] = (this.currentDialogMarking[placeId] || 0) + 1;
     }
 
-    decrementMarking(dialogUserMarking: Record<string, number>, placeId: string): Record<string, number> {
-        if ((dialogUserMarking[placeId] || 0) > 0) {
-            const newMarking = { ...dialogUserMarking };
-            newMarking[placeId] = (newMarking[placeId] || 0) - 1;
-            dialogUserMarking = newMarking;
-            this.currentDialogMarking = newMarking;
+    decrementMarking(placeId: string): void {
+        if ((this.currentDialogMarking[placeId] || 0) > 0) {
+            this.currentDialogMarking[placeId] = (this.currentDialogMarking[placeId] || 0) - 1;
         }
-        return dialogUserMarking;
     }
 
     keep() {
-        this._dialogRef.close(this.currentDialogMarking);
+        let isCorrect = true;
+        for (const [key, value] of Object.entries(this.correctDialogMarking)) {
+            if (this.currentDialogMarking[key] !== value) {
+                isCorrect = false;
+                break;
+            }
+        }
+
+        if (isCorrect) {
+            this._dialogRef.close(this.currentDialogMarking);
+        } else {
+            this._notificationService.showInfo(
+                'TOASTER.HEADER.MARKING_INPUT_WRONG',
+                'TOASTER.BODY.MARKING_INPUT_WRONG',
+            );
+        }
     }
 
     discard() {
