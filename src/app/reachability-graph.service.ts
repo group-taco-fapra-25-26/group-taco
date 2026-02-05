@@ -78,7 +78,6 @@ export class ReachabilityGraphService {
 
         this._lastProcessedDiagram = currentNet;
 
-        // if (!this._modeService.isExamMode(Tab.REACHABILITY_GRAPH)) {
         //Current marking auslesen
         this._startMarkingRG = currentNet.startMarking || {};
         const initialReachabilityLabel: string = Object.values(this._startMarkingRG).join(' ');
@@ -99,9 +98,6 @@ export class ReachabilityGraphService {
         initialStateNode.isStartingState = true;
         initialStateNode.isStartingState = true;
         initialStateNode.isStartingState = true;
-
-        //TO-DO Startmarkierung hervorheben, eingehender Arc aus dem Ursprung
-        // const initialEdge = new FiringEdge('Initial', 'Initial', initialId, 'Initial','Initial');
 
         if (!this._modeService.isExamMode(Tab.REACHABILITY_GRAPH)) {
             //AUTOMATISCH StateNode erzeugen
@@ -253,7 +249,6 @@ export class ReachabilityGraphService {
 
             //Automatically show new graph in Learn Mode
             //Also show new graph in Exam mode if StateNode already exists to prevent confusion
-            // if (!this._modeService.isExamMode(Tab.REACHABILITY_GRAPH)) {
             this._reachabilityGraph.update((graph) => {
                 const newGraph = new ReachabilityGraph();
                 newGraph.nodes = [...graph.nodes];
@@ -280,7 +275,6 @@ export class ReachabilityGraphService {
             return;
         }
 
-        //TO-DO: Decide, if behavior should change in Exam Mode, otherwise keep it like this
         if (markingExists && connectionExists) {
             // State wechseln, damit Hinzufügen beim nächsten Aufruf der Methode an der richtigen Stelle passiert
             //wird nach Durchlaufen aller if-Schleifen getriggert
@@ -336,6 +330,8 @@ export class ReachabilityGraphService {
      * Goes backward from newly added StateNode and checks if there is a Combination of StateNodes which has indefinite growth
      * Uses recursive method as well as comparison method for markings
      * checkForInfinity initializes the recursion
+     * @param node The current StateNode
+     * @param graph The current graph, distinguishes between user-generated and auto-generated Reachablitiy Graph
      */
     checkForInfinity(node: StateNode, graph?: ReachabilityGraph) {
         const targetGraph = graph ?? this._reachabilityGraph();
@@ -428,9 +424,8 @@ export class ReachabilityGraphService {
      * Used in Exam Mode to determine if user can define marking correctly.
      * @param userInputMarking Marking inputted by user with dialog. Target: Should contain the "next" marking after firing.
      * @param nextStateNode StateNode after firing, only saved in model before this method, visualized after successful comparison.
-     *
+     * @returns boolean comparison value, handled by calling method
      */
-
     compareUserInputWithTargetState(userInputMarking: Record<string, number>, nextStateNode: StateNode): boolean {
         let comparison = true;
         const userMarking = Object.values(userInputMarking);
