@@ -153,7 +153,7 @@
             "STATENODE_EXISTING": "Zustandsknoten vorhanden",
             "STATENODE_ARC_EXISTING": "Zustandsknoten und Verbindung vorhanden",
             "PETRI_NET_UNLIMITED": "Petrinetz unbeschränkt",
-            "MARKING_INPUT_WRONG": "Eingegebene Markierung fehlerhaft.",
+            "MARKING_INPUT_WRONG": "Eingegebene Markierung fehlerhaft",
             "MARKING_INPUT_CORRECT": "Korrekte Markierungseingabe",
             "MARKING_DIALOG_DISMISSED": "Dialog abgebrochen",
             "RG_CHECK_SUCCESS": "Erreichbarkeitsgraph vollständig",
