@@ -22,6 +22,7 @@ import { LabelEditDialogComponent } from '../components/label-edit-dialog/label-
 import { PLACE_RADIUS as DISPLAY_PLACE_RADIUS, TRANSITION_SIZE } from '../components/display/display.constants';
 import { TabStateService } from './tab-state.service';
 import { ProcessNetStateService } from './process-net-state.service';
+import { PetriNetLoaderService } from './petri-net-loader.service';
 
 export interface DrawnElement {
     node: DiagramNode;
@@ -264,6 +265,8 @@ export class DrawService implements OnDestroy {
     private panning = inject(PanningService);
     /** Angular Material dialog service for modals */
     private _dialog = inject(MatDialog);
+    /** Service for loading Petri nets from files */
+    private _petriNetLoaderService = inject(PetriNetLoaderService);
 
     /**
      * Checks if the draw tab is in exam mode.
@@ -502,8 +505,8 @@ export class DrawService implements OnDestroy {
     /**
      * Handles the drop event on the canvas.
      *
-     * Creates a new element (place or transition) at the drop location.
-     * Retrieves drag data from either the global window object or the event's dataTransfer.
+     * Creates a new element (place or transition) at the drop location,
+     * or loads a file if a file is dropped onto the canvas.
      *
      * @param {DragEvent} event - The drop event
      */
@@ -511,6 +514,14 @@ export class DrawService implements OnDestroy {
         event.preventDefault();
         this.isDragOver.set(false);
 
+        // Check for file drops first
+        if (event.dataTransfer?.files && event.dataTransfer.files.length > 0) {
+            const file = event.dataTransfer.files[0];
+            this._petriNetLoaderService.loadFile(file);
+            return;
+        }
+
+        // Handle palette element drops
         const dragData = window.__dragData as GlobalDragData | undefined;
         if (dragData) {
             this.placeElementAtClient(dragData.elementType, dragData.elementLabel, event.clientX, event.clientY);
