@@ -207,7 +207,7 @@
         "INSTRUCTION_RIGHT_CLICK_CONNECT": "Right-click a place or transition, then right-click the opposite type to create a connection.",
         "INSTRUCTION_MIDDLE_CLICK_DELETE": "Middle-click an element to delete it.",
         "INSTRUCTION_MIDDLE_CLICK_DELETE_CONN": "Middle-click a connection to delete it.",
-        "INSTRUCTION_VALIDATE_TOAST": "Click the checkmark button to validate the process net."
+        "INSTRUCTION_VALIDATE_TOAST": "Click the checklist button to validate the process net."
     },
     "EXAMPLE_MENU": {
         "TOOLTIP": "Open exam files",

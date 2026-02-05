@@ -210,7 +210,7 @@
         "INSTRUCTION_RIGHT_CLICK_CONNECT": "Rechtsklick auf eine Stelle oder Transition, dann Rechtsklick auf den entgegengesetzten Typ, um eine Verbindung zu erstellen.",
         "INSTRUCTION_MIDDLE_CLICK_DELETE": "Mittelklick auf ein Element zum Löschen.",
         "INSTRUCTION_MIDDLE_CLICK_DELETE_CONN": "Mittelklick auf eine Verbindung zum Löschen.",
-        "INSTRUCTION_VALIDATE_TOAST": "Klicken Sie auf die Häkchen-Schaltfläche, um das Prozessnetz zu validieren."
+        "INSTRUCTION_VALIDATE_TOAST": "Klicken Sie auf Validieren Schaltfläche, um Ihr Prozessnetz zu überprüfen."
     },
     "EXAMPLE_MENU": {
         "TOOLTIP": "Klausuraufgaben öffnen",
