@@ -201,8 +201,6 @@ export class DrawService implements OnDestroy {
     private suppressNextSourceLoad = false;
     /** Flag indicating if a clear operation is in progress */
     private isClearing = false;
-    /** Flag indicating if user has made changes in exam mode (prevents tuple updates from external sources) */
-    private hasUserDrawnInExamMode = false;
 
     // ===== Drawing State =====
     /** Reference to the SVG drawing area element */
@@ -280,9 +278,6 @@ export class DrawService implements OnDestroy {
         return this.panning.viewBox;
     }
 
-    /** Effect for synchronizing tuple in exam mode */
-    private readonly _examTupleEffect = this.createExamTupleEffect();
-
     /** Effect for ensuring tuple preview is shown inline when entering exam mode */
     private readonly _examModePreviewEffect = effect(() => {
         if (this.isExamMode) {
@@ -307,49 +302,15 @@ export class DrawService implements OnDestroy {
                 this.suppressNextSourceLoad = false;
                 return;
             }
-            if (this.isExamMode) {
-                // In exam mode, don't sync changes from other tabs to the draw tab
-                // to prevent the drawing in the draw tab from being overwritten.
-                // When a net is loaded, show only the tuple and keep the canvas empty.
-                if (diagram) {
-                    this.hasUserDrawnInExamMode = false;
-                    this.clearCanvas(true, true);
-                    const tupleFromSource = this._serializationService.serializeTuple(diagram);
-                    if (tupleFromSource) {
-                        this.tupleString.set(tupleFromSource);
-                        // Ensure the inline tuple input is shown, not the preview
-                        this.showTuplePreviewOnly.set(false);
-                    }
-                } else {
-                    // Check if sourceText is empty (from clear()) or has content (from file upload)
-                    const sourceText = this._sourceNetService.getSourceText();
-                    const preserveTuple = !!sourceText && sourceText.trim().length > 0;
-                    this.clearCanvas(true, preserveTuple);
-                }
-                return;
-            }
             if (diagram) {
                 this.loadDiagramIntoCanvas(diagram);
                 const tuple = this._serializationService.serializeTuple(diagram);
-                if (tuple && !this.isExamMode) {
+                if (tuple) {
                     this.tupleString.set(tuple);
                 }
                 this.showTuplePreviewIfAvailable();
             } else {
                 this.clearCanvas(true);
-            }
-        });
-
-        this.sourceTextSub = this._sourceNetService.sourceText$.subscribe((text: string | null) => {
-            // In exam mode, sync the tuple from source text
-            if (this.isExamMode) {
-                if (text && text.trim().length > 0) {
-                    this.tupleString.set(text);
-                    this.showTuplePreviewOnly.set(false);
-                } else {
-                    // Clear tuple when sourceText is cleared (from sidebar delete)
-                    this.tupleString.set('');
-                }
             }
         });
     }
@@ -387,7 +348,6 @@ export class DrawService implements OnDestroy {
         document.removeEventListener('mouseup', this.onDocumentMouseUp, true);
         this.sourceNetSub?.unsubscribe();
         this.sourceTextSub?.unsubscribe();
-        this._examTupleEffect?.destroy?.();
         this._examModePreviewEffect?.destroy?.();
     }
 
@@ -600,13 +560,10 @@ export class DrawService implements OnDestroy {
         this.connectionIdCounter = 0;
         this.placeLabelCounter = 0;
         this.transitionLabelCounter = 0;
-        this.hasUserDrawnInExamMode = false;
         if (this.drawingArea) {
             this.panning.resetViewBox(this.drawingArea);
         }
-        // In exam mode, don't clear the source net when clearing canvas locally
-        // This allows the sidebar delete button to remain functional
-        if (!triggeredByService && !this.isExamMode) {
+        if (!triggeredByService) {
             this._sourceNetService.clear();
         }
         this._displayService.clear();
@@ -641,10 +598,6 @@ export class DrawService implements OnDestroy {
             if (this.selectedElementId() === element.id) {
                 this.selectedElementId.set(null);
             }
-            if (this.isExamMode) {
-                this.hasUserDrawnInExamMode = true;
-            }
-            // Note: Deliberately NOT calling syncSourceNetFromCanvas() to preserve the tuple
         }
     }
 
@@ -782,9 +735,6 @@ export class DrawService implements OnDestroy {
             };
             this.connections.update((cs) => [...cs, newConn]);
             this.selectedElementId.set(null);
-            if (this.isExamMode) {
-                this.hasUserDrawnInExamMode = true;
-            }
             this.syncSourceNetFromCanvas();
         } else {
             this.selectedElementId.set(element.id);
@@ -828,9 +778,6 @@ export class DrawService implements OnDestroy {
                 return { ...c, weight: newWeight };
             }),
         );
-        if (this.isExamMode) {
-            this.hasUserDrawnInExamMode = true;
-        }
         this.syncSourceNetFromCanvas();
     }
 
@@ -851,9 +798,6 @@ export class DrawService implements OnDestroy {
         if (delta === 0) return;
         const current = element.node.tokenCount();
         element.node.tokens = Math.max(0, current - delta);
-        if (this.isExamMode) {
-            this.hasUserDrawnInExamMode = true;
-        }
         this.syncSourceNetFromCanvas();
     }
 
@@ -904,9 +848,6 @@ export class DrawService implements OnDestroy {
                 if (this.selectedElementId() === oldId) {
                     this.selectedElementId.set(newLabel);
                 }
-                if (this.isExamMode) {
-                    this.hasUserDrawnInExamMode = true;
-                }
                 this.syncSourceNetFromCanvas();
             });
             return;
@@ -943,9 +884,6 @@ export class DrawService implements OnDestroy {
                 if (this.selectedElementId() === oldId) {
                     this.selectedElementId.set(newLabel);
                 }
-                if (this.isExamMode) {
-                    this.hasUserDrawnInExamMode = true;
-                }
                 this.syncSourceNetFromCanvas();
             });
         }
@@ -967,39 +905,6 @@ export class DrawService implements OnDestroy {
 
         const result = await firstValueFrom(dialogRef.afterClosed());
         return typeof result === 'string' ? result.trim() : undefined;
-    }
-
-    /**
-     * Creates an Angular effect that synchronizes the tuple string in exam mode.
-     *
-     * In exam mode, automatically populates the tuple input field with:
-     * - The serialized tuple from the source diagram if available
-     * - The raw source text as fallback
-     *
-     * This ensures students see the Petri net specification in exam mode.
-     *
-     * @returns The effect reference for lifecycle management
-     * @private
-     */
-    private createExamTupleEffect() {
-        return effect(() => {
-            if (!this.isExamMode) return;
-            // Don't overwrite the tuple if the user has already started drawing
-            if (this.hasUserDrawnInExamMode) return;
-
-            const sourceDiagram = this._sourceNetService.getCurrentSourceNet();
-            const sourceText = this._sourceNetService.getSourceText();
-            if (sourceDiagram) {
-                const tupleFromSource = this._serializationService.serializeTuple(sourceDiagram);
-                if (tupleFromSource) {
-                    this.tupleString.set(tupleFromSource);
-                }
-                return;
-            }
-            if (sourceText) {
-                this.tupleString.set(sourceText);
-            }
-        });
     }
 
     /**
@@ -1289,9 +1194,6 @@ export class DrawService implements OnDestroy {
         if (this.isDraggingElement) {
             event.preventDefault();
             event.stopImmediatePropagation();
-            if (this.isExamMode) {
-                this.hasUserDrawnInExamMode = true;
-            }
         }
         this.draggedElement = null;
         this.isDraggingElement = false;
@@ -1363,9 +1265,6 @@ export class DrawService implements OnDestroy {
         newNode.x = x;
         newNode.y = y;
         this.drawnElements.update((elements) => [...elements, { id: newId, node: newNode }]);
-        if (this.isExamMode) {
-            this.hasUserDrawnInExamMode = true;
-        }
         this.syncSourceNetFromCanvas();
     }
 
@@ -1426,9 +1325,6 @@ export class DrawService implements OnDestroy {
         if (this.selectedElementId() === element.id) {
             this.selectedElementId.set(null);
         }
-        if (this.isExamMode) {
-            this.hasUserDrawnInExamMode = true;
-        }
         this.syncSourceNetFromCanvas();
     }
 
@@ -1442,9 +1338,6 @@ export class DrawService implements OnDestroy {
      */
     private deleteConnection(connectionId: string) {
         this.connections.update((cs) => cs.filter((c) => c.id !== connectionId));
-        if (this.isExamMode) {
-            this.hasUserDrawnInExamMode = true;
-        }
         this.syncSourceNetFromCanvas();
     }
 
@@ -1487,7 +1380,7 @@ export class DrawService implements OnDestroy {
         this._processNetStateService.clear();
 
         const tuple = this._serializationService.serializeTuple(diagram);
-        if (tuple && !this.isExamMode) {
+        if (tuple) {
             this.tupleString.set(tuple);
         }
     }
