@@ -9,6 +9,7 @@ import {
     OnDestroy,
     OnInit,
     signal,
+    untracked,
     ViewChild,
 } from '@angular/core';
 import { SvgNodeComponent } from '../../../display/svg-node/svg-node.component';
@@ -141,13 +142,6 @@ export class ProcessNetDrawDisplayComponent implements OnInit, OnDestroy, AfterV
     readonly viewBox = this.panningService.viewBoxAsString;
     readonly viewBoxObj = this.panningService.viewBox;
 
-    private viewBoxSyncEffect = effect(() => {
-        if (this.tabStateService.currentTab() !== Tab.PROCESS_NET) {
-            return;
-        }
-        this.stateService.updateViewBox(this.viewBoxObj());
-    });
-
     private fitViewSubscription?: Subscription;
 
     private startPositionEffect = effect(() => {
@@ -155,7 +149,9 @@ export class ProcessNetDrawDisplayComponent implements OnInit, OnDestroy, AfterV
             return;
         }
 
-        if (this.drawnElements().length === 0 && !this.modeService.isExamMode(Tab.PROCESS_NET)) {
+        const elements = untracked(this.drawnElements);
+
+        if (elements.length === 0 && !this.modeService.isExamMode(Tab.PROCESS_NET)) {
             this.onCreateStartPosition();
         }
     });
