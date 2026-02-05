@@ -69,7 +69,7 @@ export class RgMarkingDialogComponent {
         if (isCorrect) {
             this._dialogRef.close(this.currentDialogMarking);
         } else {
-            this._notificationService.showInfo(
+            this._notificationService.showError(
                 'TOASTER.HEADER.MARKING_INPUT_WRONG',
                 'TOASTER.BODY.MARKING_INPUT_WRONG',
             );
