@@ -335,8 +335,10 @@ export class DrawService implements OnDestroy {
                 const currentDiagram = this.buildDiagramFromCanvas();
                 const isSameDiagram = this.diagramsMatch(currentDiagram, diagram);
 
-                // Only clear and reload if the diagram is different or if there's nothing on canvas yet
-                if (!isSameDiagram || this.drawnElements().length === 0) {
+                // If only positions changed, update positions in place for smooth animation
+                if (isSameDiagram && this.showDrawing()) {
+                    this.updateCanvasPositionsFromDiagram(diagram);
+                } else if (!isSameDiagram || this.drawnElements().length === 0) {
                     // Always clear old drawing when a new net arrives
                     this.drawnElements.set([]);
                     this.connections.set([]);
@@ -1466,6 +1468,30 @@ export class DrawService implements OnDestroy {
         }
 
         return true;
+    }
+
+    private updateCanvasPositionsFromDiagram(diagram: Diagram) {
+        const placeMap = new Map(diagram.places.map((p) => [p.id, p]));
+        const transitionMap = new Map(diagram.transitions.map((t) => [t.id, t]));
+
+        this.drawnElements.update((elements) =>
+            elements.map((el) => {
+                if (el.node instanceof DiagramPlace) {
+                    const updated = placeMap.get(el.id);
+                    if (updated) {
+                        el.node.x = updated.x;
+                        el.node.y = updated.y;
+                    }
+                } else if (el.node instanceof DiagramTransition) {
+                    const updated = transitionMap.get(el.id);
+                    if (updated) {
+                        el.node.x = updated.x;
+                        el.node.y = updated.y;
+                    }
+                }
+                return { ...el };
+            }),
+        );
     }
 
     /**
