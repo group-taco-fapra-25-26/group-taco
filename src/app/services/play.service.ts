@@ -189,6 +189,7 @@ export class PlayService {
             this._currentFiringEntry && (!this._currentFiringEntry.isClosed || isSimulation)
                 ? this._currentFiringEntry
                 : this.getEmptyFiringEntry();
+        this._currentFiringEntry = entry;
         if (node.isActivated() && entry.isValid !== false && (!this._isExamMode() || isSimulation)) {
             this.fireTransition(node, diagram, displayFiring);
             this._currentMarking.set({ ...diagram.marking });
@@ -249,9 +250,14 @@ export class PlayService {
     /**
      * Deletes a firing entry from the firing sequence table.
      * @param id - The ID of the firing entry that is to be deleted
+     * @param diagram - The current Petri net diagram.
      */
-    deleteFiringEntry(id: number): void {
+    deleteFiringEntry(id: number, diagram: Diagram | undefined): void {
         this.firingEntries.update((entries) => entries.filter((entry) => entry.id !== id));
+        if (id === this._currentFiringEntry?.id || this.firingEntries().length === 0) {
+            this._currentFiringEntry = undefined;
+            if (diagram) diagram.resetMarking();
+        }
     }
 
     /**
