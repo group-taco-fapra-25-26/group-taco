@@ -40,13 +40,18 @@ export class ModeToggleComponent {
 
     protected onSliderChange() {
         const currentTab = this._tabStateService.currentTab();
-        if (this.sliderValue() > 0.5) {
-            this.sliderValue.set(1);
+        const newValue = this.sliderValue() >= 0.5 ? 1 : 0;
+
+        // Update slider async so it does not get stuck in the middle if user drags it fast
+        setTimeout(() => {
+            this.sliderValue.set(newValue);
+        });
+
+        if (newValue === 1) {
             if (!this._modeService.isExamMode(currentTab)) {
                 this._modeService.toggleMode(currentTab);
             }
         } else {
-            this.sliderValue.set(0);
             if (this._modeService.isExamMode(currentTab)) {
                 this._modeService.toggleMode(currentTab);
             }
