@@ -87,26 +87,10 @@ export class PlayValidationService {
     private hasOnlyValidTransitions(diagram: Diagram, entry: FiringEntry): boolean {
         const possibleTransitions: string[] = diagram.getTransitionLabels();
         const labels = entry.labels;
-
+        entry.setValidity(true, null);
         if (labels.length === 0) return true;
 
-        if (possibleTransitions.length === 0 && labels.length > 0) {
-            if (!this._modeService.isExamMode(Tab.PLAY))
-                this._notificationService.showWarning(
-                    'TOASTER.HEADER.TRANSITION_NOT_PRESENT',
-                    'TOASTER.BODY.TRANSITION_NOT_PRESENT',
-                    { messageParams: { label: labels[0] } },
-                );
-            entry.setValidity(false, {
-                type: 'PLAY.NOT_PRESENT',
-                invalidLabel: labels[0],
-                visitedLabels: labels,
-            });
-            return false;
-        }
-        entry.setValidity(true, null);
         const visitedLabels: string[] = [];
-
         for (const label of labels) {
             visitedLabels.push(label);
             const exactMatch = possibleTransitions.includes(label);

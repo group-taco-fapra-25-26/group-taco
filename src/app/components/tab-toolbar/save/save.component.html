@@ -12,7 +12,7 @@
         <span>{{ 'SAVE_AS_JSON' | translate }}</span>
     </button>
     <button mat-menu-item (click)="onSave('pnml')">
-        <mat-icon class="icon-pnml">account_tree</mat-icon>
+        <mat-icon class="icon-pnml">device_hub</mat-icon>
         <span>{{ 'SAVE_AS_PNML' | translate }}</span>
     </button>
     <button mat-menu-item [matMenuTriggerFor]="pngMenu">
@@ -28,21 +28,21 @@
 <!-- PNG Submenu -->
 <mat-menu #pngMenu="matMenu">
     <button mat-menu-item (click)="onGraphExport(GRAPH_IDS.PETRI_NET, 'png')">
-        <mat-icon>account_tree</mat-icon>
+        <mat-icon>device_hub</mat-icon>
         <span>{{ 'EXPORT_PETRI_NET' | translate }}</span>
     </button>
     <button
         mat-menu-item
         (click)="onGraphExport(GRAPH_IDS.REACHABILITY, 'png')"
         [disabled]="!isGraphAvailable(GRAPH_IDS.REACHABILITY)">
-        <mat-icon>share</mat-icon>
+        <mat-icon>account_tree</mat-icon>
         <span>{{ 'EXPORT_REACHABILITY_GRAPH' | translate }}</span>
     </button>
     <button
         mat-menu-item
         (click)="onGraphExport(GRAPH_IDS.PROCESS_NET, 'png')"
         [disabled]="!isGraphAvailable(GRAPH_IDS.PROCESS_NET)">
-        <mat-icon>hub</mat-icon>
+        <mat-icon>timeline</mat-icon>
         <span>{{ 'EXPORT_PROCESS_NET' | translate }}</span>
     </button>
 </mat-menu>
@@ -50,21 +50,21 @@
 <!-- JPEG Submenu -->
 <mat-menu #jpegMenu="matMenu">
     <button mat-menu-item (click)="onGraphExport(GRAPH_IDS.PETRI_NET, 'jpeg')">
-        <mat-icon>account_tree</mat-icon>
+        <mat-icon>device_hub</mat-icon>
         <span>{{ 'EXPORT_PETRI_NET' | translate }}</span>
     </button>
     <button
         mat-menu-item
         (click)="onGraphExport(GRAPH_IDS.REACHABILITY, 'jpeg')"
         [disabled]="!isGraphAvailable(GRAPH_IDS.REACHABILITY)">
-        <mat-icon>share</mat-icon>
+        <mat-icon>account_tree</mat-icon>
         <span>{{ 'EXPORT_REACHABILITY_GRAPH' | translate }}</span>
     </button>
     <button
         mat-menu-item
         (click)="onGraphExport(GRAPH_IDS.PROCESS_NET, 'jpeg')"
         [disabled]="!isGraphAvailable(GRAPH_IDS.PROCESS_NET)">
-        <mat-icon>hub</mat-icon>
+        <mat-icon>timeline</mat-icon>
         <span>{{ 'EXPORT_PROCESS_NET' | translate }}</span>
     </button>
 </mat-menu>
