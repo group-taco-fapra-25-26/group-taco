@@ -483,7 +483,7 @@ export class ReachabilityGraphService {
         for (const element of Object.entries(userInputtedMarking)) {
             element[1]=0;
         }
-    
+
 
         const markingDialogRef = this._dialog.open(RgMarkingDialogComponent, {
             data: {

@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatDialogRef } from '@angular/material/dialog';
+import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { ParserService } from '../../services/parser.service';
 import { SourcePetriNetService } from '../../services/source-petri-net.service';
 import { ToasterNotificationService } from '../../services/toaster-notification.service';
@@ -17,7 +17,15 @@ import { applyParallelOffsetsToArcs } from '../../services/arc-parallel-offset.u
 @Component({
     selector: 'app-tuple-input',
     standalone: true,
-    imports: [CommonModule, FormsModule, MatButtonModule, MatInputModule, MatFormFieldModule, TranslateModule],
+    imports: [
+        CommonModule,
+        FormsModule,
+        MatButtonModule,
+        MatInputModule,
+        MatFormFieldModule,
+        MatDialogModule,
+        TranslateModule,
+    ],
     templateUrl: './tuple-input.component.html',
     styleUrls: ['./tuple-input.component.css'],
 })
@@ -48,9 +56,5 @@ export class TupleInputComponent {
         } else {
             this._toaster.showError('TUPLE_INPUT.TOAST_ERROR_HEADER', 'TUPLE_INPUT.TOAST_ERROR_BODY');
         }
-    }
-
-    cancel() {
-        this._dialogRef.close();
     }
 }
