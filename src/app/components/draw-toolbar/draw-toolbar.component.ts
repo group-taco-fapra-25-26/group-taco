@@ -4,6 +4,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { TranslateModule } from '@ngx-translate/core';
+import { FormsModule } from '@angular/forms';
 
 export interface DrawToolbarAction {
     icon: string;
@@ -18,10 +19,17 @@ export interface DrawToolbarInstruction {
     text: string;
 }
 
+export interface DrawToolbarToggle {
+    label: string;
+    tooltip: string;
+    checked: boolean;
+    onChange: (checked: boolean) => void;
+}
+
 @Component({
     selector: 'app-draw-toolbar',
     standalone: true,
-    imports: [MatExpansionModule, MatIconModule, MatButtonModule, MatTooltipModule, TranslateModule],
+    imports: [MatExpansionModule, MatIconModule, MatButtonModule, MatTooltipModule, TranslateModule, FormsModule],
     templateUrl: './draw-toolbar.component.html',
     styleUrls: ['./draw-toolbar.component.css'],
 })
@@ -31,4 +39,5 @@ export class DrawToolbarComponent {
     helpTooltip = input.required<string>();
     actions = input.required<DrawToolbarAction[]>();
     instructions = input.required<DrawToolbarInstruction[]>();
+    toggle = input<DrawToolbarToggle | null>(null);
 }

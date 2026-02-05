@@ -101,6 +101,10 @@
             "DOUBLE_CLICK_EDIT_LABEL": "Doppelklick auf ein Element, um seine Beschriftung zu bearbeiten.",
             "SCROLL": "Scrollen",
             "SCROLL_CHANGE_TOKENS_WEIGHT": "Verwenden Sie das Mausrad, um die Anzahl der Marken (Stellen) oder das Gewicht (Verbindung) zu ändern."
+        },
+        "TOGGLE": {
+            "SAMPLE": "Netz nach dem Laden zeigen",
+            "SAMPLE_TOOLTIP": "Wenn aktiviert, wird das geladene Netz nach dem Hochladen angezeigt. Wenn deaktiviert, bleibt die Leinwand leer, damit Sie die Zeichnung selbst vornehmen können. Diese Option ist besonders im Prüfungsmodus nützlich, um die Aufgabenstellung zu simulieren."
         }
     },
     "PLAY": {

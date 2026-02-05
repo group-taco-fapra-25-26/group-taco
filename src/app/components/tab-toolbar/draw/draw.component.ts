@@ -1,4 +1,14 @@
-import { AfterViewInit, Component, computed, ElementRef, inject, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import {
+    AfterViewInit,
+    Component,
+    computed,
+    ElementRef,
+    inject,
+    OnDestroy,
+    OnInit,
+    ViewChild,
+    signal,
+} from '@angular/core';
 import { SvgNodeComponent } from '../../display/svg-node/svg-node.component';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -14,6 +24,7 @@ import {
     DrawToolbarComponent,
     DrawToolbarAction,
     DrawToolbarInstruction,
+    DrawToolbarToggle,
 } from '../../draw-toolbar/draw-toolbar.component';
 import { Tab } from '../../../classes/tabs';
 
@@ -112,6 +123,9 @@ export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
     protected isExamMode = computed(() => {
         return this._modeService.isExamMode(Tab.DRAW);
     });
+
+    /** Signal for toggle switch state */
+    protected toggleState = signal(true);
 
     /**
      * Angular lifecycle hook: OnInit
@@ -414,5 +428,21 @@ export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
             { label: 'DRAW.INSTRUCTION.EDIT_LABEL', text: 'DRAW.INSTRUCTION.DOUBLE_CLICK_EDIT_LABEL' },
             { label: 'DRAW.INSTRUCTION.SCROLL', text: 'DRAW.INSTRUCTION.SCROLL_CHANGE_TOKENS_WEIGHT' },
         ];
+    });
+
+    /**
+     * Computed signal for the toolbar toggle configuration.
+     * Provides a sample toggle switch for demonstration.
+     */
+    protected readonly toolbarToggle = computed<DrawToolbarToggle>(() => {
+        return {
+            label: 'DRAW.TOGGLE.SAMPLE',
+            tooltip: 'DRAW.TOGGLE.SAMPLE_TOOLTIP',
+            checked: this.toggleState(),
+            onChange: (checked: boolean) => {
+                this.toggleState.set(checked);
+                console.log('Toggle state changed:', checked);
+            },
+        };
     });
 }
