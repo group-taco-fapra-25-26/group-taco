@@ -18,7 +18,7 @@
         "ACTION_RESET": "Zu Zustand springen",
         "INSTRUCTION_RESET": "Doppelklick auf einen Zustandsknoten, um das Petri-Netz auf diese Markierung zurückzusetzen. Danach kann von dort aus weitergeschaltet werden.",
         "ACTION_VALIDATE": "Erreichbarkeitsgraph validieren",
-        "INSTRUCTION_VALIDATE": "Validiert den Erreichbarkeitsgraphen und prüft auf Vollständigkeit. Dies prüft, ob alle aktivierten Transitionen, die vom aktuellen Zustand des Petrinetzes aus erreichbar sind, geschaltet wurden. ",
+        "INSTRUCTION_VALIDATE": "Validiert den Erreichbarkeitsgraphen und prüft auf Vollständigkeit. Dies prüft, ob alle aktivierten Transitionen, die vom aktuellen Zustand des Petrinetzes aus erreichbar sind, geschaltet wurden. Funktioniert nicht, wenn der automatisch erzeugte vollständige EG angezeigt wird.",
         "ACTION_TOGGLEVIEW": "Ansichtsmodus umschalten",
         "INSTRUCTION_TOGGLEVIEW": "Schaltet zwischen der Erreichbarkeitsgraph-Ansicht, die im Kurstext verwendet wird und einer weiteren Ansicht, in der die Markierungen direkt an den Zustandsknoten angezeigt werden, um.",
         "ACTION_SHOWCOMPLETEGRAPH": "Vollständigen Graph anzeigen",

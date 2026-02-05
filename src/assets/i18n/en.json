@@ -18,7 +18,7 @@
         "ACTION_RESET": "Jump to State",
         "INSTRUCTION_RESET": "Double-click a state node to reset the Petri net to this marking. Afterwards, firing can be continued from this Petri Net state.",
         "ACTION_VALIDATE": "Validate Reachability Graph",
-        "INSTRUCTION_VALIDATE": "Validate the Reachability Graph and check for completeness. This is based on the current state of the Petri Net and checks whether all transitions that can be fired from the current state have been explored.",
+        "INSTRUCTION_VALIDATE": "Validate the Reachability Graph and check for completeness. This is based on the current state of the Petri Net and checks whether all transitions that can be fired from the current state have been explored. Does not function while the automatically generated full RG is shown.",
         "ACTION_TOGGLEVIEW": "Toggle View Mode",
         "INSTRUCTION_TOGGLEVIEW": "Switches between the view shown in the course script and a view where markings are displayed at each StateNode of the RG.",
         "ACTION_SHOWCOMPLETEGRAPH": "Show Complete Graph",
