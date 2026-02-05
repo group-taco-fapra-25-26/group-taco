@@ -150,7 +150,7 @@ export class ReachabilityGraphDrawDisplayComponent extends DisplayComponent {
         {
             icon: 'checklist',
             tooltip: 'REACHABILITY_GRAPH.BUTTON_VALIDATE_NET',
-            isActive: !this.isEmpty(),
+            isActive: !this.isEmpty() && !this.showCompleteGraph(),
             color: 'primary',
             action: () => this.onValidate(),
         },
