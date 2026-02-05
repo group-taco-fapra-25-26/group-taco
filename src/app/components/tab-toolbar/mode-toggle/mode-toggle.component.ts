@@ -1,4 +1,4 @@
-import { Component, effect, inject } from '@angular/core';
+import { Component, inject, linkedSignal } from '@angular/core';
 import { ModeService } from '../../../services/mode.service';
 import { TabStateService } from '../../../services/tab-state.service';
 import { MatIcon, MatIconRegistry } from '@angular/material/icon';
@@ -22,7 +22,10 @@ export class ModeToggleComponent {
     private _matIconRegistry = inject(MatIconRegistry);
     private _domSanitizer = inject(DomSanitizer);
 
-    protected sliderValue = 0;
+    protected sliderValue = linkedSignal({
+        source: this._tabStateService.currentTab,
+        computation: (currentTab) => (this._modeService.isExamMode(currentTab) ? 1 : 0),
+    });
 
     constructor() {
         this._matIconRegistry.addSvgIcon(
@@ -33,22 +36,17 @@ export class ModeToggleComponent {
             'taco',
             this._domSanitizer.bypassSecurityTrustResourceUrl('assets/images/taco.svg'),
         );
-
-        effect(() => {
-            const currentTab = this._tabStateService.currentTab();
-            this.sliderValue = this._modeService.isExamMode(currentTab) ? 1 : 0;
-        });
     }
 
     protected onSliderChange() {
         const currentTab = this._tabStateService.currentTab();
-        if (this.sliderValue > 0.5) {
-            this.sliderValue = 1;
+        if (this.sliderValue() > 0.5) {
+            this.sliderValue.set(1);
             if (!this._modeService.isExamMode(currentTab)) {
                 this._modeService.toggleMode(currentTab);
             }
         } else {
-            this.sliderValue = 0;
+            this.sliderValue.set(0);
             if (this._modeService.isExamMode(currentTab)) {
                 this._modeService.toggleMode(currentTab);
             }
@@ -56,7 +54,7 @@ export class ModeToggleComponent {
     }
 
     protected get isExamActive(): boolean {
-        return this.sliderValue > 0.5;
+        return this.sliderValue() > 0.5;
     }
 
     protected modeText(): string {
