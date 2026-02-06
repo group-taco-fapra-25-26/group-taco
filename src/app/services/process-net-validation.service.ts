@@ -43,6 +43,13 @@ interface OriginalNetShape {
     postWeights: Record<string, Record<string, number>>;
 }
 
+/**
+ * Transforms the Petri net structure into a shape optimized for validation lookups.
+ * Maps transitions to their preset and postset places and weights.
+ *
+ * @param net The Petri net to analyze.
+ * @returns An object containing pre- / post-sets and weights for all transitions.
+ */
 function buildOriginalNetShape(net: PetriNet): OriginalNetShape {
     const shape: OriginalNetShape = {
         pre: {},
@@ -73,6 +80,15 @@ function buildOriginalNetShape(net: PetriNet): OriginalNetShape {
     return shape;
 }
 
+/**
+ * Validates a process net against an underlying Petri net.
+ * Checks structure consistency, causal constraints, and dynamic properties like maximality.
+ *
+ * @param net The original Petri net.
+ * @param elements The nodes (conditions and events) of the process net.
+ * @param connections The causal dependencies (arcs) between elements.
+ * @returns A result object containing validation status, errors, and warnings.
+ */
 export function validateProcessNet(
     net: PetriNet,
     elements: ProcessElement[],
@@ -138,6 +154,18 @@ export function validateProcessNet(
     };
 }
 
+/**
+ * Verifies that each event (transition occurrence) in the process net has presets and postsets
+ * matching the structure of the corresponding transition in the original Petri net.
+ * Includes checks for correct arc weights.
+ *
+ * @param net The original Petri net.
+ * @param elements Process net elements.
+ * @param connections Process net arcs.
+ * @param elementMap Fast lookup map for process net elements by ID.
+ * @param originalShape Pre-calculated structure of the original Petri net.
+ * @returns Array of validation errors if structural mismatches are found.
+ */
 function validateTransitionsForStructure(
     net: PetriNet,
     elements: ProcessElement[],
@@ -195,7 +223,10 @@ function validateTransitionsForStructure(
                 return;
             }
 
-            const normalize = (values: string[]) => Array.from(new Set(values)).sort();
+            const normalize = (values: string[]) => {
+                const normalized = Array.from(new Set(values)).sort();
+                return normalized.length > 0 ? normalized : ['∅'];
+            };
 
             const expectedPre = origPre[originalT];
             const actualPre = procPre[tOcc.id];
@@ -212,21 +243,23 @@ function validateTransitionsForStructure(
                 });
             } else {
                 // If structure matches, verify weights for each required place label
-                expectedPreSet.forEach((pl) => {
-                    const expW = origPreW[originalT][pl] ?? 1;
-                    const actW = procPreW[tOcc.id][pl] ?? 0;
-                    if (expW !== actW) {
-                        errors.push({
-                            key: 'TOASTER.VALIDATION_MESSAGES.PRESET_WEIGHT_MISMATCH',
-                            params: {
-                                label: tOcc.label,
-                                place: pl,
-                                expected: expW,
-                                found: actW,
-                            },
-                        });
-                    }
-                });
+                expectedPreSet
+                    .filter((pl) => pl !== '∅')
+                    .forEach((pl) => {
+                        const expW = origPreW[originalT][pl] ?? 1;
+                        const actW = procPreW[tOcc.id][pl] ?? 0;
+                        if (expW !== actW) {
+                            errors.push({
+                                key: 'TOASTER.VALIDATION_MESSAGES.PRESET_WEIGHT_MISMATCH',
+                                params: {
+                                    label: tOcc.label,
+                                    place: pl,
+                                    expected: expW,
+                                    found: actW,
+                                },
+                            });
+                        }
+                    });
             }
 
             const expectedPost = origPost[originalT];
@@ -243,27 +276,38 @@ function validateTransitionsForStructure(
                     },
                 });
             } else {
-                expectedPostSet.forEach((pl) => {
-                    const expW = origPostW[originalT][pl] ?? 1;
-                    const actW = procPostW[tOcc.id][pl] ?? 0;
-                    if (expW !== actW) {
-                        errors.push({
-                            key: 'TOASTER.VALIDATION_MESSAGES.POSTSET_WEIGHT_MISMATCH',
-                            params: {
-                                label: tOcc.label,
-                                place: pl,
-                                expected: expW,
-                                found: actW,
-                            },
-                        });
-                    }
-                });
+                expectedPostSet
+                    .filter((pl) => pl !== '∅')
+                    .forEach((pl) => {
+                        const expW = origPostW[originalT][pl] ?? 1;
+                        const actW = procPostW[tOcc.id][pl] ?? 0;
+                        if (expW !== actW) {
+                            errors.push({
+                                key: 'TOASTER.VALIDATION_MESSAGES.POSTSET_WEIGHT_MISMATCH',
+                                params: {
+                                    label: tOcc.label,
+                                    place: pl,
+                                    expected: expW,
+                                    found: actW,
+                                },
+                            });
+                        }
+                    });
             }
         });
 
     return errors;
 }
 
+/**
+ * Ensures that every condition (place) in the process net has an incoming causal connection,
+ * unless it is explicitly designated as a start place (initial token).
+ *
+ * @param net The original Petri net (unused).
+ * @param elements Process net elements.
+ * @param connectionsByTarget Index of connections by their target ID.
+ * @returns Array of errors for isolated places.
+ */
 function validatePlaceInputs(
     net: PetriNet,
     elements: ProcessElement[],
@@ -287,6 +331,15 @@ function validatePlaceInputs(
     return errors;
 }
 
+/**
+ * Checks the branching property of process nets: every condition must be produced by at most one event.
+ * This ensures no backward conflict (places have at most one incoming arc).
+ *
+ * @param elements Process net elements.
+ * @param connections Process net arcs.
+ * @param elementMap Map for looking up element types.
+ * @returns Array of errors for places with multiple producers.
+ */
 function validateProducerUniqueness(
     elements: ProcessElement[],
     connections: ProcessConnection[],
@@ -313,6 +366,14 @@ function validateProducerUniqueness(
     return errors;
 }
 
+/**
+ * Validates that the process net graph contains no cycles.
+ * A fundamental property of process nets is that they are acyclic directed graphs.
+ *
+ * @param elements Process net elements.
+ * @param connections Process net arcs.
+ * @returns Array containing an error if a cycle is detected.
+ */
 function validateAcyclicity(elements: ProcessElement[], connections: ProcessConnection[]): ValidationMessage[] {
     const errors: ValidationMessage[] = [];
     const graph: Record<string, string[]> = {};
@@ -343,6 +404,14 @@ function validateAcyclicity(elements: ProcessElement[], connections: ProcessConn
     return errors;
 }
 
+/**
+ * Checks if the start places in the process net correspond exactly to the initial marking
+ * of the original Petri net.
+ *
+ * @param net The original Petri net with initial marking.
+ * @param elements Process net elements.
+ * @returns Array of errors if start places are missing or incorrect.
+ */
 function validateStartPlacesPresence(net: PetriNet, elements: ProcessElement[]): ValidationMessage[] {
     const errors: ValidationMessage[] = [];
     const requiredStartPlaces = new Set(
@@ -375,6 +444,17 @@ function validateStartPlacesPresence(net: PetriNet, elements: ProcessElement[]):
     return errors;
 }
 
+/**
+ * Checks if the process net represents a maximal run.
+ * A run is maximal if no further transition event can occur from the current cut (set of terminal places).
+ * This produces informational warnings rather than validation errors.
+ *
+ * @param net The original Petri net.
+ * @param elements Process net elements.
+ * @param connectionsBySource Index of connections by their source ID.
+ * @param originalShape Pre-calculated structure of the original Petri net.
+ * @returns Array of informational messages about enabled transitions that were not fired.
+ */
 function validateMaximality(
     net: PetriNet,
     elements: ProcessElement[],
