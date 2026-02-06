@@ -70,10 +70,7 @@ export class ProcessNetStateService {
         this.connections.set([]);
         this.elementIdCounter = 0;
         this.connectionIdCounter = 0;
-        console.log('Diagram cleared. Mode:', mode);
-        console.log(diagram);
         if (mode === AppMode.LEARN && diagram) {
-            console.log('Creating start positions for diagram in LEARN mode');
             this.createStartPositions(diagram, viewBoxValues);
         }
     }
