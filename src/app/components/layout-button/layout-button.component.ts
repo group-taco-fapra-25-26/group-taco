@@ -6,6 +6,10 @@ import { SpringEmbedderService } from '../../services/spring-embedder.service';
 import { TranslateModule } from '@ngx-translate/core';
 import { DisplayService } from '../../services/display.service';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { DrawService } from '../../services/draw.service';
+import { TabStateService } from '../../services/tab-state.service';
+import { Tab } from '../../classes/tabs';
+import { CanvasDiagram } from '../../classes/diagram/canvas-diagram';
 
 @Component({
     selector: 'app-layout-button',
@@ -16,6 +20,8 @@ import { toSignal } from '@angular/core/rxjs-interop';
 export class LayoutButtonComponent {
     private _springEmbedderService = inject(SpringEmbedderService);
     private _displayService = inject(DisplayService);
+    private _drawService = inject(DrawService);
+    private _tabStateService = inject(TabStateService);
 
     private _diagramSignal = toSignal(this._displayService.diagram$);
     private _isCalculating = signal(false);
@@ -31,8 +37,17 @@ export class LayoutButtonComponent {
 
     calculateLayout() {
         this._isCalculating.set(true);
-        this._springEmbedderService
-            .calculateLayout()
+        let layoutPromise: Promise<void>;
+
+        if (this._tabStateService.currentTab() === Tab.DRAW) {
+            const drawnGraph = new CanvasDiagram(this._drawService.drawnElements, this._drawService.connections);
+            this._displayService.display(drawnGraph);
+            layoutPromise = this._springEmbedderService.calculateLayout(drawnGraph);
+        } else {
+            layoutPromise = this._springEmbedderService.calculateLayout();
+        }
+
+        layoutPromise
             .then(() => this._isCalculating.set(false))
             .catch((error) => {
                 this._isCalculating.set(false);

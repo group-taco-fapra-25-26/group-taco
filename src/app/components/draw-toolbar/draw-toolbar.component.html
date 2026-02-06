@@ -5,6 +5,22 @@
                 <mat-icon [matTooltip]="helpTooltip() | translate" color="primary">help_outline</mat-icon>
                 <mat-panel-title>{{ headerTitle() | translate }}</mat-panel-title>
             </div>
+            @if (toggle(); as toggleConfig) {
+                <div
+                    class="pn-toggle-container"
+                    [matTooltip]="toggleConfig.tooltip | translate"
+                    (click)="$event.stopPropagation()"
+                    tabindex="0">
+                    <span class="pn-toggle-label">{{ toggleConfig.label | translate }}</span>
+                    <label class="pn-toggle-switch">
+                        <input
+                            type="checkbox"
+                            [checked]="toggleConfig.checked"
+                            (change)="toggleConfig.onChange($any($event.target).checked)" />
+                        <span class="pn-toggle-slider"></span>
+                    </label>
+                </div>
+            }
             @for (action of actions(); track action.tooltip) {
                 <button
                     matIconButton

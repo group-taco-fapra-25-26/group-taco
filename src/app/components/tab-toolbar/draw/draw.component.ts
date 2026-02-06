@@ -1,9 +1,19 @@
-import { AfterViewInit, Component, computed, ElementRef, inject, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import {
+    AfterViewInit,
+    Component,
+    computed,
+    ElementRef,
+    inject,
+    OnDestroy,
+    OnInit,
+    signal,
+    ViewChild,
+} from '@angular/core';
 import { SvgNodeComponent } from '../../display/svg-node/svg-node.component';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { DrawnElement, DrawService } from '../../../services/draw.service';
+import { DrawService } from '../../../services/draw.service';
 import { MatDialogModule } from '@angular/material/dialog';
 import { DisplayService } from '../../../services/display.service';
 import { ImageExportService } from '../../../services/image-export.service';
@@ -11,11 +21,13 @@ import { ModeService } from '../../../services/mode.service';
 import { Subscription } from 'rxjs';
 import { GRAPH_FILENAMES, GRAPH_IDS } from '../../display/display.constants';
 import {
-    DrawToolbarComponent,
     DrawToolbarAction,
+    DrawToolbarComponent,
     DrawToolbarInstruction,
+    DrawToolbarToggle,
 } from '../../draw-toolbar/draw-toolbar.component';
 import { Tab } from '../../../classes/tabs';
+import { DrawnElement } from '../../../classes/diagram/drawn-element';
 
 /**
  * DrawComponent
@@ -112,6 +124,9 @@ export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
     protected isExamMode = computed(() => {
         return this._modeService.isExamMode(Tab.DRAW);
     });
+
+    /** Signal for toggle switch state */
+    protected toggleState = signal(true);
 
     /**
      * Angular lifecycle hook: OnInit
@@ -414,5 +429,22 @@ export class DrawComponent implements AfterViewInit, OnDestroy, OnInit {
             { label: 'DRAW.INSTRUCTION.EDIT_LABEL', text: 'DRAW.INSTRUCTION.DOUBLE_CLICK_EDIT_LABEL' },
             { label: 'DRAW.INSTRUCTION.SCROLL', text: 'DRAW.INSTRUCTION.SCROLL_CHANGE_TOKENS_WEIGHT' },
         ];
+    });
+
+    /**
+     * Computed signal for the toolbar toggle configuration.
+     * Controls whether the drawing is displayed on the canvas.
+     * When toggled off, only the tuple is shown; when on, both tuple and drawing are shown.
+     */
+    protected readonly toolbarToggle = computed<DrawToolbarToggle>(() => {
+        return {
+            label: 'DRAW.TOGGLE.SHOW_DRAWING',
+            tooltip: 'DRAW.TOGGLE.SHOW_DRAWING_TOOLTIP',
+            checked: this.toggleState(),
+            onChange: (checked: boolean) => {
+                this.toggleState.set(checked);
+                this.draw.setShowDrawing(checked);
+            },
+        };
     });
 }
