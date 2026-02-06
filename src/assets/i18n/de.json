@@ -117,6 +117,10 @@
             "DOUBLE_CLICK_EDIT_LABEL": "Doppelklick auf ein Element, um seine Beschriftung zu bearbeiten.",
             "SCROLL": "Scrollen",
             "SCROLL_CHANGE_TOKENS_WEIGHT": "Verwenden Sie das Mausrad, um die Anzahl der Marken (Stellen) oder das Gewicht (Verbindung) zu ändern."
+        },
+        "TOGGLE": {
+            "SHOW_DRAWING": "Zeichnung anzeigen",
+            "SHOW_DRAWING_TOOLTIP": "Schalten Sie um, um die Zeichnung auf der Leinwand anzuzeigen oder auszublenden. Die Tupel-Spezifikation ist immer sichtbar."
         }
     },
     "PLAY": {

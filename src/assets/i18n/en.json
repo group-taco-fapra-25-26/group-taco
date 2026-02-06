@@ -116,6 +116,10 @@
             "DOUBLE_CLICK_EDIT_LABEL": "Double-click an element to edit its label.",
             "SCROLL": "Scroll",
             "SCROLL_CHANGE_TOKENS_WEIGHT": "Use the mouse wheel to change the number of tokens (places) or the weight (connection)."
+        },
+        "TOGGLE": {
+            "SHOW_DRAWING": "Show Drawing",
+            "SHOW_DRAWING_TOOLTIP": "Toggle to show or hide the drawing on the canvas. The tuple specification is always visible."
         }
     },
     "PLAY": {

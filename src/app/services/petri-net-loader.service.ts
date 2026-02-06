@@ -96,22 +96,6 @@ export class PetriNetLoaderService {
                 this._processNetSateService.clear();
                 this._reachabilityGraphService.clear(false);
                 const inDrawTab = this._tabStateService.currentTab() === Tab.DRAW;
-                if (this._modeService.isExamMode(Tab.DRAW) && inDrawTab) {
-                    const tuple = this._serializationService.serializeTuple(parsedNet) ?? content;
-                    this._sourcePetriNetService.setSourceText(tuple);
-                    if (this._modeService.isExamMode(Tab.DRAW) && inDrawTab) {
-                        this._toasterService.showSuccess(
-                            'TOASTER.HEADER.SUCCESS',
-                            'TOASTER.BODY.NET_LOADED_SUCCESSFULLY_HIDDEN',
-                        );
-                    } else {
-                        this._toasterService.showSuccess(
-                            'TOASTER.HEADER.SUCCESS',
-                            'TOASTER.BODY.NET_LOADED_SUCCESSFULLY',
-                        );
-                    }
-                    return;
-                }
                 this._sourcePetriNetService.loadNewNet(parsedNet, content);
                 this._tabStateService.setAllLastMarkings(parsedNet.marking);
                 this._displayService.display(parsedNet, { triggeredByFiring: false });
