@@ -3,6 +3,8 @@ import { DiagramNode } from '../classes/diagram/diagram-node';
 import { DiagramPlace, DiagramPlaceLabelPlacement } from '../classes/diagram/diagram-place';
 import { DiagramTransition, DiagramTransitionOptions } from '../classes/diagram/diagram-transition';
 import { DiagramArc } from '../classes/diagram/diagram-arc';
+import { CanvasDiagram } from '../classes/diagram/canvas-diagram';
+import { Connection, DrawnElement } from '../classes/diagram/drawn-element';
 import { PanningService } from './panning.service';
 import { ParserService } from './parser.service';
 import { SourcePetriNetService } from './source-petri-net.service';
@@ -23,18 +25,6 @@ import { PLACE_RADIUS as DISPLAY_PLACE_RADIUS, TRANSITION_SIZE } from '../compon
 import { TabStateService } from './tab-state.service';
 import { ProcessNetStateService } from './process-net-state.service';
 import { PetriNetLoaderService } from './petri-net-loader.service';
-
-export interface DrawnElement {
-    node: DiagramNode;
-    id: string;
-}
-
-interface Connection {
-    id: string;
-    aId: string;
-    bId: string;
-    weight: number;
-}
 
 interface GlobalDragData {
     elementType: 'place' | 'transition';
@@ -683,9 +673,10 @@ export class DrawService implements OnDestroy {
         const diagram = this._parserService.parse(input);
         if (diagram) {
             this._sourceNetService.loadNewNet(diagram, input);
-            this._displayService.display(diagram);
             this.loadDiagramIntoCanvas(diagram);
-            this._springEmbedderService.calculateLayout().catch((error) => console.error(error));
+            const drawnGraph = new CanvasDiagram(this.drawnElements, this.connections);
+            this._displayService.display(drawnGraph);
+            this._springEmbedderService.calculateLayout(drawnGraph).catch((error) => console.error(error));
             this._toaster.showSuccess('TUPLE_INPUT.TOAST_SUCCESS_HEADER', 'TUPLE_INPUT.TOAST_SUCCESS_BODY');
             this.showTuplePreviewIfAvailable();
 
@@ -1233,25 +1224,9 @@ export class DrawService implements OnDestroy {
         this.drawnElements.update((elements) =>
             elements.map((el) => {
                 if (el.id !== this.draggedElement?.id) return el;
-                let newNode: DiagramNode;
-                if (el.node instanceof DiagramPlace) {
-                    const tokens = (el.node as DiagramPlace).tokenCount() ?? 0;
-                    const originalLabel = el.node.label ?? el.node.displayLabel;
-                    newNode = this.buildPlace(el.node.id, originalLabel, tokens, {
-                        innerLabel: undefined,
-                        hideTokens: el.node.hideTokens,
-                        labelPlacement: 'below',
-                        isStartPlace: el.node.isStartPlace,
-                    });
-                } else if (el.node instanceof DiagramTransition) {
-                    const label = (el.node as DiagramTransition).displayLabel ?? el.node.id;
-                    newNode = this.buildTransition(el.node.id, label, { innerLabel: label });
-                } else {
-                    newNode = el.node;
-                }
-                newNode.x = newX;
-                newNode.y = newY;
-                return { ...el, node: newNode };
+                el.node.x = newX;
+                el.node.y = newY;
+                return { ...el };
             }),
         );
     };

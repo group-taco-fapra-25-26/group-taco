@@ -6,14 +6,14 @@ import {
     inject,
     OnDestroy,
     OnInit,
-    ViewChild,
     signal,
+    ViewChild,
 } from '@angular/core';
 import { SvgNodeComponent } from '../../display/svg-node/svg-node.component';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { DrawnElement, DrawService } from '../../../services/draw.service';
+import { DrawService } from '../../../services/draw.service';
 import { MatDialogModule } from '@angular/material/dialog';
 import { DisplayService } from '../../../services/display.service';
 import { ImageExportService } from '../../../services/image-export.service';
@@ -21,12 +21,13 @@ import { ModeService } from '../../../services/mode.service';
 import { Subscription } from 'rxjs';
 import { GRAPH_FILENAMES, GRAPH_IDS } from '../../display/display.constants';
 import {
-    DrawToolbarComponent,
     DrawToolbarAction,
+    DrawToolbarComponent,
     DrawToolbarInstruction,
     DrawToolbarToggle,
 } from '../../draw-toolbar/draw-toolbar.component';
 import { Tab } from '../../../classes/tabs';
+import { DrawnElement } from '../../../classes/diagram/drawn-element';
 
 /**
  * DrawComponent
