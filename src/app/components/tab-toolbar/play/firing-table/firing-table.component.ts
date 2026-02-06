@@ -105,7 +105,7 @@ export class FiringTableComponent implements OnInit, OnDestroy {
      * @param id - The ID of the entry to delete.
      */
     onDeleteEntry(id: number): void {
-        this._playService.deleteFiringEntry(id);
+        this._playService.deleteFiringEntry(id, this._diagram);
     }
 
     /**

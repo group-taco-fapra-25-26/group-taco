@@ -10,7 +10,8 @@
         <mat-slider min="0" max="1" step="0.05" discrete="false" class="vertical-slider">
             <input
                 matSliderThumb
-                [(ngModel)]="sliderValue"
+                [ngModel]="sliderValue()"
+                (ngModelChange)="sliderValue.set($event)"
                 (change)="onSliderChange()"
                 [attr.aria-label]="modeText() | translate" />
         </mat-slider>

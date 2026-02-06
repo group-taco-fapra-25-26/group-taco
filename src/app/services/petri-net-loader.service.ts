@@ -94,7 +94,7 @@ export class PetriNetLoaderService {
 
             if (parsedNet) {
                 this._processNetSateService.clear();
-                this._reachabilityGraphService.clear();
+                this._reachabilityGraphService.clear(false);
                 const inDrawTab = this._tabStateService.currentTab() === Tab.DRAW;
                 this._sourcePetriNetService.loadNewNet(parsedNet, content);
                 this._tabStateService.setAllLastMarkings(parsedNet.marking);
