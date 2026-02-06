@@ -207,6 +207,7 @@
             "POSTSET_WEIGHT_MISMATCH": "❌ Nachbereichsgewicht falsch bei {{label}} für Stelle {{place}}. Erwartet: {{expected}} / Gefunden: {{found}}",
             "PLACE_NO_INCOMING": "❌ Stelle {{label}} besitzt keinen eingehenden Bogen, obwohl sie kein Startplatz in diesem Prozessnetz ist.",
             "PLACE_MULTIPLE_PRODUCERS": "❌ Stelle {{place}} hat mehr als einen Produzenten – verletzt Kausalität.",
+            "PLACE_MULTIPLE_CONSUMERS": "❌ Stelle {{place}} hat mehr als einen Konsumenten – verletzt Konfliktfreiheit.",
             "CYCLE_DETECTED": "❌ Prozessnetz enthält einen Zyklus – Prozessnetze müssen azyklisch sein.",
             "MISSING_START_PLACES": "❌ Startplätze fehlen im Prozessnetz: {{places}}. Bitte alle markierten Plätze platzieren.",
             "MARKED_START_PLACES_NOT_IN_NET": "❌ Die markierten Startplätze ({{places}}) befinden sich nicht im Prozessnetz.",
@@ -236,7 +237,9 @@
         "INSTRUCTION_RIGHT_CLICK_CONNECT": "Rechtsklick auf eine Stelle oder Transition, dann Rechtsklick auf den entgegengesetzten Typ, um eine Verbindung zu erstellen.",
         "INSTRUCTION_MIDDLE_CLICK_DELETE": "Mittelklick auf ein Element zum Löschen.",
         "INSTRUCTION_MIDDLE_CLICK_DELETE_CONN": "Mittelklick auf eine Verbindung zum Löschen.",
-        "INSTRUCTION_VALIDATE_TOAST": "Klicken Sie auf Validieren Schaltfläche, um Ihr Prozessnetz zu überprüfen."
+        "INSTRUCTION_VALIDATE_TOAST": "Klicken Sie auf Validieren Schaltfläche, um Ihr Prozessnetz zu überprüfen.",
+        "INSTRUCTION_AUTO_FIRING": "Automatische Erstellung",
+        "INSTRUCTION_AUTO_FIRING_TEXT": "Im Lernmodus erstellt das Klicken auf aktive Transitionen im Petrinetz automatisch das Prozessnetz."
     },
     "EXAMPLE_MENU": {
         "TOOLTIP": "Klausuraufgaben öffnen",
