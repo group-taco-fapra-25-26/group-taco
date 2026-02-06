@@ -206,6 +206,7 @@
             "POSTSET_WEIGHT_MISMATCH": "❌ Postset weight mismatch at {{label}} for place {{place}}. Expected: {{expected}} / Found: {{found}}",
             "PLACE_NO_INCOMING": "❌ Place {{label}} has no incoming arc, although it is not a start place in this process net.",
             "PLACE_MULTIPLE_PRODUCERS": "❌ Place {{place}} has more than one producer – violates causality.",
+            "PLACE_MULTIPLE_CONSUMERS": "❌ Place {{place}} has more than one consumer – violates no-conflict property.",
             "CYCLE_DETECTED": "❌ Process net contains a cycle – process nets must be acyclic.",
             "MISSING_START_PLACES": "❌ Start places missing in process net: {{places}}. Please place all marked places.",
             "MARKED_START_PLACES_NOT_IN_NET": "❌ The marked start places ({{places}}) are not in the process net.",

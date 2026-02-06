@@ -135,6 +135,10 @@ export function validateProcessNet(
     const errorsFromProducerLimit = validateProducerUniqueness(elements, connections, elementMap);
     errors.push(...errorsFromProducerLimit);
 
+    // Checks if each place has at most one consuming transition, to ensure no forward conflict.
+    const errorsFromConsumerLimit = validateConsumerUniqueness(elements, connections, elementMap);
+    errors.push(...errorsFromConsumerLimit);
+
     // It is the sole check that every place with tokens in the initial marking is actually drawn and explicitly marked as a start place.
     const errorsFromStartPlaces = validateStartPlacesPresence(net, elements);
     errors.push(...errorsFromStartPlaces);
@@ -357,9 +361,48 @@ function validateProducerUniqueness(
 
     Object.entries(producerCount).forEach(([placeId, count]) => {
         if (count > 1) {
+            const place = elementMap.get(placeId);
+            const label = place ? place.label : placeId;
             errors.push({
                 key: 'TOASTER.VALIDATION_MESSAGES.PLACE_MULTIPLE_PRODUCERS',
-                params: { place: placeId },
+                params: { place: label },
+            });
+        }
+    });
+    return errors;
+}
+
+/**
+ * Checks the branching property of process nets: every condition must be consumed by at most one event.
+ * This ensures no forward conflict (places have at most one outgoing arc).
+ *
+ * @param elements Process net elements.
+ * @param connections Process net arcs.
+ * @param elementMap Map for looking up element types.
+ * @returns Array of errors for places with multiple consumers.
+ */
+function validateConsumerUniqueness(
+    elements: ProcessElement[],
+    connections: ProcessConnection[],
+    elementMap: Map<string, ProcessElement>,
+): ValidationMessage[] {
+    const errors: ValidationMessage[] = [];
+    const consumerCount: Record<string, number> = {};
+    connections.forEach((conn) => {
+        const src = elementMap.get(conn.from);
+        const tgt = elementMap.get(conn.to);
+        if (src?.type === 'Place' && tgt?.type === 'Transition') {
+            consumerCount[src.id] = (consumerCount[src.id] || 0) + 1;
+        }
+    });
+
+    Object.entries(consumerCount).forEach(([placeId, count]) => {
+        if (count > 1) {
+            const place = elementMap.get(placeId);
+            const label = place ? place.label : placeId;
+            errors.push({
+                key: 'TOASTER.VALIDATION_MESSAGES.PLACE_MULTIPLE_CONSUMERS',
+                params: { place: label },
             });
         }
     });
