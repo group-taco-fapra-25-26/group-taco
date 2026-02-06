@@ -126,7 +126,10 @@ export class SvgNodeComponent {
 
     readonly isStartPlace = computed(() => {
         const node = this.diagramNode();
-        return node instanceof DiagramPlace ? node.isStartPlace : false;
+        const isStart = node instanceof DiagramPlace ? node.isStartPlace : false;
+        if (!isStart) return false;
+
+        return !this._modeService.isExamMode(this._tabStateService.currentTab());
     });
 
     readonly shouldShowInnerLabel = computed(() => this.showInnerLabel() && !!this.innerLabel());
