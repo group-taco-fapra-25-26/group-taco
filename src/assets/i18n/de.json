@@ -12,7 +12,7 @@
         "SHOW_COMPLETE_GRAPH": "Vollständigen Graph anzeigen",
         "HIDE_COMPLETE_GRAPH": "Vollständigen Graph ausblenden",
         "ACTION_BUILD": "Graph aufbauen",
-        "INSTRUCTION_BUILD": "Schalte aktive Transitionen im Petri-Netz, um den Erreichbarkeitsgraphen schrittweise zu erkunden.",
+        "INSTRUCTION_BUILD": "Schalte aktivierte Transitionen im Petri-Netz, um den Erreichbarkeitsgraphen schrittweise zu erkunden.",
         "ACTION_MOVE": "Knoten verschieben",
         "INSTRUCTION_MOVE": "Linksklick und Ziehen, um Zustandsknoten frei anzuordnen.",
         "ACTION_RESET": "Zu Zustand springen",
@@ -239,7 +239,7 @@
         "INSTRUCTION_MIDDLE_CLICK_DELETE_CONN": "Mittelklick auf eine Verbindung zum Löschen.",
         "INSTRUCTION_VALIDATE_TOAST": "Klicken Sie auf Validieren Schaltfläche, um Ihr Prozessnetz zu überprüfen.",
         "INSTRUCTION_AUTO_FIRING": "Automatische Erstellung",
-        "INSTRUCTION_AUTO_FIRING_TEXT": "Im Lernmodus erstellt das Klicken auf aktive Transitionen im Petrinetz automatisch das Prozessnetz."
+        "INSTRUCTION_AUTO_FIRING_TEXT": "Im Lernmodus erstellt das Klicken auf aktivierte Transitionen im Petrinetz automatisch das Prozessnetz."
     },
     "EXAMPLE_MENU": {
         "TOOLTIP": "Klausuraufgaben öffnen",
