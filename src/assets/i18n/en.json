@@ -238,7 +238,7 @@
         "INSTRUCTION_MIDDLE_CLICK_DELETE_CONN": "Middle-click a connection to delete it.",
         "INSTRUCTION_VALIDATE_TOAST": "Click the checklist button to validate the process net.",
         "INSTRUCTION_AUTO_FIRING": "Auto Creation",
-        "INSTRUCTION_AUTO_FIRING_TEXT": "In learn mode, clicking active transitions in the Petri net automatically builds the process net."
+        "INSTRUCTION_AUTO_FIRING_TEXT": "In learn mode, clicking activated transitions in the Petri net automatically builds the process net."
     },
     "EXAMPLE_MENU": {
         "TOOLTIP": "Open exam files",

@@ -12,7 +12,7 @@
         "SHOW_COMPLETE_GRAPH": "Vollständigen Graph anzeigen",
         "HIDE_COMPLETE_GRAPH": "Vollständigen Graph ausblenden",
         "ACTION_BUILD": "Graph aufbauen",
-        "INSTRUCTION_BUILD": "Schalte aktive Transitionen im Petri-Netz, um den Erreichbarkeitsgraphen schrittweise zu erkunden.",
+        "INSTRUCTION_BUILD": "Schalte aktivierte Transitionen im Petri-Netz, um den Erreichbarkeitsgraphen schrittweise zu erkunden.",
         "ACTION_MOVE": "Knoten verschieben",
         "INSTRUCTION_MOVE": "Linksklick und Ziehen, um Zustandsknoten frei anzuordnen.",
         "ACTION_RESET": "Zu Zustand springen",
@@ -73,7 +73,7 @@
         "VALIDATE": "Validieren",
         "PLACE": "+ Stelle",
         "TRANSITION": "+ Transition",
-        "CONTROLS": "Ziehen Sie Elemente, um neue Stellen und Transitionen zu erstellen. Rechtsklicken Sie eine Transition und eine Stelle, um eine Verbindung zwischen ihnen zu erstellen. Scrollen Sie auf einer Verbindung nach oben oder unten, um ihr Gewicht zu ändern, oder auf einer Stelle, um ihre Markierung zu ändern. Mittelklick entfernt eine Stelle, Transition oder Verbindung. Doppelklicken Sie eine Transition oder Stelle, um sie umzubenennen.",
+        "CONTROLS": "Ziehen Sie Elemente, um neue Stellen und Transitionen zu erstellen. Rechtsklicken Sie eine Transition und eine Stelle, um eine Verbindung zwischen ihnen zu erstellen. Scrollen Sie auf einer Kante nach oben oder unten, um ihr Gewicht zu ändern, oder auf einer Stelle, um ihre Markierung zu ändern. Mittelklick entfernt eine Stelle, Transition oder Kante. Doppelklicken Sie eine Transition oder Stelle, um sie umzubenennen.",
         "TOAST_SUCCESS_BODY": "Tupel erfolgreich verarbeitet",
         "TOAST_SUCCESS_HEADER": "Netz geladen",
         "TOAST_VALIDATION_HEADER": "Richtige Zeichnung",
@@ -83,13 +83,13 @@
         "TOAST_INVALIDATION_HEADER": "Zeichnung stimmt nicht überein",
         "TOAST_INVALIDATION_BODY": "Tupel und Zeichnung stimmen nicht überein",
         "VALIDATION": {
-            "MISSING_PLACES": "Fehlende Stellen: {{items}}",
-            "EXTRA_PLACES": "Zusätzliche Stellen: {{items}}",
-            "MISSING_TRANSITIONS": "Fehlende Transitionen: {{items}}",
-            "EXTRA_TRANSITIONS": "Zusätzliche Transitionen: {{items}}",
-            "MISSING_ARC": "Fehlender Bogen: {{arc}}",
-            "EXTRA_ARC": "Zusätzlicher Bogen: {{arc}}",
-            "ARC_WEIGHT_MISMATCH": "Bogengewicht stimmt nicht bei {{arc}}: erwartet {{expected}}, gefunden {{found}}",
+            "MISSING_PLACES": "Fehlende Stelle(n): {{items}}",
+            "EXTRA_PLACES": "Zusätzliche Stelle(n): {{items}}",
+            "MISSING_TRANSITIONS": "Fehlende Transition(en): {{items}}",
+            "EXTRA_TRANSITIONS": "Zusätzliche Transition(en): {{items}}",
+            "MISSING_ARC": "Fehlende Kante(n): {{arc}}",
+            "EXTRA_ARC": "Zusätzliche Kante(n): {{arc}}",
+            "ARC_WEIGHT_MISMATCH": "Kantengewicht stimmt nicht bei {{arc}}: erwartet {{expected}}, gefunden {{found}}",
             "TOKENS_MISSING": "{{count}} Marke(n) fehlen bei {{place}} (erwartet {{expected}}, gefunden {{found}})",
             "TOKENS_EXTRA": "{{count}} Marke(n) zu viel bei {{place}} (erwartet {{expected}}, gefunden {{found}})",
             "TOKENS_UNEXPECTED": "Unerwartete Marken bei {{place}}: gefunden {{found}}"
@@ -110,17 +110,17 @@
             "MOVE": "Verschieben",
             "LEFT_CLICK_MOVE": "Linksklick und Ziehen, um Elemente auf der Leinwand und aus der Palette auf die Leinwand zu verschieben.",
             "CONNECT": "Verbinden",
-            "RIGHT_CLICK_CONNECT": "Rechtsklick auf eine Stelle oder Transition, dann Rechtsklick auf den entgegengesetzten Typ, um eine Verbindung zu erstellen.",
+            "RIGHT_CLICK_CONNECT": "Rechtsklick auf eine Stelle oder Transition, dann Rechtsklick auf den entgegengesetzten Typ, um eine Kante zu erstellen.",
             "DELETE": "Löschen",
-            "MIDDLE_CLICK_DELETE": "Mittelklick auf ein Element oder eine Verbindung zum Löschen.",
+            "MIDDLE_CLICK_DELETE": "Mittelklick auf ein Element oder eine Kante zum Löschen.",
             "EDIT_LABEL": "Beschriftung bearbeiten",
             "DOUBLE_CLICK_EDIT_LABEL": "Doppelklick auf ein Element, um seine Beschriftung zu bearbeiten.",
             "SCROLL": "Scrollen",
-            "SCROLL_CHANGE_TOKENS_WEIGHT": "Verwenden Sie das Mausrad, um die Anzahl der Marken (Stellen) oder das Gewicht (Verbindung) zu ändern."
+            "SCROLL_CHANGE_TOKENS_WEIGHT": "Verwenden Sie das Mausrad, um die Anzahl der Marken (Stellen) oder das Gewicht (Kante) zu ändern."
         },
         "TOGGLE": {
             "SHOW_DRAWING": "Zeichnung anzeigen",
-            "SHOW_DRAWING_TOOLTIP": "Schalten Sie um, um die Zeichnung auf der Leinwand anzuzeigen oder auszublenden. Die Tupel-Spezifikation ist immer sichtbar."
+            "SHOW_DRAWING_TOOLTIP": "Schalten Sie um, um die Zeichnung auf der Leinwand anzuzeigen oder auszublenden beim Laden eines Netzes. Die Tupel-Spezifikation ist immer sichtbar."
         }
     },
     "PLAY": {
@@ -179,7 +179,7 @@
             "CRITICAL_PARSING_ERROR": "Beim Parsen der Datei ist ein kritischer Fehler aufgetreten.",
             "LOAD_NET_FIRST": "Bitte zuerst ein Petri-Netz laden.",
             "NO_MARKED_PLACES_FOUND": "Keine markierten Stellen gefunden.",
-            "START_PLACES_CREATED": "{{count}} Startplätze angelegt.",
+            "START_PLACES_CREATED": "{{count}} Markierte Stelle(n) angelegt.",
             "VALIDATION_ERROR": "Bitte zuerst ein Petri-Netz laden.",
             "VALIDATION_VALID_MAXIMAL": "Das Prozessnetz ist gültig und maximal.",
             "VALIDATION_VALID_WITH_INFOS": "Das Prozessnetz ist gültig.",
@@ -205,12 +205,12 @@
             "PRESET_WEIGHT_MISMATCH": "❌ Vorbereichsgewicht falsch bei {{label}} für Stelle {{place}}. Erwartet: {{expected}} / Gefunden: {{found}}",
             "POSTSET_MISMATCH": "❌ Nachbereich falsch bei {{label}}. Erwartet: {{expected}} / Gefunden: {{found}}",
             "POSTSET_WEIGHT_MISMATCH": "❌ Nachbereichsgewicht falsch bei {{label}} für Stelle {{place}}. Erwartet: {{expected}} / Gefunden: {{found}}",
-            "PLACE_NO_INCOMING": "❌ Stelle {{label}} besitzt keinen eingehenden Bogen, obwohl sie kein Startplatz in diesem Prozessnetz ist.",
+            "PLACE_NO_INCOMING": "❌ Stelle {{label}} besitzt keinen eingehende Kante, obwohl sie kein Startplatz in diesem Prozessnetz ist.",
             "PLACE_MULTIPLE_PRODUCERS": "❌ Stelle {{place}} hat mehr als einen Produzenten – verletzt Kausalität.",
             "PLACE_MULTIPLE_CONSUMERS": "❌ Stelle {{place}} hat mehr als einen Konsumenten – verletzt Konfliktfreiheit.",
             "CYCLE_DETECTED": "❌ Prozessnetz enthält einen Zyklus – Prozessnetze müssen azyklisch sein.",
-            "MISSING_START_PLACES": "❌ Startplätze fehlen im Prozessnetz: {{places}}. Bitte alle markierten Plätze platzieren.",
-            "MARKED_START_PLACES_NOT_IN_NET": "❌ Die markierten Startplätze ({{places}}) befinden sich nicht im Prozessnetz.",
+            "MISSING_START_PLACES": "❌ Markierte Stelle(n) fehlen im Prozessnetz: {{places}}. Bitte alle markierten Stellen platzieren.",
+            "MARKED_START_PLACES_NOT_IN_NET": "❌ Die markierten Stelle(n) ({{places}}) befinden sich nicht im Prozessnetz.",
             "NOT_MAXIMAL": "Info: Prozessnetz ist nicht maximal. Transition {{label}} kann mit den Stellen ({{places}}) noch ausgeführt werden."
         }
     },
@@ -239,7 +239,7 @@
         "INSTRUCTION_MIDDLE_CLICK_DELETE_CONN": "Mittelklick auf eine Verbindung zum Löschen.",
         "INSTRUCTION_VALIDATE_TOAST": "Klicken Sie auf Validieren Schaltfläche, um Ihr Prozessnetz zu überprüfen.",
         "INSTRUCTION_AUTO_FIRING": "Automatische Erstellung",
-        "INSTRUCTION_AUTO_FIRING_TEXT": "Im Lernmodus erstellt das Klicken auf aktive Transitionen im Petrinetz automatisch das Prozessnetz."
+        "INSTRUCTION_AUTO_FIRING_TEXT": "Im Lernmodus erstellt das Klicken auf aktivierte Transitionen im Petrinetz automatisch das Prozessnetz."
     },
     "EXAMPLE_MENU": {
         "TOOLTIP": "Klausuraufgaben öffnen",
