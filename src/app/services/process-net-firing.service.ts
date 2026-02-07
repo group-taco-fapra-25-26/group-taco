@@ -9,6 +9,7 @@ import { SourcePetriNetService } from './source-petri-net.service';
 import { ModeService } from './mode.service';
 import { Tab } from '../classes/tabs';
 import { DisplayService } from './display.service';
+import { AppMode } from '../classes/app-mode';
 
 export interface ProcessNetFiringFlow {
     placeId: string;
@@ -84,11 +85,14 @@ export class ProcessNetFiringService {
     /**
      * Clears the process net and resets the source diagram's marking.
      */
-    clear() {
+    clear(mode?: AppMode): void {
         this.autoFiringCount = 0;
-        this._stateService.clear();
-        if (this._displayService.diagram instanceof Diagram) {
-            this._displayService.diagram.resetMarking();
+        const diagram = this._displayService.diagram;
+        if (diagram instanceof Diagram) {
+            diagram.resetMarking();
+            this._stateService.clear(mode, diagram);
+        } else {
+            this._stateService.clear();
         }
     }
 

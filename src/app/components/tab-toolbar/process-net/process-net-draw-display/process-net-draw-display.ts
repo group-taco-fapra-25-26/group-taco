@@ -114,14 +114,17 @@ export class ProcessNetDrawDisplayComponent implements OnInit, OnDestroy, AfterV
         },
     ]);
 
-    protected readonly toolbarInstructions = computed<DrawToolbarInstruction[]>(() => [
-        { label: 'PROCESS_NET.ACTION_DRAG_DROP', text: 'PROCESS_NET.INSTRUCTION_DRAG_DROP' },
-        { label: 'PROCESS_NET.INSTRUCTION_MOVE', text: 'PROCESS_NET.INSTRUCTION_LEFT_CLICK_MOVE' },
-        { label: 'PROCESS_NET.INSTRUCTION_CONNECT', text: 'PROCESS_NET.INSTRUCTION_RIGHT_CLICK_CONNECT' },
-        { label: 'PROCESS_NET.INSTRUCTION_DELETE', text: 'PROCESS_NET.INSTRUCTION_MIDDLE_CLICK_DELETE' },
-        { label: 'PROCESS_NET.INSTRUCTION_DELETE_CONN', text: 'PROCESS_NET.INSTRUCTION_MIDDLE_CLICK_DELETE_CONN' },
-        { label: 'PROCESS_NET.INSTRUCTION_VALIDATE', text: 'PROCESS_NET.INSTRUCTION_VALIDATE_TOAST' },
-    ]);
+    protected readonly toolbarInstructions = computed<DrawToolbarInstruction[]>(() => {
+        return [
+            { label: 'PROCESS_NET.INSTRUCTION_AUTO_FIRING', text: 'PROCESS_NET.INSTRUCTION_AUTO_FIRING_TEXT' },
+            { label: 'PROCESS_NET.ACTION_DRAG_DROP', text: 'PROCESS_NET.INSTRUCTION_DRAG_DROP' },
+            { label: 'PROCESS_NET.INSTRUCTION_MOVE', text: 'PROCESS_NET.INSTRUCTION_LEFT_CLICK_MOVE' },
+            { label: 'PROCESS_NET.INSTRUCTION_CONNECT', text: 'PROCESS_NET.INSTRUCTION_RIGHT_CLICK_CONNECT' },
+            { label: 'PROCESS_NET.INSTRUCTION_DELETE', text: 'PROCESS_NET.INSTRUCTION_MIDDLE_CLICK_DELETE' },
+            { label: 'PROCESS_NET.INSTRUCTION_DELETE_CONN', text: 'PROCESS_NET.INSTRUCTION_MIDDLE_CLICK_DELETE_CONN' },
+            { label: 'PROCESS_NET.INSTRUCTION_VALIDATE', text: 'PROCESS_NET.INSTRUCTION_VALIDATE_TOAST' },
+        ];
+    });
 
     private draggedElement: DrawnElement | null = null;
     private dragOffset = { x: 0, y: 0 };
@@ -149,9 +152,10 @@ export class ProcessNetDrawDisplayComponent implements OnInit, OnDestroy, AfterV
             return;
         }
 
+        const isExamMode = this.modeService.isExamMode(Tab.PROCESS_NET);
         const elements = untracked(this.drawnElements);
 
-        if (elements.length === 0 && !this.modeService.isExamMode(Tab.PROCESS_NET)) {
+        if (elements.length === 0 && !isExamMode) {
             this.onCreateStartPosition();
         }
     });

@@ -206,6 +206,7 @@
             "POSTSET_WEIGHT_MISMATCH": "❌ Postset weight mismatch at {{label}} for place {{place}}. Expected: {{expected}} / Found: {{found}}",
             "PLACE_NO_INCOMING": "❌ Place {{label}} has no incoming arc, although it is not a start place in this process net.",
             "PLACE_MULTIPLE_PRODUCERS": "❌ Place {{place}} has more than one producer – violates causality.",
+            "PLACE_MULTIPLE_CONSUMERS": "❌ Place {{place}} has more than one consumer – violates no-conflict property.",
             "CYCLE_DETECTED": "❌ Process net contains a cycle – process nets must be acyclic.",
             "MISSING_START_PLACES": "❌ Start places missing in process net: {{places}}. Please place all marked places.",
             "MARKED_START_PLACES_NOT_IN_NET": "❌ The marked start places ({{places}}) are not in the process net.",
@@ -235,7 +236,9 @@
         "INSTRUCTION_RIGHT_CLICK_CONNECT": "Right-click a place or transition, then right-click the opposite type to create a connection.",
         "INSTRUCTION_MIDDLE_CLICK_DELETE": "Middle-click an element to delete it.",
         "INSTRUCTION_MIDDLE_CLICK_DELETE_CONN": "Middle-click a connection to delete it.",
-        "INSTRUCTION_VALIDATE_TOAST": "Click the checklist button to validate the process net."
+        "INSTRUCTION_VALIDATE_TOAST": "Click the checklist button to validate the process net.",
+        "INSTRUCTION_AUTO_FIRING": "Auto Creation",
+        "INSTRUCTION_AUTO_FIRING_TEXT": "In learn mode, clicking active transitions in the Petri net automatically builds the process net."
     },
     "EXAMPLE_MENU": {
         "TOOLTIP": "Open exam files",
