@@ -5,6 +5,7 @@ import { DiagramTransition } from '../classes/diagram/diagram-transition';
 import { Diagram } from '../classes/diagram/diagram';
 import { viewBoxValues } from '../components/display/display.constants';
 import { Subject } from 'rxjs';
+import { AppMode } from '../classes/app-mode';
 
 export interface DrawnElement {
     node: DiagramNode;
@@ -64,11 +65,14 @@ export class ProcessNetStateService {
         this.connections.update(updater);
     }
 
-    clear() {
+    clear(mode?: AppMode, diagram?: Diagram) {
         this.drawnElements.set([]);
         this.connections.set([]);
         this.elementIdCounter = 0;
         this.connectionIdCounter = 0;
+        if (mode === AppMode.LEARN && diagram) {
+            this.createStartPositions(diagram, viewBoxValues);
+        }
     }
 
     generateElementId(prefix: string): string {

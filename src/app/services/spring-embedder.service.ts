@@ -69,6 +69,7 @@ export class SpringEmbedderService {
                 this._sourceNetService.optimalLayoutCalculated();
                 break;
             }
+            this._separateParallelArcs(arcs, nodes);
             await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
         }
         this._separateParallelArcs(arcs, nodes);

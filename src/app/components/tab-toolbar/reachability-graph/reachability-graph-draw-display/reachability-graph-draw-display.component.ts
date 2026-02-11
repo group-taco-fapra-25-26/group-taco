@@ -150,7 +150,7 @@ export class ReachabilityGraphDrawDisplayComponent extends DisplayComponent {
         {
             icon: 'checklist',
             tooltip: 'REACHABILITY_GRAPH.BUTTON_VALIDATE_NET',
-            isActive: !this.isEmpty(),
+            isActive: !this.isEmpty() && !this.showCompleteGraph(),
             color: 'primary',
             action: () => this.onValidate(),
         },
@@ -183,6 +183,16 @@ export class ReachabilityGraphDrawDisplayComponent extends DisplayComponent {
         { label: 'REACHABILITY_GRAPH.ACTION_BUILD', text: 'REACHABILITY_GRAPH.INSTRUCTION_BUILD' },
         { label: 'REACHABILITY_GRAPH.ACTION_MOVE', text: 'REACHABILITY_GRAPH.INSTRUCTION_MOVE' },
         { label: 'REACHABILITY_GRAPH.ACTION_RESET', text: 'REACHABILITY_GRAPH.INSTRUCTION_RESET' },
+        { label: 'REACHABILITY_GRAPH.ACTION_VALIDATE', text: 'REACHABILITY_GRAPH.INSTRUCTION_VALIDATE' },
+        { label: 'REACHABILITY_GRAPH.ACTION_TOGGLEVIEW', text: 'REACHABILITY_GRAPH.INSTRUCTION_TOGGLEVIEW' },
+        {
+            label: 'REACHABILITY_GRAPH.ACTION_SHOWCOMPLETEGRAPH',
+            text: 'REACHABILITY_GRAPH.INSTRUCTION_SHOWCOMPLETEGRAPH',
+        },
+        {
+            label: 'REACHABILITY_GRAPH.ACTION_HIDECOMPLETEGRAPH',
+            text: 'REACHABILITY_GRAPH.INSTRUCTION_HIDECOMPLETEGRAPH',
+        },
     ]);
 
     private clearDrawing() {

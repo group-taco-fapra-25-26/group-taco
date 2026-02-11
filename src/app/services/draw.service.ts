@@ -3,6 +3,8 @@ import { DiagramNode } from '../classes/diagram/diagram-node';
 import { DiagramPlace, DiagramPlaceLabelPlacement } from '../classes/diagram/diagram-place';
 import { DiagramTransition, DiagramTransitionOptions } from '../classes/diagram/diagram-transition';
 import { DiagramArc } from '../classes/diagram/diagram-arc';
+import { CanvasDiagram } from '../classes/diagram/canvas-diagram';
+import { Connection, DrawnElement } from '../classes/diagram/drawn-element';
 import { PanningService } from './panning.service';
 import { ParserService } from './parser.service';
 import { SourcePetriNetService } from './source-petri-net.service';
@@ -22,18 +24,7 @@ import { LabelEditDialogComponent } from '../components/label-edit-dialog/label-
 import { PLACE_RADIUS as DISPLAY_PLACE_RADIUS, TRANSITION_SIZE } from '../components/display/display.constants';
 import { TabStateService } from './tab-state.service';
 import { ProcessNetStateService } from './process-net-state.service';
-
-export interface DrawnElement {
-    node: DiagramNode;
-    id: string;
-}
-
-interface Connection {
-    id: string;
-    aId: string;
-    bId: string;
-    weight: number;
-}
+import { PetriNetLoaderService } from './petri-net-loader.service';
 
 interface GlobalDragData {
     elementType: 'place' | 'transition';
@@ -176,8 +167,17 @@ export class DrawService implements OnDestroy {
     tupleString = signal('');
     readonly tuplePreview = computed(() => this.parseTuplePreview(this.tupleString()));
 
+    /** Signal to control whether the drawing should be loaded and displayed */
+    showDrawing = signal(true);
+
     setTupleString(value: string) {
         this.tupleString.set(value);
+    }
+
+    setShowDrawing(value: boolean) {
+        this.showDrawing.set(value);
+        // The toggle only controls whether incoming nets are drawn
+        // It does not retroactively load or clear existing drawings
     }
 
     showTupleInline() {
@@ -255,6 +255,8 @@ export class DrawService implements OnDestroy {
     private panning = inject(PanningService);
     /** Angular Material dialog service for modals */
     private _dialog = inject(MatDialog);
+    /** Service for loading Petri nets from files */
+    private _petriNetLoaderService = inject(PetriNetLoaderService);
 
     /**
      * Checks if the draw tab is in exam mode.
@@ -280,9 +282,6 @@ export class DrawService implements OnDestroy {
         return this.panning.viewBox;
     }
 
-    /** Effect for synchronizing tuple in exam mode */
-    private readonly _examTupleEffect = this.createExamTupleEffect();
-
     /** Effect for ensuring tuple preview is shown inline when entering exam mode */
     private readonly _examModePreviewEffect = effect(() => {
         if (this.isExamMode) {
@@ -302,54 +301,59 @@ export class DrawService implements OnDestroy {
      */
     init(): void {
         if (this.sourceNetSub || this.sourceTextSub) return;
+
+        // Subscribe to sourceText$ to detect new net uploads (loadNewNet calls)
+        // This updates the tuple even in exam mode when a new net is uploaded
+        this.sourceTextSub = this._sourceNetService.sourceText$.subscribe((text: string) => {
+            if (text && this.isExamMode) {
+                // A new net was loaded via loadNewNet, update the tuple string
+                const diagram = this._sourceNetService.getCurrentSourceNet();
+                if (diagram) {
+                    const tuple = this._serializationService.serializeTuple(diagram);
+                    if (tuple) {
+                        this.tupleString.set(tuple);
+                    }
+                }
+            }
+        });
+
         this.sourceNetSub = this._sourceNetService.sourceNet$.subscribe((diagram: Diagram | null) => {
             if (this.suppressNextSourceLoad) {
                 this.suppressNextSourceLoad = false;
                 return;
             }
-            if (this.isExamMode) {
-                // In exam mode, don't sync changes from other tabs to the draw tab
-                // to prevent the drawing in the draw tab from being overwritten.
-                // When a net is loaded, show only the tuple and keep the canvas empty.
-                if (diagram) {
-                    this.hasUserDrawnInExamMode = false;
-                    this.clearCanvas(true, true);
-                    const tupleFromSource = this._serializationService.serializeTuple(diagram);
-                    if (tupleFromSource) {
-                        this.tupleString.set(tupleFromSource);
-                        // Ensure the inline tuple input is shown, not the preview
-                        this.showTuplePreviewOnly.set(false);
-                    }
-                } else {
-                    // Check if sourceText is empty (from clear()) or has content (from file upload)
-                    const sourceText = this._sourceNetService.getSourceText();
-                    const preserveTuple = !!sourceText && sourceText.trim().length > 0;
-                    this.clearCanvas(true, preserveTuple);
-                }
-                return;
-            }
             if (diagram) {
-                this.loadDiagramIntoCanvas(diagram);
-                const tuple = this._serializationService.serializeTuple(diagram);
-                if (tuple && !this.isExamMode) {
-                    this.tupleString.set(tuple);
+                // Check if the incoming diagram matches what's currently on the canvas
+                // This prevents clearing when the diagram is just the user's own work coming back (e.g., tab switches)
+                const currentDiagram = this.buildDiagramFromCanvas();
+                const isSameDiagram = this.diagramsMatch(currentDiagram, diagram);
+
+                // If only positions changed, update positions in place for smooth animation
+                if (isSameDiagram && this.showDrawing()) {
+                    this.updateCanvasPositionsFromDiagram(diagram);
+                } else if (!isSameDiagram || this.drawnElements().length === 0) {
+                    // Always clear old drawing when a new net arrives
+                    this.drawnElements.set([]);
+                    this.connections.set([]);
+                    this.selectedElementId.set(null);
+
+                    // Only load the new drawing if showDrawing is true
+                    if (this.showDrawing()) {
+                        this.loadDiagramIntoCanvas(diagram);
+                    }
+                }
+
+                // In exam mode, preserve the original tuple string (don't update from edited diagrams)
+                // The sourceText$ subscription above handles new uploads
+                if (!this.isExamMode) {
+                    const tuple = this._serializationService.serializeTuple(diagram);
+                    if (tuple) {
+                        this.tupleString.set(tuple);
+                    }
                 }
                 this.showTuplePreviewIfAvailable();
             } else {
                 this.clearCanvas(true);
-            }
-        });
-
-        this.sourceTextSub = this._sourceNetService.sourceText$.subscribe((text: string | null) => {
-            // In exam mode, sync the tuple from source text
-            if (this.isExamMode) {
-                if (text && text.trim().length > 0) {
-                    this.tupleString.set(text);
-                    this.showTuplePreviewOnly.set(false);
-                } else {
-                    // Clear tuple when sourceText is cleared (from sidebar delete)
-                    this.tupleString.set('');
-                }
             }
         });
     }
@@ -387,7 +391,6 @@ export class DrawService implements OnDestroy {
         document.removeEventListener('mouseup', this.onDocumentMouseUp, true);
         this.sourceNetSub?.unsubscribe();
         this.sourceTextSub?.unsubscribe();
-        this._examTupleEffect?.destroy?.();
         this._examModePreviewEffect?.destroy?.();
     }
 
@@ -492,8 +495,8 @@ export class DrawService implements OnDestroy {
     /**
      * Handles the drop event on the canvas.
      *
-     * Creates a new element (place or transition) at the drop location.
-     * Retrieves drag data from either the global window object or the event's dataTransfer.
+     * Creates a new element (place or transition) at the drop location,
+     * or loads a file if a file is dropped onto the canvas.
      *
      * @param {DragEvent} event - The drop event
      */
@@ -501,6 +504,14 @@ export class DrawService implements OnDestroy {
         event.preventDefault();
         this.isDragOver.set(false);
 
+        // Check for file drops first
+        if (event.dataTransfer?.files && event.dataTransfer.files.length > 0) {
+            const file = event.dataTransfer.files[0];
+            this._petriNetLoaderService.loadFile(file);
+            return;
+        }
+
+        // Handle palette element drops
         const dragData = window.__dragData as GlobalDragData | undefined;
         if (dragData) {
             this.placeElementAtClient(dragData.elementType, dragData.elementLabel, event.clientX, event.clientY);
@@ -641,10 +652,6 @@ export class DrawService implements OnDestroy {
             if (this.selectedElementId() === element.id) {
                 this.selectedElementId.set(null);
             }
-            if (this.isExamMode) {
-                this.hasUserDrawnInExamMode = true;
-            }
-            // Note: Deliberately NOT calling syncSourceNetFromCanvas() to preserve the tuple
         }
     }
 
@@ -666,9 +673,10 @@ export class DrawService implements OnDestroy {
         const diagram = this._parserService.parse(input);
         if (diagram) {
             this._sourceNetService.loadNewNet(diagram, input);
-            this._displayService.display(diagram);
             this.loadDiagramIntoCanvas(diagram);
-            this._springEmbedderService.calculateLayout().catch((error) => console.error(error));
+            const drawnGraph = new CanvasDiagram(this.drawnElements, this.connections);
+            this._displayService.display(drawnGraph);
+            this._springEmbedderService.calculateLayout(drawnGraph).catch((error) => console.error(error));
             this._toaster.showSuccess('TUPLE_INPUT.TOAST_SUCCESS_HEADER', 'TUPLE_INPUT.TOAST_SUCCESS_BODY');
             this.showTuplePreviewIfAvailable();
 
@@ -970,39 +978,6 @@ export class DrawService implements OnDestroy {
     }
 
     /**
-     * Creates an Angular effect that synchronizes the tuple string in exam mode.
-     *
-     * In exam mode, automatically populates the tuple input field with:
-     * - The serialized tuple from the source diagram if available
-     * - The raw source text as fallback
-     *
-     * This ensures students see the Petri net specification in exam mode.
-     *
-     * @returns The effect reference for lifecycle management
-     * @private
-     */
-    private createExamTupleEffect() {
-        return effect(() => {
-            if (!this.isExamMode) return;
-            // Don't overwrite the tuple if the user has already started drawing
-            if (this.hasUserDrawnInExamMode) return;
-
-            const sourceDiagram = this._sourceNetService.getCurrentSourceNet();
-            const sourceText = this._sourceNetService.getSourceText();
-            if (sourceDiagram) {
-                const tupleFromSource = this._serializationService.serializeTuple(sourceDiagram);
-                if (tupleFromSource) {
-                    this.tupleString.set(tupleFromSource);
-                }
-                return;
-            }
-            if (sourceText) {
-                this.tupleString.set(sourceText);
-            }
-        });
-    }
-
-    /**
      * Validates the student's drawn Petri net against the tuple specification in exam mode.
      *
      * Performs comprehensive validation by comparing:
@@ -1249,25 +1224,9 @@ export class DrawService implements OnDestroy {
         this.drawnElements.update((elements) =>
             elements.map((el) => {
                 if (el.id !== this.draggedElement?.id) return el;
-                let newNode: DiagramNode;
-                if (el.node instanceof DiagramPlace) {
-                    const tokens = (el.node as DiagramPlace).tokenCount() ?? 0;
-                    const originalLabel = el.node.label ?? el.node.displayLabel;
-                    newNode = this.buildPlace(el.node.id, originalLabel, tokens, {
-                        innerLabel: undefined,
-                        hideTokens: el.node.hideTokens,
-                        labelPlacement: 'below',
-                        isStartPlace: el.node.isStartPlace,
-                    });
-                } else if (el.node instanceof DiagramTransition) {
-                    const label = (el.node as DiagramTransition).displayLabel ?? el.node.id;
-                    newNode = this.buildTransition(el.node.id, label, { innerLabel: label });
-                } else {
-                    newNode = el.node;
-                }
-                newNode.x = newX;
-                newNode.y = newY;
-                return { ...el, node: newNode };
+                el.node.x = newX;
+                el.node.y = newY;
+                return { ...el };
             }),
         );
     };
@@ -1460,6 +1419,68 @@ export class DrawService implements OnDestroy {
     }
 
     /**
+     * Compares two diagrams to check if they represent the same Petri net structure.
+     * Checks places, transitions, arcs, and markings for equality.
+     *
+     * @param {Diagram} diagram1 - First diagram to compare
+     * @param {Diagram} diagram2 - Second diagram to compare
+     * @returns {boolean} True if diagrams match, false otherwise
+     * @private
+     */
+    private diagramsMatch(diagram1: Diagram, diagram2: Diagram): boolean {
+        // Compare number of places and transitions
+        if (diagram1.places.length !== diagram2.places.length) return false;
+        if (diagram1.transitions.length !== diagram2.transitions.length) return false;
+        if (diagram1.arcs.length !== diagram2.arcs.length) return false;
+
+        // Check if all places match (by id and token count)
+        const places1Map = new Map(diagram1.places.map((p) => [p.id, p]));
+        for (const place2 of diagram2.places) {
+            const place1 = places1Map.get(place2.id);
+            if (!place1 || place1.tokenCount() !== place2.tokenCount()) return false;
+        }
+
+        // Check if all transitions match (by id)
+        const transitions1Set = new Set(diagram1.transitions.map((t) => t.id));
+        for (const transition2 of diagram2.transitions) {
+            if (!transitions1Set.has(transition2.id)) return false;
+        }
+
+        // Check if all arcs match (by source, target, and weight)
+        const arcs1Set = new Set(diagram1.arcs.map((a) => `${a.source}->${a.target}:${a.weight}`));
+        for (const arc2 of diagram2.arcs) {
+            const arcKey = `${arc2.source}->${arc2.target}:${arc2.weight}`;
+            if (!arcs1Set.has(arcKey)) return false;
+        }
+
+        return true;
+    }
+
+    private updateCanvasPositionsFromDiagram(diagram: Diagram) {
+        const placeMap = new Map(diagram.places.map((p) => [p.id, p]));
+        const transitionMap = new Map(diagram.transitions.map((t) => [t.id, t]));
+
+        this.drawnElements.update((elements) =>
+            elements.map((el) => {
+                if (el.node instanceof DiagramPlace) {
+                    const updated = placeMap.get(el.id);
+                    if (updated) {
+                        el.node.x = updated.x;
+                        el.node.y = updated.y;
+                    }
+                } else if (el.node instanceof DiagramTransition) {
+                    const updated = transitionMap.get(el.id);
+                    if (updated) {
+                        el.node.x = updated.x;
+                        el.node.y = updated.y;
+                    }
+                }
+                return { ...el };
+            }),
+        );
+    }
+
+    /**
      * Synchronizes the current canvas state to the source Petri net.
      *
      * Builds a Diagram from the current canvas elements and connections,
@@ -1467,17 +1488,13 @@ export class DrawService implements OnDestroy {
      * - The source net service (for cross-tab synchronization)
      * - The display service (for visualization)
      * - The tab state service (for marking history)
-     * - The tuple string (for text representation)
+     * - The tuple string (for text representation, except in exam mode)
      *
-     * In exam mode, synchronization is skipped to prevent the student's work
-     * from being saved or shared with other tabs.
+     * In exam mode, the tuple string is preserved to show the original specification.
      *
      * @private
      */
     private syncSourceNetFromCanvas() {
-        if (this.isExamMode) {
-            return;
-        }
         const diagram = this.buildDiagramFromCanvas();
 
         this.suppressNextSourceLoad = true;
@@ -1486,9 +1503,12 @@ export class DrawService implements OnDestroy {
         this._displayService.display(diagram);
         this._processNetStateService.clear();
 
-        const tuple = this._serializationService.serializeTuple(diagram);
-        if (tuple && !this.isExamMode) {
-            this.tupleString.set(tuple);
+        // In exam mode, preserve the original tuple string (the specification to match)
+        if (!this.isExamMode) {
+            const tuple = this._serializationService.serializeTuple(diagram);
+            if (tuple) {
+                this.tupleString.set(tuple);
+            }
         }
     }
 
