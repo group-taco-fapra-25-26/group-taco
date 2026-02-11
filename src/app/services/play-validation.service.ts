@@ -18,24 +18,32 @@ export class PlayValidationService {
     /**
      * Finds valid firing sequences in a Petri net diagram beginning at its start marking.
      * @param diagram  - The Petri net diagram for which firing sequences are to be found.
-     * @param maxTransitions - The maximum number of transitions in the firing sequences.
+     * @param minTransitionCount - The minimum number of transitions in the firing sequences.
      * @param maxSequencesCount - The maximum number of firing sequences to find.
      */
-    findSequences(diagram: Diagram, maxTransitions: number, maxSequencesCount: number): void {
+    findSequences(diagram: Diagram, minTransitionCount: number, maxSequencesCount: number): void {
         const visitedSequences = new Map<number, Set<string>>();
         const queue: { marking: Record<string, number>; sequence: string[] }[] = [];
 
         diagram.resetMarking();
         const startMarking = { ...diagram.marking };
         queue.push({ marking: startMarking, sequence: [] });
-        this._playService.addFiringEntry('', 0, startMarking, true);
-        let foundSequencesCount = 1;
+        let foundSequencesCount = 0;
 
         while (queue.length > 0 && foundSequencesCount < maxSequencesCount) {
             const { marking, sequence } = queue.shift()!;
             const currentLength = sequence.length;
 
-            if (currentLength >= maxTransitions) continue;
+            if (currentLength >= minTransitionCount) {
+                const newSequenceStr = sequence.join(' ');
+                const sequencesOfLength = visitedSequences.get(currentLength) || new Set<string>();
+                if (!sequencesOfLength.has(newSequenceStr)) {
+                    sequencesOfLength.add(newSequenceStr);
+                    visitedSequences.set(currentLength, sequencesOfLength);
+                    this._playService.addFiringEntry(newSequenceStr, currentLength, marking, true);
+                    foundSequencesCount++;
+                }
+            }
 
             for (const transition of diagram.transitions) {
                 if (foundSequencesCount >= maxSequencesCount) break;
@@ -46,22 +54,11 @@ export class PlayValidationService {
                     diagram.updateMarking();
                     const currentMarking: Record<string, number> = { ...diagram.marking };
                     const newSequence = [...sequence, transition.label || transition.id];
-                    const newSequenceStr = newSequence.join(' ');
 
-                    const sequencesOfLength = visitedSequences.get(newSequence.length) || new Set<string>();
-                    if (!sequencesOfLength.has(newSequenceStr)) {
-                        sequencesOfLength.add(newSequenceStr);
-                        visitedSequences.set(newSequence.length, sequencesOfLength);
-                        this._playService.addFiringEntry(newSequenceStr, newSequence.length, currentMarking, true);
-                        foundSequencesCount++;
-
-                        if (newSequence.length < maxTransitions) {
-                            queue.push({
-                                marking: currentMarking,
-                                sequence: newSequence,
-                            });
-                        }
-                    }
+                    queue.push({
+                        marking: currentMarking,
+                        sequence: newSequence,
+                    });
                 }
             }
         }

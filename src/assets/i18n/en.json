@@ -110,7 +110,7 @@
         "NEW_SEQUENCE": "New Sequence",
         "VALIDATE_SEQUENCES": "Validate Sequences",
         "FIND_SEQUENCES": "Find Sequences...",
-        "MAX_TRANSITION_COUNT": "max. transition count",
+        "MIN_TRANSITION_COUNT": "min. transition count",
         "MAX_SEQUENCE_COUNT": "max. sequence count",
         "NOT_PRESENT": "not present",
         "NOT_ACTIVATED": "not activated"
@@ -161,7 +161,7 @@
             "VALIDATION_INVALID": "The process net is invalid.",
             "VALID_SEQUENCES": "All firing sequences are valid.",
             "INVALID_SEQUENCES": "The following firing sequences are invalid. Hover over the info icon next to each invalid sequence in the table to see details.",
-            "SEQUENCE_GENERATION": "Generated firing sequences of the Petri net, limited to {{maxTransitionCount}} transitions per sequence and a total of {{maxSequenceCount}} sequences. This represents a bounded sublanguage of the Petri net.",
+            "SEQUENCE_GENERATION": "Generated firing sequences of the Petri net with minimum {{minTransitionCount}} transitions per sequence and a total of {{maxSequenceCount}} sequences. This represents a bounded sublanguage of the Petri net.",
             "SWITCHED_STATE_SUCCESSFULLY": "Petri Net marking was successfully switched to corresponding state.",
             "STATENODE_ARC_EXISTING": "StateNode and arc already exist, state of RG was updated.",
             "PETRI_NET_UNLIMITED": "Petri Net is unlimited.",

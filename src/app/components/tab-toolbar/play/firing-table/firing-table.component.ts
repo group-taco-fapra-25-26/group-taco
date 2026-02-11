@@ -57,9 +57,9 @@ export class FiringTableComponent implements OnInit, OnDestroy {
 
     // Attributes used for the "Find Sequences" functionality
     isFindSequencesFormVisible = false;
-    private readonly _MAX_TRANSITIONS_DEFAULT: number = 50;
+    private readonly _MIN_TRANSITIONS_DEFAULT: number = 0;
     private readonly _MAX_SEQUENCES_DEFAULT: number = 250;
-    maxTransitionCount: number = this._MAX_TRANSITIONS_DEFAULT;
+    minTransitionCount: number = this._MIN_TRANSITIONS_DEFAULT;
     maxSequenceCount: number = this._MAX_SEQUENCES_DEFAULT;
 
     ngOnInit(): void {
@@ -67,7 +67,7 @@ export class FiringTableComponent implements OnInit, OnDestroy {
             .pipe(
                 tap((_) => {
                     this._diagram = undefined;
-                    this.maxTransitionCount = this._MAX_TRANSITIONS_DEFAULT;
+                    this.minTransitionCount = this._MIN_TRANSITIONS_DEFAULT;
                     this.maxSequenceCount = this._MAX_SEQUENCES_DEFAULT;
                 }),
                 filter((diagram): diagram is Diagram => diagram instanceof Diagram),
@@ -180,14 +180,14 @@ export class FiringTableComponent implements OnInit, OnDestroy {
     onFindSequences(): void {
         if (!this._diagram) return;
         this._playService.clearFiringEntries();
-        this.playValidationService.findSequences(this._diagram, this.maxTransitionCount, this.maxSequenceCount);
+        this.playValidationService.findSequences(this._diagram, this.minTransitionCount, this.maxSequenceCount);
         this._diagram.resetMarking();
         this._notificationService.showSuccess(
             'TOASTER.HEADER.SEQUENCE_GENERATION',
             'TOASTER.BODY.SEQUENCE_GENERATION',
             {
                 duration: 8000,
-                messageParams: { maxTransitionCount: this.maxTransitionCount, maxSequenceCount: this.maxSequenceCount },
+                messageParams: { minTransitionCount: this.minTransitionCount, maxSequenceCount: this.maxSequenceCount },
             },
         );
         this.isFindSequencesFormVisible = false;
@@ -210,12 +210,12 @@ export class FiringTableComponent implements OnInit, OnDestroy {
     }
 
     /**
-     * Updates the maximum transition count based on user input.
+     * Updates the minimum transition count based on user input.
      * @param event - The input event containing the new value.
      */
-    onMaxTransitionCountChange(event: Event): void {
+    onMinTransitionCountChange(event: Event): void {
         const inputElement = event.target as HTMLInputElement;
-        this.maxTransitionCount = Number(inputElement.value);
+        this.minTransitionCount = Number(inputElement.value);
     }
 
     /**

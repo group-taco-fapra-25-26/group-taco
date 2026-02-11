@@ -2,14 +2,14 @@
     @if (isFindSequencesFormVisible) {
         <div class="find-sequences-form">
             <div class="slider-wrapper">
-                <span class="slider-label">{{ 'PLAY.MAX_TRANSITION_COUNT' | translate }}:</span>
+                <span class="slider-label">{{ 'PLAY.MIN_TRANSITION_COUNT' | translate }}:</span>
                 <mat-slider [min]="0" [max]="50" [step]="1">
                     <input
                         matSliderThumb
-                        [(ngModel)]="maxTransitionCount"
-                        (change)="onMaxTransitionCountChange($event)" />
+                        [(ngModel)]="minTransitionCount"
+                        (change)="onMinTransitionCountChange($event)" />
                 </mat-slider>
-                <span class="slider-value">{{ maxTransitionCount }}</span>
+                <span class="slider-value">{{ minTransitionCount }}</span>
             </div>
 
             <div class="form-divider-vertical" aria-hidden="true"></div>

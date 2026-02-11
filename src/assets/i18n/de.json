@@ -111,7 +111,7 @@
         "NEW_SEQUENCE": "Neue Sequenz",
         "VALIDATE_SEQUENCES": "Sequenzen validieren",
         "FIND_SEQUENCES": "Sequenzen finden...",
-        "MAX_TRANSITION_COUNT": "max. Anzahl Transitionen",
+        "MIN_TRANSITION_COUNT": "min. Anzahl Transitionen",
         "MAX_SEQUENCE_COUNT": "max. Anzahl Sequenzen",
         "NOT_PRESENT": "nicht vorhanden",
         "NOT_ACTIVATED": "nicht aktiviert"
@@ -163,7 +163,7 @@
             "VALIDATION_INVALID": "Das Prozessnetz ist ungültig.",
             "VALID_SEQUENCES": "Alle Schaltfolgen sind korrekt.",
             "INVALID_SEQUENCES": "Folgende Schaltfolgen sind fehlerhaft. Für weitere Informationen die Maus über das Info-Symbol neben der entsprechenden Sequenz in der Tabelle bewegen.",
-            "SEQUENCE_GENERATION": "Schaltsequenzen des Petrinetzes wurden generiert mit maximal {{maxTransitionCount}} Transitionen pro Ablauf und auf {{maxSequenceCount}} Sequenzen begrenzt. Dies entspricht einer Teilmenge der Sprache des Petrinetzes.",
+            "SEQUENCE_GENERATION": "Schaltsequenzen des Petrinetzes wurden generiert mit mindestens {{minTransitionCount}} Transitionen pro Ablauf und auf {{maxSequenceCount}} Sequenzen begrenzt. Dies entspricht einer Teilmenge der Sprache des Petrinetzes.",
             "SWITCHED_STATE_SUCCESSFULLY": "Die Markierung des Petrinetzes wurde erfolgreich angepasst.",
             "STATENODE_EXISTING": "Der Zustandsknoten existiert bereits, neue Verbindung wurde erstellt.",
             "STATENODE_ARC_EXISTING": "Der Zustandsknoten und die Verbindung existieren bereits, EG-Status wurde angepasst.",
