@@ -1,3 +1,10 @@
+:host {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 2px 2px 6px 2px;
+}
+
 .pn-toolbar {
     display: flex;
     gap: 8px;
@@ -27,10 +34,31 @@
     display: flex;
     align-items: center;
     gap: 10px;
+    white-space: nowrap;
 }
 
 .pn-help-header {
     padding-left: 10px;
+    height: auto !important;
+    min-height: 40px;
+    padding-top: 2px;
+    padding-bottom: 2px;
+}
+
+.pn-help-header ::ng-deep .mat-content {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    row-gap: 4px;
+}
+
+.pn-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+    flex-wrap: wrap;
+    justify-content: flex-end;
 }
 
 .pn-help-content {
@@ -130,4 +158,23 @@
 
 .pn-toggle-switch:hover .pn-toggle-slider {
     box-shadow: 0 0 8px rgba(25, 118, 210, 0.3);
+}
+
+.leopard-icon {
+    display: inline-block;
+    font-size: 24px;
+    line-height: 1;
+    transform: translateY(-2px);
+    transition: transform 0.2s ease-in-out;
+}
+
+button[data-tour='leopard']:hover .leopard-icon {
+    transform: translateY(-2px) scale(1.25);
+}
+
+.leopard-icon-menu {
+    display: inline-block;
+    font-size: 24px;
+    margin-right: 16px;
+    line-height: 1;
 }

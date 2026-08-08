@@ -1,12 +1,11 @@
 import { computed, inject, Injectable, Injector, signal } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
-import { ConfirmDialogComponent } from '../components/confirm-dialog/confirm-dialog.component';
+import { ConfirmDialogComponent } from '../components/shared/confirm-dialog/confirm-dialog.component';
 import { AppMode } from '../classes/app-mode';
 import { Tab } from '../classes/tabs';
 import { ToasterNotificationService } from './toaster-notification.service';
+import { TokenTrailStateService } from './token-trail-state.service';
 import { DrawService } from './draw.service';
-import { ProcessNetStateService } from './process-net-state.service';
-import { ReachabilityGraphService } from '../reachability-graph.service';
 
 @Injectable({ providedIn: 'root' })
 export class ModeService {
@@ -19,7 +18,14 @@ export class ModeService {
     >();
 
     constructor() {
-        const tabs: Tab[] = [Tab.DRAW, Tab.PLAY, Tab.REACHABILITY_GRAPH, Tab.PROCESS_NET];
+        const tabs: Tab[] = [
+            Tab.DRAW,
+            Tab.PLAY,
+            Tab.REACHABILITY_GRAPH,
+            Tab.PROCESS_NET,
+            Tab.TOKEN_TRAIL,
+            Tab.PRACTICE,
+        ];
         tabs.forEach((tab) => {
             this._tabModeSignals.set(tab, {
                 mode: signal<AppMode>(AppMode.LEARN),
@@ -44,7 +50,7 @@ export class ModeService {
         return this.getMode(tab) === AppMode.EXAM;
     }
 
-    toggleMode(tab: Tab): void {
+    toggleMode(tab: Tab, onDiscard?: () => void): void {
         const tabSignals = this._tabModeSignals.get(tab);
         if (!tabSignals) return;
 
@@ -54,6 +60,7 @@ export class ModeService {
                     title: 'CONFIRM_DIALOG.TITLE',
                     tab: tab,
                     message: tab === Tab.DRAW ? 'CONFIRM_DIALOG.MESSAGE_DRAW' : 'CONFIRM_DIALOG.MESSAGE_DEFAULT',
+                    onDiscard,
                 },
             });
         }
@@ -70,10 +77,9 @@ export class ModeService {
         switch (tab) {
             case Tab.DRAW:
                 return this._injector.get(DrawService).drawnElements().length > 0;
-            case Tab.PROCESS_NET:
-                return this._injector.get(ProcessNetStateService).drawnElements().length > 0;
-            case Tab.REACHABILITY_GRAPH:
-                return this._injector.get(ReachabilityGraphService).reachabilityGraphSignal().nodes.length > 1;
+            case Tab.TOKEN_TRAIL:
+            case Tab.PRACTICE:
+                return this._injector.get(TokenTrailStateService).drawnElements().length > 0;
             default:
                 return false;
         }

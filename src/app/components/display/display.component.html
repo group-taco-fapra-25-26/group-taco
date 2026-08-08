@@ -1,11 +1,13 @@
 <svg
     #drawingArea
     class="canvas"
+    [class.drag-over-invalid]="isDragOver()"
     data-export-id="petri-net"
     [attr.viewBox]="viewBox()"
     preserveAspectRatio="xMidYMid meet"
     (drop)="processDropEvent($event)"
-    (dragover)="prevent($event)"
+    (dragover)="onDragOver($event)"
+    (dragleave)="onDragLeave()"
     (mousedown)="$event.target === drawingArea && startPan($event)"
     (mousemove)="pan($event)"
     (mouseup)="endPan()"
@@ -17,10 +19,10 @@
         </marker>
     </defs>
     @for (edge of diagram()?.getEdges(); track edge.id) {
-        <g appSvgArc [diagramArc]="edge" [nodes]="diagram()?.getNodes() || []" />
+        <g appSvgArc [diagramArc]="edge" [nodes]="diagram()?.getNodes() || []" [edges]="diagram()?.getEdges() || []" />
     }
 
     @for (node of diagram()?.getNodes(); track node.id) {
-        <g appSvgNode [diagramNode]="node" (clickNode)="processNodeClick(node)" />
+        <g appSvgNode [diagramNode]="node" />
     }
 </svg>

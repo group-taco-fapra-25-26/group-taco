@@ -4,17 +4,15 @@ import { ParserService } from './parser.service';
 import { DisplayService } from './display.service';
 import { catchError, of, take } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
-import { ModeService } from './mode.service';
 import { SourcePetriNetService } from './source-petri-net.service';
 import { ToasterNotificationService } from './toaster-notification.service';
 import { TabStateService } from './tab-state.service';
 import { Tab } from '../classes/tabs';
 import { SerializationService } from './serialization.service';
-import { ProcessNetStateService } from './process-net-state.service';
 import { PanningService } from './panning.service';
 import { DiagramNode } from '../classes/diagram/diagram-node';
 import { applyParallelOffsetsToArcs } from './arc-parallel-offset.util';
-import { ReachabilityGraphService } from '../reachability-graph.service';
+import { TokenTrailLpnService } from './token-trail-lpn.service';
 
 @Injectable({
     providedIn: 'root',
@@ -26,12 +24,26 @@ export class PetriNetLoaderService {
     private _displayService = inject(DisplayService);
     private _http = inject(HttpClient);
     private _sourcePetriNetService = inject(SourcePetriNetService);
-    private _modeService = inject(ModeService);
     private _tabStateService = inject(TabStateService);
     private _serializationService = inject(SerializationService);
-    private _processNetSateService = inject(ProcessNetStateService);
     private _panningService = inject(PanningService);
-    private _reachabilityGraphService = inject(ReachabilityGraphService);
+    private _lpnService = inject(TokenTrailLpnService);
+
+    private _customLpnService?: TokenTrailLpnService;
+
+    /**
+     * Registers a custom TokenTrailLpnService (e.g. from the component-scoped injector).
+     */
+    public registerLpnService(lpnService: TokenTrailLpnService | undefined): void {
+        this._customLpnService = lpnService;
+    }
+
+    /**
+     * Gets the currently registered TokenTrailLpnService.
+     */
+    public getRegisteredLpnService(): TokenTrailLpnService | undefined {
+        return this._customLpnService;
+    }
 
     /**
      * Processes an uploaded file (File object).
@@ -93,8 +105,14 @@ export class PetriNetLoaderService {
             const parsedNet = this._parser.parse(content);
 
             if (parsedNet) {
-                this._processNetSateService.clear();
-                this._reachabilityGraphService.clear(false);
+                // If we import an LPN as a normal source net,
+                // we should show the c1 to cx naming schema (the place ID) instead of the combined labels.
+                for (const place of parsedNet.places) {
+                    if (/^c\d+$/.test(place.id)) {
+                        place.label = place.id;
+                    }
+                }
+
                 const inDrawTab = this._tabStateService.currentTab() === Tab.DRAW;
                 this._sourcePetriNetService.loadNewNet(parsedNet, content);
                 this._tabStateService.setAllLastMarkings(parsedNet.marking);
@@ -104,20 +122,7 @@ export class PetriNetLoaderService {
                     this._panningService.nudgeViewBox(0, -80);
                     this._panningService.expandViewBox(1.1);
                 }
-                if (
-                    this._tabStateService.currentTab() === Tab.PROCESS_NET &&
-                    !this._modeService.isExamMode(Tab.PROCESS_NET)
-                ) {
-                    this._processNetSateService.createStartPositions(parsedNet, this._panningService.INITIAL_VIEWBOX);
-                }
-                if (this._modeService.isExamMode(Tab.DRAW) && inDrawTab) {
-                    this._toasterService.showSuccess(
-                        'TOASTER.HEADER.SUCCESS',
-                        'TOASTER.BODY.NET_LOADED_SUCCESSFULLY_HIDDEN',
-                    );
-                } else {
-                    this._toasterService.showSuccess('TOASTER.HEADER.SUCCESS', 'TOASTER.BODY.NET_LOADED_SUCCESSFULLY');
-                }
+                this._toasterService.showSuccess('TOASTER.HEADER.SUCCESS', 'TOASTER.BODY.NET_LOADED_SUCCESSFULLY');
                 // Build node map and apply parallel offsets to arcs
                 const nodeMap = new Map<string, DiagramNode>();
                 parsedNet.allNodes.forEach((node: DiagramNode) => nodeMap.set(node.id, node));
@@ -128,5 +133,47 @@ export class PetriNetLoaderService {
         } catch (error) {
             this._toasterService.showError('TOASTER.HEADER.PROCESSING_ERROR', 'TOASTER.BODY.CRITICAL_PARSING_ERROR');
         }
+    }
+
+    /**
+     * Processes an LPN file (File object) and loads it into the LPN canvas.
+     * Uses the same path as drag-and-drop on the token-trail tab.
+     */
+    public loadLpnFile(file: File): void {
+        this._fileReader
+            .readFile(file)
+            .pipe(take(1))
+            .subscribe((content) => {
+                if (!content) {
+                    this._toasterService.showWarning(
+                        'TOASTER.HEADER.READ_ERROR',
+                        'TOASTER.BODY.FILE_EMPTY_OR_UNREADABLE',
+                    );
+                    return;
+                }
+
+                try {
+                    const parsedDiagram = this._parser.parse(content);
+                    if (parsedDiagram) {
+                        const targetLpnService = this._customLpnService || this._lpnService;
+                        targetLpnService.loadLpnFromDiagram(parsedDiagram);
+                        this._toasterService.showSuccess(
+                            'TOASTER.HEADER.SUCCESS',
+                            'TOASTER.BODY.NET_LOADED_SUCCESSFULLY',
+                        );
+                    } else {
+                        this._toasterService.showWarning(
+                            'TOASTER.HEADER.PARSER_ERROR',
+                            'TOASTER.BODY.FILE_NOT_INTERPRETABLE',
+                        );
+                    }
+                } catch (err) {
+                    console.error('Error importing LPN file:', err);
+                    this._toasterService.showError(
+                        'TOASTER.HEADER.PROCESSING_ERROR',
+                        'TOASTER.BODY.CRITICAL_PARSING_ERROR',
+                    );
+                }
+            });
     }
 }

@@ -1,4 +1,5 @@
 /* You can add global styles to this file, and also import other style files */
+@import 'shepherd.js/dist/css/shepherd.css';
 
 html,
 body {
@@ -133,39 +134,457 @@ body {
     -ms-user-select: none;
     display: flex;
     flex-direction: column;
-    height: 600px;
+    height: 100% !important;
+    flex: 1 1 auto;
+    min-height: 0;
     overflow: visible;
-}
-
-.graph-display-layout {
-    display: flex;
-    flex-direction: row;
-    gap: 1rem;
-}
-
-.graph-display-layout > * {
-    flex: 1 1 0;
-    min-width: 0;
-    background: #fff;
-    border: 1px solid #e0e0e0;
-    border-radius: 10px;
-    padding: 12px;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
-}
-
-.graph-display-layout svg {
-    display: block;
-    width: 100%;
-}
-
-@media (max-width: 900px) {
-    .graph-display-layout {
-        flex-direction: column;
-    }
 }
 
 .wide-tooltip {
     .mdc-tooltip__surface {
         max-width: unset;
     }
+}
+
+/* --- Shepherd Tour Custom Styles --- */
+.shepherd-element.shepherd-theme-custom {
+    background: rgba(255, 255, 255, 0.95) !important;
+    backdrop-filter: blur(10px) !important;
+    border: 1px solid rgba(0, 0, 0, 0.1) !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15) !important;
+    border-radius: 12px !important;
+    font-family: Roboto, sans-serif !important;
+    max-width: 400px !important;
+    padding: 18px !important;
+}
+
+.shepherd-element .shepherd-arrow,
+.shepherd-element.shepherd-theme-custom .shepherd-arrow {
+    display: none !important;
+}
+
+.shepherd-element.shepherd-theme-custom .shepherd-header {
+    background: transparent !important;
+    padding: 0 0 10px 0 !important;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+}
+
+.shepherd-element.shepherd-theme-custom .shepherd-title {
+    font-size: 1.15rem !important;
+    font-weight: 700 !important;
+    color: #1976d2 !important;
+    margin: 0 !important;
+}
+
+.shepherd-element.shepherd-theme-custom .shepherd-text {
+    font-size: 0.95rem !important;
+    line-height: 1.6 !important;
+    color: #333333 !important;
+    padding: 14px 0 !important;
+}
+
+.shepherd-element.shepherd-theme-custom .shepherd-footer {
+    padding: 10px 0 0 0 !important;
+    display: flex !important;
+    justify-content: flex-end !important;
+    gap: 10px !important;
+    border-top: 1px solid rgba(0, 0, 0, 0.08) !important;
+}
+
+.shepherd-element.shepherd-theme-custom .shepherd-button {
+    border-radius: 6px !important;
+    font-weight: 600 !important;
+    font-size: 0.85rem !important;
+    padding: 8px 16px !important;
+    border: none !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease-in-out !important;
+    outline: none !important;
+}
+
+.shepherd-element.shepherd-theme-custom .shepherd-button-secondary {
+    background: #f1f3f4 !important;
+    color: #3c4043 !important;
+}
+
+.shepherd-element.shepherd-theme-custom .shepherd-button-secondary:hover {
+    background: #e8eaed !important;
+}
+
+.shepherd-element.shepherd-theme-custom .shepherd-button-primary {
+    background: #1976d2 !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 4px rgba(25, 118, 210, 0.2) !important;
+}
+
+.shepherd-element.shepherd-theme-custom .shepherd-button-primary:hover {
+    background: #1565c0 !important;
+    box-shadow: 0 4px 8px rgba(21, 101, 192, 0.3) !important;
+}
+
+.shepherd-element.shepherd-theme-custom .shepherd-button:disabled,
+.shepherd-element.shepherd-theme-custom .shepherd-button-disabled {
+    opacity: 0.4 !important;
+    cursor: not-allowed !important;
+    pointer-events: none !important;
+}
+
+.shepherd-element.shepherd-theme-custom .shepherd-cancel-icon {
+    color: #70757a !important;
+    font-size: 1.4em !important;
+    font-weight: normal !important;
+    transition: color 0.2s !important;
+    background: transparent !important;
+    border: none !important;
+    cursor: pointer !important;
+}
+
+.shepherd-element.shepherd-theme-custom .shepherd-cancel-icon:hover {
+    color: #1976d2 !important;
+}
+
+/* Toast Action Buttons */
+.toast-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.toast-action-btn {
+    font-size: 0.85em !important;
+    font-weight: 500 !important;
+    padding: 6px 14px !important;
+    border-radius: 4px !important;
+    border: none !important;
+    cursor: pointer !important;
+    transition:
+        background-color 0.2s,
+        opacity 0.2s !important;
+    font-family: inherit !important;
+}
+
+/* Success Toast Buttons */
+.success-toast .dismiss-btn {
+    color: #388e3c !important;
+    background-color: transparent !important;
+    border: 1px solid rgba(56, 142, 60, 0.4) !important;
+}
+.success-toast .dismiss-btn:hover {
+    background-color: rgba(56, 142, 60, 0.1) !important;
+}
+.success-toast .accept-btn {
+    color: white !important;
+    background-color: #388e3c !important;
+}
+.success-toast .accept-btn:hover {
+    background-color: #2e7d32 !important;
+}
+
+/* Info Toast Buttons */
+.info-toast .dismiss-btn {
+    color: #1976d2 !important;
+    background-color: transparent !important;
+    border: 1px solid rgba(25, 118, 210, 0.4) !important;
+}
+.info-toast .dismiss-btn:hover {
+    background-color: rgba(25, 118, 210, 0.1) !important;
+}
+.info-toast .accept-btn {
+    color: white !important;
+    background-color: #1976d2 !important;
+}
+.info-toast .accept-btn:hover {
+    background-color: #1565c0 !important;
+}
+
+/* Warning Toast Buttons */
+.warning-toast .dismiss-btn {
+    color: #f57c00 !important;
+    background-color: transparent !important;
+    border: 1px solid rgba(245, 124, 0, 0.4) !important;
+}
+.warning-toast .dismiss-btn:hover {
+    background-color: rgba(245, 124, 0, 0.1) !important;
+}
+.warning-toast .accept-btn {
+    color: white !important;
+    background-color: #f57c00 !important;
+}
+.warning-toast .accept-btn:hover {
+    background-color: #e65100 !important;
+}
+
+/* Error Toast Buttons */
+.error-toast .dismiss-btn {
+    color: #d32f2f !important;
+    background-color: transparent !important;
+    border: 1px solid rgba(211, 47, 47, 0.4) !important;
+}
+.error-toast .dismiss-btn:hover {
+    background-color: rgba(211, 47, 47, 0.1) !important;
+}
+.error-toast .accept-btn {
+    color: white !important;
+    background-color: #d32f2f !important;
+}
+.error-toast .accept-btn:hover {
+    background-color: #c62828 !important;
+}
+
+/* --- Presentation Mode Styles --- */
+html.presentation-mode,
+body.presentation-mode {
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+    height: 100vh !important;
+    width: 100vw !important;
+}
+
+/* Hide scrollbars on main page containers in focus mode */
+html.presentation-mode,
+body.presentation-mode,
+body.presentation-mode .flexColumnAlignStartStretch,
+body.presentation-mode app-main-tab,
+body.presentation-mode .editor-container,
+body.presentation-mode mat-tab-group,
+body.presentation-mode .flex-tab-group,
+body.presentation-mode .mat-mdc-tab-body-wrapper,
+body.presentation-mode .mat-mdc-tab-body,
+body.presentation-mode .mat-mdc-tab-body-content,
+body.presentation-mode .mat-mdc-tab-body-active,
+body.presentation-mode app-draw,
+body.presentation-mode app-token-trail,
+body.presentation-mode app-token-trail-practice,
+body.presentation-mode .split-view-layout,
+body.presentation-mode .split-view-panel,
+body.presentation-mode app-token-trail-display,
+body.presentation-mode app-token-trail-draw-display {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+}
+
+html.presentation-mode::-webkit-scrollbar,
+body.presentation-mode::-webkit-scrollbar,
+body.presentation-mode .flexColumnAlignStartStretch::-webkit-scrollbar,
+body.presentation-mode app-main-tab::-webkit-scrollbar,
+body.presentation-mode .editor-container::-webkit-scrollbar,
+body.presentation-mode mat-tab-group::-webkit-scrollbar,
+body.presentation-mode .flex-tab-group::-webkit-scrollbar,
+body.presentation-mode .mat-mdc-tab-body-wrapper::-webkit-scrollbar,
+body.presentation-mode .mat-mdc-tab-body::-webkit-scrollbar,
+body.presentation-mode .mat-mdc-tab-body-content::-webkit-scrollbar,
+body.presentation-mode .mat-mdc-tab-body-active::-webkit-scrollbar,
+body.presentation-mode app-draw::-webkit-scrollbar,
+body.presentation-mode app-token-trail::-webkit-scrollbar,
+body.presentation-mode app-token-trail-practice::-webkit-scrollbar,
+body.presentation-mode .split-view-layout::-webkit-scrollbar,
+body.presentation-mode .split-view-panel::-webkit-scrollbar,
+body.presentation-mode app-token-trail-display::-webkit-scrollbar,
+body.presentation-mode app-token-trail-draw-display::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+}
+
+/* Allow scrollbars for toolbar panels and instruction areas in focus mode */
+body.presentation-mode .pn-help-content,
+body.presentation-mode .bubble-content {
+    scrollbar-width: thin !important;
+    -ms-overflow-style: auto !important;
+}
+
+body.presentation-mode .pn-help-content::-webkit-scrollbar,
+body.presentation-mode .bubble-content::-webkit-scrollbar {
+    display: block !important;
+    width: 6px !important;
+    height: 6px !important;
+}
+
+body.presentation-mode .pn-help-content::-webkit-scrollbar-thumb,
+body.presentation-mode .bubble-content::-webkit-scrollbar-thumb {
+    background: #cbd5e1 !important;
+    border-radius: 4px !important;
+}
+
+body.presentation-mode .pn-help-content::-webkit-scrollbar-thumb:hover,
+body.presentation-mode .bubble-content::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8 !important;
+}
+
+body.presentation-mode .pn-help-content::-webkit-scrollbar-track,
+body.presentation-mode .bubble-content::-webkit-scrollbar-track {
+    background: transparent !important;
+}
+
+body.presentation-mode .flexColumnAlignStartStretch {
+    height: 100vh !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+}
+
+/* Hide header, subheader, line, footer, and sidebar in presentation mode */
+body.presentation-mode .flexColumnAlignStartStretch > div.flexRowAlignCenterCenter,
+body.presentation-mode .flexColumnAlignStartStretch > h2,
+body.presentation-mode .flexColumnAlignStartStretch > hr,
+body.presentation-mode .flexColumnAlignStartStretch > app-footer,
+body.presentation-mode .action-sidebar {
+    display: none !important;
+}
+
+/* Make sure the main content container fills the entire viewport */
+body.presentation-mode .flexColumnAlignStartStretch > div:nth-of-type(2) {
+    flex: 1 !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+}
+
+body.presentation-mode app-main-tab {
+    flex: 1 !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+}
+
+body.presentation-mode .editor-container {
+    flex: 1 !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    border: none !important;
+    overflow: hidden !important;
+}
+
+body.presentation-mode mat-tab-group,
+body.presentation-mode .flex-tab-group {
+    height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+}
+
+/* Hide the material tab header completely in presentation mode */
+body.presentation-mode mat-tab-header,
+body.presentation-mode .mat-mdc-tab-header {
+    display: none !important;
+}
+
+body.presentation-mode .mat-mdc-tab-body-wrapper {
+    flex: 1 !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+}
+
+body.presentation-mode mat-tab-body,
+body.presentation-mode .mat-mdc-tab-body {
+    height: 100% !important;
+    overflow: hidden !important;
+}
+
+body.presentation-mode .mat-mdc-tab-body-content {
+    height: 100% !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+body.presentation-mode .mat-mdc-tab-body-active {
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100% !important;
+    overflow: hidden !important;
+}
+
+body.presentation-mode .tab-toolbar-container {
+    display: none !important;
+}
+
+/* Expand Draw Tab component with premium spacing/borders */
+body.presentation-mode app-draw {
+    display: block !important;
+    height: 100% !important;
+}
+
+body.presentation-mode .draw-layout {
+    height: calc(100vh - 32px) !important;
+    max-height: calc(100vh - 32px) !important;
+    width: auto !important;
+    margin: 16px !important;
+    border: 1px solid #e0e0e0 !important;
+    border-radius: 10px !important;
+    padding: 12px !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+    box-sizing: border-box !important;
+}
+
+/* Expand Token Trail / Practice split view with premium spacing/borders */
+body.presentation-mode app-token-trail,
+body.presentation-mode app-token-trail-practice {
+    display: block !important;
+    height: 100% !important;
+}
+
+body.presentation-mode .split-view-layout {
+    height: calc(100vh - 32px) !important;
+    max-height: calc(100vh - 32px) !important;
+    width: auto !important;
+    margin: 16px !important;
+    gap: 0.5rem !important;
+    box-sizing: border-box !important;
+    flex-direction: column !important; /* Stack vertically in presentation mode */
+}
+
+body.presentation-mode .split-view-panel {
+    min-height: 0 !important;
+    border: 1px solid #e0e0e0 !important;
+    border-radius: 10px !important;
+    padding: 12px !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    box-sizing: border-box !important;
+}
+
+/* Resize displays inside the split view */
+body.presentation-mode app-token-trail-display,
+body.presentation-mode app-token-trail-display .display-container {
+    height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+body.presentation-mode app-token-trail-display .canvas {
+    height: 100% !important;
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    border: 1px dashed lightgrey !important;
+    border-radius: 6px !important;
+}
+
+body.presentation-mode app-token-trail-draw-display,
+body.presentation-mode app-token-trail-draw-display .drawing-area-container {
+    height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+body.presentation-mode app-token-trail-draw-display .drawing-canvas {
+    height: 100% !important;
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    border: 1px dashed #bdbdbd !important;
+    border-radius: 6px !important;
+}
+
+body.presentation-mode app-token-trail-draw-display .instruction-panel {
+    flex: 0 0 auto !important;
 }

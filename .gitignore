@@ -40,3 +40,9 @@ testem.log
 # System files
 .DS_Store
 Thumbs.db
+/ilpn-components/
+
+# Antigravity / Gemini CLI
+.agents/*
+.antigravitycli/*
+.gemini/*

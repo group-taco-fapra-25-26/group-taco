@@ -40,11 +40,6 @@ export class SourcePetriNetService {
     private _lastChangeTriggeredByFiring = false;
 
     /**
-     * Observable that emits whether the optimal layout has been calculated for the current source Petri net.
-     */
-    public readonly optimalLayoutCalculated$: Observable<boolean> = this._isOptimalLayoutCalculated$.asObservable();
-
-    /**
      * Marks that the optimal layout has been calculated for the current source Petri net.
      */
     public optimalLayoutCalculated(): void {
@@ -134,12 +129,5 @@ export class SourcePetriNetService {
         this._isDirty$.next(false);
         this._isOptimalLayoutCalculated$.next(false);
         this._lastChangeTriggeredByFiring = false;
-    }
-
-    public setSourceText(rawText: string): void {
-        this._sourceText$.next(rawText);
-        this._sourceNet$.next(null);
-        this._isDirty$.next(false);
-        this._isOptimalLayoutCalculated$.next(false);
     }
 }

@@ -2,13 +2,12 @@ import { Component, computed, inject, input, output, signal } from '@angular/cor
 import { Coords } from '../../../classes/json-petri-net';
 import { SHAPE } from '../../../classes/diagram/diagram-node';
 import { DisplayableNode } from '../../../classes/displayable-graph.interface';
-import { ModeService } from '../../../services/mode.service';
-import { TabStateService } from '../../../services/tab-state.service';
 import { PlayService } from '../../../services/play.service';
 import { DiagramTransition } from '../../../classes/diagram/diagram-transition';
 import { DiagramPlace } from '../../../classes/diagram/diagram-place';
-import { StateNode } from '../../../classes/reachability-graph.model';
 import { PLACE_RADIUS, TRANSITION_SIZE } from '../display.constants';
+import { Condition } from '../../../classes/labeled-net.model';
+import { TokenTrailStateService, LpnDisplayMode } from '../../../services/token-trail-state.service';
 
 @Component({
     selector: 'g[appSvgNode]',
@@ -26,21 +25,19 @@ export class SvgNodeComponent {
     });
 
     readonly diagramNode = input<DisplayableNode>();
-    private _modeService = inject(ModeService);
-    private _tabStateService = inject(TabStateService);
     private _playService = inject(PlayService);
+    private _tokenTrailStateService = inject(TokenTrailStateService, { optional: true });
 
     readonly showInnerLabel = input<boolean>(false);
     readonly transitionLabelPlacement = input<'inside' | 'below'>('inside');
     readonly disableActiveColoring = input<boolean>(false);
+    readonly fillColorOverride = input<string | null>(null);
 
     readonly isTransitionAndActive = computed(() => {
         if (this.disableActiveColoring()) return false;
         const node = this.diagramNode();
         if (node instanceof DiagramTransition) {
-            return (
-                this._playService.canBeFired(node) && !this._modeService.isExamMode(this._tabStateService.currentTab())
-            );
+            return this._playService.canBeFired(node);
         }
         return false;
     });
@@ -58,13 +55,14 @@ export class SvgNodeComponent {
 
     clickNode = output<DisplayableNode>();
 
-    stateNodeClick = output<StateNode>();
-
     readonly fillColor = signal('white');
 
     readonly transitionFillColor = computed(() => {
         if (this.isFiring()) {
             return 'lime';
+        }
+        if (this.fillColorOverride()) {
+            return this.fillColorOverride()!;
         }
         return this.fillColor();
     });
@@ -91,6 +89,9 @@ export class SvgNodeComponent {
     });
 
     readonly placeFillColor = computed(() => {
+        if (this.fillColorOverride()) {
+            return this.fillColorOverride()!;
+        }
         return this.fillColor();
     });
 
@@ -106,8 +107,12 @@ export class SvgNodeComponent {
      * Truncated display label for the node, adding ellipsis if it exceeds MAX_CHARS.
      */
     readonly displayLabel = computed(() => {
-        const label = this.diagramNode()?.displayLabel || '';
-        if (label.length > this.MAX_CHARS && !(this.diagramNode() instanceof StateNode)) {
+        const node = this.diagramNode();
+        if (node instanceof Condition && this._tokenTrailStateService?.displayMode() === LpnDisplayMode.Puzzle) {
+            return '';
+        }
+        const label = node?.displayLabel || '';
+        if (label.length > this.MAX_CHARS) {
             return label.substring(0, this.MAX_CHARS) + '...';
         }
         return label;
@@ -125,11 +130,7 @@ export class SvgNodeComponent {
     });
 
     readonly isStartPlace = computed(() => {
-        const node = this.diagramNode();
-        const isStart = node instanceof DiagramPlace ? node.isStartPlace : false;
-        if (!isStart) return false;
-
-        return !this._modeService.isExamMode(this._tabStateService.currentTab());
+        return false;
     });
 
     readonly shouldShowInnerLabel = computed(() => this.showInnerLabel() && !!this.innerLabel());
@@ -247,7 +248,6 @@ export class SvgNodeComponent {
     }
 
     public circleClick() {
-        const node = this.diagramNode();
-        if (node) this.stateNodeClick.emit(node as StateNode);
+        // No-op - click Node bindings are not needed
     }
 }

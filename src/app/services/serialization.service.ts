@@ -7,6 +7,8 @@ import { DiagramArc } from '../classes/diagram/diagram-arc';
 import { XMLBuilder } from 'fast-xml-parser';
 import { PnmlArc, PnmlPlace, PnmlPosition, PnmlTransition } from '../classes/pnml-petri-net';
 
+import { Condition, Event as LabeledEvent, LabeledNetEdge, LabeledNetNode } from '../classes/labeled-net.model';
+
 export type SUPPORTED_FORMAT = 'pnml' | 'json';
 
 const formatTupleSet = (items: string[]) => `{${items.join(', ')}}`;
@@ -24,6 +26,29 @@ export class SerializationService {
             default:
                 throw new Error(`Unsupported format: ${format}`);
         }
+    }
+
+    public serializeLpn(
+        drawnElements: LabeledNetNode[],
+        connections: LabeledNetEdge[],
+        format: SUPPORTED_FORMAT,
+    ): string {
+        const places = drawnElements
+            .filter((el): el is Condition => el instanceof Condition)
+            .map((cond) => {
+                const dp = new DiagramPlace(cond.id, cond.isStartPlace ? 1 : 0, cond.label, {
+                    isStartPlace: cond.isStartPlace,
+                    hideTokens: !cond.isStartPlace,
+                });
+                dp.x = cond.x;
+                dp.y = cond.y;
+                return dp;
+            });
+        const transitions = drawnElements.filter((el): el is LabeledEvent => el instanceof LabeledEvent);
+        const arcs = connections.map((c) => new DiagramArc(c.id, c.source, c.target, c.weight, c.bendPoints));
+
+        const diagram = new Diagram(places, transitions, arcs);
+        return this.serialize(diagram, format);
     }
 
     public serializeTuple(diagram: Diagram): string {
@@ -73,6 +98,11 @@ export class SerializationService {
         this._serializePlaces(diagram.places, rawNet);
         this._serializeTransitions(diagram.transitions, rawNet);
         this._serializeArcs(diagram.arcs, rawNet);
+
+        const startPlaces = diagram.places.filter((p) => p.isStartPlace).map((p) => p.id);
+        if (startPlaces.length > 0) {
+            rawNet.lpnStartPlaces = startPlaces;
+        }
 
         return JSON.stringify(rawNet, null, 2);
     }
@@ -161,10 +191,13 @@ export class SerializationService {
     private _mapPlaceToPnml(place: DiagramPlace): PnmlPlace {
         return {
             '@_id': place.id,
+            name: {
+                text: place.label || place.id,
+            },
             graphics: {
                 position: {
-                    '@_x': place.x,
-                    '@_y': place.y,
+                    '@_x': Math.round(place.x),
+                    '@_y': Math.round(place.y),
                 },
             },
             initialMarking: {
@@ -178,8 +211,8 @@ export class SerializationService {
             '@_id': transition.id,
             graphics: {
                 position: {
-                    '@_x': transition.x,
-                    '@_y': transition.y,
+                    '@_x': Math.round(transition.x),
+                    '@_y': Math.round(transition.y),
                 },
             },
             name: {
@@ -202,8 +235,8 @@ export class SerializationService {
         if (arc.bendPoints && arc.bendPoints.length > 0) {
             arcObj.graphics.position = arc.bendPoints.map(
                 (bp): PnmlPosition => ({
-                    '@_x': bp.x,
-                    '@_y': bp.y,
+                    '@_x': Math.round(bp.x),
+                    '@_y': Math.round(bp.y),
                 }),
             );
         }

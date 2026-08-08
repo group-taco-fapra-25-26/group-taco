@@ -1,48 +1,79 @@
 <div class="editor-container">
-    <div class="mode-sidebar">
-        <app-mode-toggle></app-mode-toggle>
-    </div>
+    @if (_tabStateService.isPresentationMode()) {
+        <button
+            mat-icon-button
+            class="exit-presentation-btn"
+            (click)="togglePresentationMode($event)"
+            [matTooltip]="'EXIT_PRESENTATION_MODE' | translate">
+            <mat-icon>fullscreen_exit</mat-icon>
+        </button>
+    }
     <mat-tab-group class="flex-tab-group" [selectedIndex]="selectedIndex" (selectedTabChange)="onTabChange($event)">
         <mat-tab>
             <ng-template mat-tab-label>
                 <mat-icon class="tab-icon">edit</mat-icon>
-                {{ 'TAB_DRAW' | translate }}
+                <span>{{ 'TAB_DRAW' | translate }}</span>
+                @if (selectedIndex === 0) {
+                    <button
+                        mat-icon-button
+                        class="tab-presentation-btn"
+                        (click)="togglePresentationMode($event)"
+                        [matTooltip]="'ENTER_PRESENTATION_MODE' | translate">
+                        <mat-icon>fullscreen</mat-icon>
+                    </button>
+                }
             </ng-template>
             <app-draw></app-draw>
         </mat-tab>
 
         <mat-tab>
             <ng-template mat-tab-label>
-                <mat-icon class="tab-icon">play_arrow</mat-icon>
-                {{ 'TAB_PLAY' | translate }}
+                <mat-icon class="tab-icon">linear_scale</mat-icon>
+                <span>{{ 'TAB_TOKEN_TRAIL' | translate }}</span>
+                @if (selectedIndex === 1) {
+                    <button
+                        mat-icon-button
+                        class="tab-presentation-btn"
+                        (click)="togglePresentationMode($event)"
+                        [matTooltip]="'ENTER_PRESENTATION_MODE' | translate">
+                        <mat-icon>fullscreen</mat-icon>
+                    </button>
+                }
             </ng-template>
-            <app-play></app-play>
+            <app-token-trail></app-token-trail>
         </mat-tab>
 
         <mat-tab>
             <ng-template mat-tab-label>
-                <mat-icon class="tab-icon">account_tree</mat-icon>
-                {{ 'TAB_REACHABILITY' | translate }}
+                <mat-icon class="tab-icon">extension</mat-icon>
+                <span>{{ 'TAB_PRACTICE' | translate }}</span>
+                @if (selectedIndex === 2) {
+                    <button
+                        mat-icon-button
+                        class="tab-presentation-btn"
+                        (click)="togglePresentationMode($event)"
+                        [matTooltip]="'ENTER_PRESENTATION_MODE' | translate">
+                        <mat-icon>fullscreen</mat-icon>
+                    </button>
+                }
             </ng-template>
-            <app-reachability-graph></app-reachability-graph>
-        </mat-tab>
-
-        <mat-tab>
-            <ng-template mat-tab-label>
-                <mat-icon class="tab-icon">timeline</mat-icon>
-                {{ 'TAB_PROCESS' | translate }}
-            </ng-template>
-            <app-process-net></app-process-net>
+            <app-token-trail-practice></app-token-trail-practice>
         </mat-tab>
     </mat-tab-group>
     <div class="action-sidebar">
         <app-upload></app-upload>
-        <app-tuple-input-button></app-tuple-input-button>
         <app-save></app-save>
         <app-clear-net-button></app-clear-net-button>
         <app-layout-button></app-layout-button>
         <div class="divider-horizontal"></div>
         <app-example-menu></app-example-menu>
         <app-language-button></app-language-button>
+        <button
+            mat-icon-button
+            color="primary"
+            [matTooltip]="'TOKEN_TRAIL.TOUR.RESTART_BUTTON' | translate"
+            (click)="startTour()">
+            <mat-icon>explore</mat-icon>
+        </button>
     </div>
 </div>
